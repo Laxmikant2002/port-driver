@@ -1,0 +1,19 @@
+{
+    "@@locale": "es",
+    "counterAppBarTitle": "Contador",
+    "@counterAppBarTitle": {
+        "description": "Texto mostrado en la barra de la aplicación de la página del contador"
+    },
+    "email": "Correo electrónico",
+    "@email": {
+        "description": "Etiqueta para el campo de entrada de correo electrónico"
+    },
+    "password": "Contraseña",
+    "@password": {
+        "description": "Etiqueta para el campo de entrada de contraseña"
+    },
+    "login": "Iniciar sesión",
+    "@login": {
+        "description": "Etiqueta para el botón de inicio de sesión"
+    }
+}

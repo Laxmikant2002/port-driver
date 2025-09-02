@@ -1,0 +1,19 @@
+{
+    "@@locale": "en",
+    "counterAppBarTitle": "Counter",
+    "@counterAppBarTitle": {
+        "description": "Text shown in the AppBar of the Counter Page"
+    },
+    "email": "Email",
+    "@email": {
+        "description": "Label for the email input field"
+    },
+    "password": "Password",
+    "@password": {
+        "description": "Label for the password input field"
+    },
+    "login": "Login",
+    "@login": {
+        "description": "Label for the login button"
+    }
+}

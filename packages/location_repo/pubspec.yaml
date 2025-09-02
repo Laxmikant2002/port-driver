@@ -1,0 +1,8 @@
+name: location_repo
+description: Location repository package for driver project.
+version: 1.0.0
+publish_to: none
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+library: true
+dependencies:
