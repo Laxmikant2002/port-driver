@@ -28,7 +28,7 @@ dependencies:
   intl: ^0.20.2
   localstorage:
     path: ./packages/localstorage
-  pinput: ^5.0.0
+  pinput: ^5.0.2
   shared_preferences: ^2.3.3
   #new
   geolocator: ^13.0.2
