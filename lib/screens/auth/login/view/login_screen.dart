@@ -202,7 +202,12 @@ class _BottomCard extends StatelessWidget {
       child: BlocListener<LoginBloc, LoginState>(
         listener: (context, state) {
           if (state.status == FormzSubmissionStatus.success) {
-            Navigator.pushNamed(context, '/signup');
+            // Navigate to OTP screen with phone number
+            Navigator.pushNamed(
+              context, 
+              '/get-otp',
+              arguments: state.phoneInput.value,
+            );
           } else if (state.status == FormzSubmissionStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

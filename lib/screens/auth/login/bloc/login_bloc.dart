@@ -37,7 +37,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       await Future<void>.delayed(const Duration(seconds: 2));
       emit(state.copyWith(
         status: FormzSubmissionStatus.success,
-        error: 'OTP sent to your phone number.',
+        error: null, // Clear error on success
       ));
     } catch (e) {
       emit(state.copyWith(

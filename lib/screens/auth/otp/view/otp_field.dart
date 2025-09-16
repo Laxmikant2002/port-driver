@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pinput/pinput.dart';
+import '../../../../widgets/colors.dart';
 import '../bloc/otp_bloc.dart';
 
 class OtpField extends StatelessWidget {
@@ -11,56 +13,64 @@ class OtpField extends StatelessWidget {
     return BlocBuilder<OtpBloc, OtpState>(
       builder: (context, state) {
         return Pinput(
-          length: 6,
+          length: 4,
           onChanged: (value) {
             context.read<OtpBloc>().add(ChangeOtp(value));
           },
           defaultPinTheme: PinTheme(
-            width: 50,
-            height: 50,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[300]!),
+              border: Border.all(color: AppColors.border, width: 1.5),
             ),
             textStyle: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
             ),
           ),
           focusedPinTheme: PinTheme(
-            width: 50,
-            height: 50,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.black),
+              border: Border.all(color: AppColors.primary, width: 2),
             ),
             textStyle: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
             ),
           ),
           errorPinTheme: PinTheme(
-            width: 50,
-            height: 50,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(
-              color: Colors.red[50],
+              color: AppColors.errorBg,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.red),
+              border: Border.all(color: AppColors.error, width: 2),
             ),
             textStyle: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
+              color: AppColors.error,
             ),
           ),
           errorText: state.otpInput.error != null
-              ? OtpInputField.getErrorMsg(state.otpInput.error)
+              ? state.otpInput.errorMessage
               : null,
           errorTextStyle: const TextStyle(
-            color: Colors.red,
-            fontSize: 12,
+            color: AppColors.error,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
           ),
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          autofocus: true,
         );
       },
     );

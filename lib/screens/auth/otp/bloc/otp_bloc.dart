@@ -1,39 +1,12 @@
 import 'dart:async';
-import 'package:equatable/equatable.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
+import 'package:equatable/equatable.dart';
 import 'package:auth_repo/auth_repo.dart';
 
-part 'otp_state.dart';
 part 'otp_event.dart';
-
-enum OtpInputError {
-  empty,
-  invalidLength,
-}
-
-class OtpInputField extends FormzInput<String, OtpInputError> {
-  const OtpInputField.pure() : super.pure('');
-  const OtpInputField.dirty([super.value = '']) : super.dirty();
-
-  @override
-  OtpInputError? validator(String value) {
-    if (value.isEmpty) return OtpInputError.empty;
-    if (value.length != 6) return OtpInputError.invalidLength;
-    return null;
-  }
-
-  static String getErrorMsg(OtpInputError? error) {
-    switch (error) {
-      case OtpInputError.empty:
-        return 'Please enter OTP';
-      case OtpInputError.invalidLength:
-        return 'OTP must be 6 digits';
-      case null:
-        return '';
-    }
-  }
-}
+part 'otp_state.dart';
 
 class OtpBloc extends Bloc<OtpEvent, OtpState> {
   OtpBloc(this.authRepo, this.phone) : super(const OtpState()) {
@@ -48,7 +21,7 @@ class OtpBloc extends Bloc<OtpEvent, OtpState> {
   Timer? _resendTimer;
 
   void _changeOtp(ChangeOtp event, Emitter<OtpState> emit) {
-    final otpInput = OtpInputField.dirty(event.otp);
+    final otpInput = OtpInput.dirty(event.otp);
     emit(
       state.copyWith(
         otpInput: otpInput,
@@ -60,17 +33,16 @@ class OtpBloc extends Bloc<OtpEvent, OtpState> {
 
   Future<void> _verifyOtp(VerifyOtp event, Emitter<OtpState> emit) async {
     // Validate OTP
-    final otpInput = OtpInputField.dirty(state.otpInput.value);
+    final otpInput = OtpInput.dirty(state.otpInput.value);
     final otpError = otpInput.error;
-
-    // Update state with validation results
-    emit(state.copyWith(
-      otpInput: otpInput,
-      status: FormzSubmissionStatus.failure,
-    ));
 
     // Check for validation errors
     if (otpError != null) {
+      emit(state.copyWith(
+        otpInput: otpInput,
+        status: FormzSubmissionStatus.failure,
+        error: otpInput.errorMessage,
+      ));
       return;
     }
 
@@ -106,7 +78,7 @@ class OtpBloc extends Bloc<OtpEvent, OtpState> {
         emit(state.copyWith(
           status: FormzSubmissionStatus.initial,
           canResend: false,
-          resendTimer: 60,
+          resendTimer: 24,
         ));
         _startResendTimer();
       } else {
