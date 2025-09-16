@@ -63,19 +63,27 @@ flutter:
   uses-material-design: true
   generate: true
   assets:
-    - assets/images/circle_pin.png
-    - assets/images/cty.png
-    - assets/images/pin.png
-    - assets/default-profile.png
+    # Organized by category for better maintainability
+    
+    # Images (photos, graphics)
+    - assets/images/
+    
+    # Illustrations (login backgrounds, onboarding, etc.)
+    - assets/illustrations/
+    
+    # Icons and logos  
+    - assets/vehicle_icons/
+    - assets/Gaadi_logo_Final.svg
+    - assets/pin.svg
+    
+    # Background assets
+    - assets/background anime .png
     - assets/Background.png
     - assets/Background.webp
-    - assets/Gaadi_logo_Final.svg
     - assets/Bg.webp
+    
+    # Profile and misc
+    - assets/default-profile.png
     - assets/taxi.png
-    - assets/pin.svg
     - assets/initial.png
     - assets/final.png
-    - assets/vehicle_icons/Mini.png
-    - assets/vehicle_icons/Sedan.png
-    - assets/vehicle_icons/Auto.png
-    - assets/vehicle_icons/Bike.png
