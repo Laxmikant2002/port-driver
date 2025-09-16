@@ -29,8 +29,8 @@ class ProfileView extends StatelessWidget {
       body: BlocListener<ProfileBloc, ProfileState>(
         listener: (context, state) {
           if (state.status == ProfileStatus.success) {
-            // Navigate to home or dashboard
-            Navigator.of(context).pushReplacementNamed('/home');
+            // Navigate to language selection screen
+            Navigator.of(context).pushReplacementNamed('/language');
           } else if (state.status == ProfileStatus.failure) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()

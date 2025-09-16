@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:driver/screens/account/settings/views/about.dart';
 import 'package:driver/screens/account/settings/views/faq_screen.dart';
-import 'package:driver/screens/account/settings/views/language_screen.dart';
+// import 'package:driver/screens/account/settings/views/language_screen.dart';
 import 'package:driver/screens/account/settings/views/privacy.dart';
 import 'package:driver/screens/account/settings/views/settings_screen.dart';
 import 'package:driver/screens/account/settings/views/support_screen.dart';
@@ -19,7 +19,7 @@ class SettingsRoutes {
   static Map<String, WidgetBuilder> getRoutes() {
     return {
       settings: (context) => const SettingsScreen(),
-      language: (context) => const LanguageSelectionScreen(),
+      // language: (context) => const LanguageSelectionScreen(),
       notifications: (context) => const NotificationsScreen(),
       privacy: (context) => const PrivacyScreen(),
       support: (context) => const SupportScreen(),
