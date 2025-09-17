@@ -32,7 +32,7 @@ class _OtpScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: AppColors.background,
       body: BlocListener<OtpBloc, OtpState>(
         listener: (context, state) {
           if (state.status == FormzSubmissionStatus.success) {
@@ -56,7 +56,7 @@ class _OtpScreen extends StatelessWidget {
                   ),
                   action: SnackBarAction(
                     label: 'Dismiss',
-                    textColor: AppColors.textLight,
+                    textColor: AppColors.textTertiary,
                     onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
                   ),
                 ),
@@ -65,17 +65,17 @@ class _OtpScreen extends StatelessWidget {
         },
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: Column(
               children: [
-                const _Logo(),
-                const SizedBox(height: 48),
+                const _HeaderSection(),
+                const SizedBox(height: 32),
                 const _OtpCard(),
                 const SizedBox(height: 32),
                 _ChangeNumberLink(),
                 const SizedBox(height: 16),
                 // Testing bypass button (remove for production)
                 const _BypassButton(),
+                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -100,7 +100,7 @@ class _VerifyButton extends StatelessWidget {
             gradient: isDisabled 
                 ? null 
                 : LinearGradient(
-                    colors: [AppColors.primary, AppColors.primaryDark],
+                    colors: [AppColors.cyan, AppColors.primary],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -109,7 +109,7 @@ class _VerifyButton extends StatelessWidget {
                 ? null 
                 : [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.cyan.withOpacity(0.3),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -118,7 +118,7 @@ class _VerifyButton extends StatelessWidget {
           child: ElevatedButton(
             onPressed: isDisabled ? null : () => context.read<OtpBloc>().add(const VerifyOtp()),
             style: ElevatedButton.styleFrom(
-              backgroundColor: isDisabled ? Colors.grey[300] : Colors.transparent,
+              backgroundColor: isDisabled ? AppColors.border : Colors.transparent,
               shadowColor: Colors.transparent,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
@@ -127,22 +127,47 @@ class _VerifyButton extends StatelessWidget {
               elevation: 0,
             ),
             child: isLoading
-                ? const SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2.5,
-                    ),
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2.5,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Verifying...',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   )
-                : Text(
-                    'Verify OTP',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isDisabled ? AppColors.textSecondary : Colors.white,
-                      letterSpacing: 0.5,
-                    ),
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.verified_user_outlined,
+                        size: 20,
+                        color: isDisabled ? AppColors.textTertiary : Colors.white,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Verify OTP',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isDisabled ? AppColors.textTertiary : Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
                   ),
           ),
         );
@@ -151,31 +176,45 @@ class _VerifyButton extends StatelessWidget {
   }
 }
 
-class _Logo extends StatelessWidget {
-  const _Logo();
+class _HeaderSection extends StatelessWidget {
+  const _HeaderSection();
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withOpacity(0.1),
+            AppColors.cyan.withOpacity(0.05),
+          ],
+        ),
+      ),
       child: Column(
         children: [
+          // App Name
           Text(
             'Electric Loading Gadi',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: AppColors.primary,
+              color: AppColors.textPrimary,
               letterSpacing: -0.5,
             ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
             'Secure Verification',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -189,14 +228,14 @@ class _OtpCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(32), // Increased padding for better spacing
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24), // More rounded for modern look
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.08), // Subtle primary color shadow
+            color: AppColors.primary.withOpacity(0.08),
             blurRadius: 32,
             offset: const Offset(0, 12),
             spreadRadius: 0,
@@ -210,28 +249,14 @@ class _OtpCard extends StatelessWidget {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center, // Center align for better hierarchy
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Icon with background circle
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(40),
-            ),
-            child: const Icon(
-              Icons.sms_outlined,
-              size: 40,
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
+          // Title
+          Text(
             'Verify Your Number',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 28, // Larger for better hierarchy
+              fontSize: 28,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
               letterSpacing: -0.5,
@@ -273,7 +298,7 @@ class _ResendText extends StatelessWidget {
               color: AppColors.backgroundSecondary,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AppColors.border.withOpacity(0.5),
+                color: AppColors.border,
                 width: 1,
               ),
             ),
@@ -293,7 +318,7 @@ class _ResendText extends StatelessWidget {
                       'Resend OTP',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.primary,
+                        color: AppColors.cyan,
                         fontWeight: FontWeight.w600,
                         decoration: TextDecoration.underline,
                       ),
@@ -326,7 +351,7 @@ Widget _ChangeNumberLink() {
           'Change Number',
           style: TextStyle(
             fontSize: 16,
-            color: AppColors.primary,
+            color: AppColors.cyan,
             fontWeight: FontWeight.w600,
             decoration: TextDecoration.underline,
           ),

@@ -26,6 +26,7 @@ class ProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: BlocListener<ProfileBloc, ProfileState>(
         listener: (context, state) {
           if (state.status == ProfileStatus.success) {
@@ -37,37 +38,26 @@ class ProfileView extends StatelessWidget {
               ..showSnackBar(
                 SnackBar(
                   content: Text(state.errorMessage ?? 'Profile setup failed'),
-                  backgroundColor: Colors.red,
+                  backgroundColor: AppColors.error,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               );
           }
         },
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppColors.primary.withOpacity(0.1),
-                AppColors.background,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const _HeaderSection(),
+                const SizedBox(height: 24),
+                const _ProfileForm(),
+                const SizedBox(height: 32),
+                const _SubmitButton(),
+                const SizedBox(height: 24),
               ],
-            ),
-          ),
-          child: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 40),
-                  const _WelcomeText(),
-                  const SizedBox(height: 40),
-                  const _ProfileForm(),
-                  const SizedBox(height: 32),
-                  const _SubmitButton(),
-                  const SizedBox(height: 24),
-                ],
-              ),
             ),
           ),
         ),
@@ -76,32 +66,48 @@ class ProfileView extends StatelessWidget {
   }
 }
 
-// Logo widget removed as requested
-
-class _WelcomeText extends StatelessWidget {
-  const _WelcomeText();
+class _HeaderSection extends StatelessWidget {
+  const _HeaderSection();
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          'Complete Your Profile',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-          textAlign: TextAlign.center,
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withOpacity(0.1),
+            AppColors.cyan.withOpacity(0.05),
+          ],
         ),
-        const SizedBox(height: 12),
-        Text(
-          'Please fill in your details to complete the registration',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppColors.textSecondary,
-              ),
-          textAlign: TextAlign.center,
-        ),
-      ],
+      ),
+      child: Column(
+        children: [
+          // Welcome Text
+          Text(
+            'Complete Your Profile',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Please fill in your details to complete the registration',
+            style: TextStyle(
+              fontSize: 16,
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -111,24 +117,79 @@ class _ProfileForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 8,
-      shadowColor: AppColors.primary.withOpacity(0.1),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.08),
+            blurRadius: 32,
+            offset: const Offset(0, 12),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: AppColors.border.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+            spreadRadius: 0,
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(32.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Form Header
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.cyan.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.edit_rounded,
+                    color: AppColors.cyan,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Personal Information',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Fill in your details below',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            // Form Fields
             const _FirstNameField(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             const _LastNameField(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             const _EmailField(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             const _PhoneField(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             const _AlternativePhoneField(),
           ],
         ),
@@ -145,36 +206,91 @@ class _FirstNameField extends StatelessWidget {
     return BlocBuilder<ProfileBloc, ProfileState>(
       buildWhen: (previous, current) => previous.firstName != current.firstName,
       builder: (context, state) {
-        return TextFormField(
-          onChanged: (firstName) => context
-              .read<ProfileBloc>()
-              .add(ProfileFirstNameChanged(firstName)),
-          decoration: InputDecoration(
-            labelText: 'First Name *',
-            prefixIcon: Icon(
-              Icons.person,
-              color: AppColors.primary,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppColors.primary.withOpacity(0.3),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'First Name',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
               ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppColors.primary,
-                width: 2,
+            const SizedBox(height: 8),
+            TextFormField(
+              onChanged: (firstName) => context
+                  .read<ProfileBloc>()
+                  .add(ProfileFirstNameChanged(firstName)),
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Enter your first name',
+                hintStyle: TextStyle(
+                  color: AppColors.textTertiary,
+                  fontSize: 16,
+                ),
+                prefixIcon: Container(
+                  margin: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.cyan.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.person_outline_rounded,
+                    color: AppColors.cyan,
+                    size: 20,
+                  ),
+                ),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.border,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.cyan,
+                    width: 2,
+                  ),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 1,
+                  ),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 2,
+                  ),
+                ),
+                errorText: state.firstName.displayError != null
+                    ? 'First name is required'
+                    : null,
+                errorStyle: TextStyle(
+                  color: AppColors.error,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-            errorText: state.firstName.displayError != null
-                ? 'First name is required'
-                : null,
-          ),
+          ],
         );
       },
     );
@@ -189,36 +305,91 @@ class _LastNameField extends StatelessWidget {
     return BlocBuilder<ProfileBloc, ProfileState>(
       buildWhen: (previous, current) => previous.lastName != current.lastName,
       builder: (context, state) {
-        return TextFormField(
-          onChanged: (lastName) => context
-              .read<ProfileBloc>()
-              .add(ProfileLastNameChanged(lastName)),
-          decoration: InputDecoration(
-            labelText: 'Last Name *',
-            prefixIcon: Icon(
-              Icons.person_outline,
-              color: AppColors.primary,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppColors.primary.withOpacity(0.3),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Last Name',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
               ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppColors.primary,
-                width: 2,
+            const SizedBox(height: 8),
+            TextFormField(
+              onChanged: (lastName) => context
+                  .read<ProfileBloc>()
+                  .add(ProfileLastNameChanged(lastName)),
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Enter your last name',
+                hintStyle: TextStyle(
+                  color: AppColors.textTertiary,
+                  fontSize: 16,
+                ),
+                prefixIcon: Container(
+                  margin: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.cyan.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.person_outline_rounded,
+                    color: AppColors.cyan,
+                    size: 20,
+                  ),
+                ),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.border,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.cyan,
+                    width: 2,
+                  ),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 1,
+                  ),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 2,
+                  ),
+                ),
+                errorText: state.lastName.displayError != null
+                    ? 'Last name is required'
+                    : null,
+                errorStyle: TextStyle(
+                  color: AppColors.error,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-            errorText: state.lastName.displayError != null
-                ? 'Last name is required'
-                : null,
-          ),
+          ],
         );
       },
     );
@@ -233,36 +404,100 @@ class _EmailField extends StatelessWidget {
     return BlocBuilder<ProfileBloc, ProfileState>(
       buildWhen: (previous, current) => previous.email != current.email,
       builder: (context, state) {
-        return TextFormField(
-          onChanged: (email) =>
-              context.read<ProfileBloc>().add(ProfileEmailChanged(email)),
-          keyboardType: TextInputType.emailAddress,
-          decoration: InputDecoration(
-            labelText: 'Email (Optional)',
-            prefixIcon: Icon(
-              Icons.email,
-              color: AppColors.primary,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppColors.primary.withOpacity(0.3),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Email Address',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
               ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppColors.primary,
-                width: 2,
+            const SizedBox(height: 4),
+            Text(
+              '(Optional)',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textTertiary,
+                fontStyle: FontStyle.italic,
               ),
             ),
-            errorText: state.email.displayError != null
-                ? 'Enter a valid email address'
-                : null,
-          ),
+            const SizedBox(height: 8),
+            TextFormField(
+              onChanged: (email) =>
+                  context.read<ProfileBloc>().add(ProfileEmailChanged(email)),
+              keyboardType: TextInputType.emailAddress,
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Enter your email address',
+                hintStyle: TextStyle(
+                  color: AppColors.textTertiary,
+                  fontSize: 16,
+                ),
+                prefixIcon: Container(
+                  margin: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.cyan.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.email_outlined,
+                    color: AppColors.cyan,
+                    size: 20,
+                  ),
+                ),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.border,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.cyan,
+                    width: 2,
+                  ),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 1,
+                  ),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 2,
+                  ),
+                ),
+                errorText: state.email.displayError != null
+                    ? 'Enter a valid email address'
+                    : null,
+                errorStyle: TextStyle(
+                  color: AppColors.error,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -276,33 +511,61 @@ class _PhoneField extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ProfileBloc, ProfileState>(
       builder: (context, state) {
-        return TextFormField(
-          initialValue: state.phone,
-          enabled: false,
-          decoration: InputDecoration(
-            labelText: 'Phone Number',
-            prefixIcon: Icon(
-              Icons.phone,
-              color: AppColors.primary.withOpacity(0.5),
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppColors.primary.withOpacity(0.3),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Phone Number',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
               ),
             ),
-            disabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppColors.primary.withOpacity(0.2),
+            const SizedBox(height: 8),
+            TextFormField(
+              initialValue: state.phone,
+              enabled: false,
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Phone number from login',
+                hintStyle: TextStyle(
+                  color: AppColors.textTertiary,
+                  fontSize: 16,
+                ),
+                prefixIcon: Container(
+                  margin: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.cyan.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.phone_outlined,
+                    color: AppColors.cyan,
+                    size: 20,
+                  ),
+                ),
+                filled: true,
+                fillColor: AppColors.backgroundSecondary,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                disabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.border,
+                    width: 1,
+                  ),
+                ),
               ),
             ),
-            filled: true,
-            fillColor: AppColors.primary.withOpacity(0.05),
-          ),
+          ],
         );
       },
     );
@@ -318,37 +581,101 @@ class _AlternativePhoneField extends StatelessWidget {
       buildWhen: (previous, current) =>
           previous.alternativePhone != current.alternativePhone,
       builder: (context, state) {
-        return TextFormField(
-          onChanged: (alternativePhone) => context
-              .read<ProfileBloc>()
-              .add(ProfileAlternativePhoneChanged(alternativePhone)),
-          keyboardType: TextInputType.phone,
-          decoration: InputDecoration(
-            labelText: 'Alternative Phone (Optional)',
-            prefixIcon: Icon(
-              Icons.phone_android,
-              color: AppColors.primary,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppColors.primary.withOpacity(0.3),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Alternative Phone',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
               ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppColors.primary,
-                width: 2,
+            const SizedBox(height: 4),
+            Text(
+              '(Optional)',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textTertiary,
+                fontStyle: FontStyle.italic,
               ),
             ),
-            errorText: state.alternativePhone.displayError != null
-                ? 'Enter a valid phone number'
-                : null,
-          ),
+            const SizedBox(height: 8),
+            TextFormField(
+              onChanged: (alternativePhone) => context
+                  .read<ProfileBloc>()
+                  .add(ProfileAlternativePhoneChanged(alternativePhone)),
+              keyboardType: TextInputType.phone,
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Enter alternative phone number',
+                hintStyle: TextStyle(
+                  color: AppColors.textTertiary,
+                  fontSize: 16,
+                ),
+                prefixIcon: Container(
+                  margin: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.cyan.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.phone_android_outlined,
+                    color: AppColors.cyan,
+                    size: 20,
+                  ),
+                ),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.border,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.cyan,
+                    width: 2,
+                  ),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 1,
+                  ),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 2,
+                  ),
+                ),
+                errorText: state.alternativePhone.displayError != null
+                    ? 'Enter a valid phone number'
+                    : null,
+                errorStyle: TextStyle(
+                  color: AppColors.error,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -365,57 +692,84 @@ class _SubmitButton extends StatelessWidget {
           previous.status != current.status ||
           previous.isValid != current.isValid,
       builder: (context, state) {
-        return SizedBox(
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 24),
           width: double.infinity,
           height: 56,
+          decoration: BoxDecoration(
+            gradient: state.isValid
+                ? LinearGradient(
+                    colors: [AppColors.cyan, AppColors.primary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: state.isValid
+                ? [
+                    BoxShadow(
+                      color: AppColors.cyan.withOpacity(0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ]
+                : null,
+          ),
           child: ElevatedButton(
             onPressed: state.isValid
                 ? () => context.read<ProfileBloc>().add(const ProfileSubmitted())
                 : null,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
+              backgroundColor: state.isValid ? Colors.transparent : AppColors.border,
               foregroundColor: Colors.white,
               shadowColor: Colors.transparent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-            ).copyWith(
-              backgroundColor: MaterialStateProperty.resolveWith((states) {
-                if (states.contains(MaterialState.disabled)) {
-                  return AppColors.primary.withOpacity(0.3);
-                }
-                return null;
-              }),
+              elevation: 0,
             ),
-            child: Ink(
-              decoration: BoxDecoration(
-                gradient: state.isValid
-                    ? LinearGradient(
-                        colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
-                      )
-                    : null,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Container(
-                alignment: Alignment.center,
-                child: state.status == ProfileStatus.loading
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
+            child: state.status == ProfileStatus.loading
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        height: 20,
+                        width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
-                      )
-                    : const Text(
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Creating Profile...',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.check_circle_outline_rounded,
+                        size: 20,
+                        color: state.isValid ? Colors.white : AppColors.textTertiary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
                         'Complete Profile',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
+                          color: state.isValid ? Colors.white : AppColors.textTertiary,
                         ),
                       ),
-              ),
-            ),
+                    ],
+                  ),
           ),
         );
       },
