@@ -4,7 +4,7 @@ import 'package:formz/formz.dart';
 import '../bloc/login_bloc.dart';
 import 'phone_field.dart';
 import '../../../../widgets/colors.dart';
-import '../../../../constants/app_constants.dart';
+import '../../../../routes/auth_routes.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -13,7 +13,7 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => LoginBloc(),
-      child: _LoginView(),
+      child: const _LoginView(),
     );
   }
 }
@@ -34,7 +34,7 @@ class _LoginViewState extends State<_LoginView>
   void initState() {
     super.initState();
     _fadeController = AnimationController(
-      duration: AppConstants.kFadeAnimationDuration,
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
     _fadeAnimation = Tween<double>(
@@ -56,104 +56,44 @@ class _LoginViewState extends State<_LoginView>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Clean solid background (matches screenshot's light blue vibe)
+          // Background gradient
           Container(
             decoration: const BoxDecoration(
-              color: AppColors.backgroundPrimary,
-              // Removed radial gradient for cleaner look
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: AppColors.backgroundGradient,
+                stops: [0.0, 1.0],
+              ),
             ),
           ),
-          // Fullscreen background illustration - FIXED: Use contain for no distortion with increased height
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: MediaQuery.of(context).size.height * 0.10, // Extend image higher by reducing bottom space
+          // Illustration
+          Positioned.fill(
             child: FadeTransition(
               opacity: _fadeAnimation,
               child: Image.asset(
-                'assets/background anime .png',
-                fit: BoxFit.contain, // CHANGED: From cover to contain—preserves aspect ratio
-                alignment: Alignment.topCenter, // Changed to topCenter to push image up and make it appear taller
-                // UPDATED: Use responsive cache helpers for optimal performance
-                cacheWidth: context.backgroundCacheWidth,
-                cacheHeight: context.backgroundCacheHeight,
-                errorBuilder: (context, error, stackTrace) {
-                  // FALLBACK: Clean gradient background if asset fails
-                  return Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0xFFE3F2FD), // Light blue top (matches screenshot)
-                          Color(0xFFF8FAFC), // Very light blue-white bottom
-                        ],
-                        stops: [0.0, 1.0],
-                      ),
-                    ),
-                  );
-                },
+                'assets/background anime .png', // Keep original asset name
+                fit: BoxFit.contain,
+                alignment: Alignment.center,
               ),
             ),
           ),
-          // UPDATED: Much lighter overlay to preserve image vibrancy - positioned to match image area
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: MediaQuery.of(context).size.height * 0.25, // Match the image positioning
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.transparent,
-                    AppColors.backgroundPrimary.withOpacity(0.02), // REDUCED: Much lighter
-                    AppColors.backgroundPrimary.withOpacity(0.05), // REDUCED: Much lighter
-                  ],
-                  stops: const [0.0, 0.6, 0.85, 1.0], // ADJUSTED: More transparent for better illustration visibility
-                ),
-              ),
-            ),
-          ),
-          // Responsive company branding and content
+          // Company name at top instead of step indicator
           SafeArea(
             child: Column(
               children: [
                 Padding(
-                  padding: EdgeInsets.all(context.responsivePadding),
+                  padding: const EdgeInsets.all(16.0),
                   child: Center(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: AppConstants.kPaddingLarge,
-                        vertical: AppConstants.kPaddingMedium,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface.withOpacity(0.95),
-                        borderRadius: BorderRadius.circular(AppConstants.kContainerBorderRadius),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withOpacity(0.08),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        'Electric Loading Gadi',
-                        style: TextStyle(
-                          fontSize: context.isMobile ? AppConstants.kBrandTextSize : 26,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                          letterSpacing: 0.5,
-                        ),
+                    child: Text(
+                      'Electric Loading Gadi',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
@@ -175,52 +115,31 @@ class _BottomCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: context.responsiveHorizontalPadding,
-        vertical: context.responsiveVerticalPadding,
-      ),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(AppConstants.kCardBorderRadius),
-        ),
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.textPrimary.withOpacity(0.08),
-            blurRadius: 24,
-            offset: const Offset(0, -12),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.04),
-            blurRadius: 40,
-            offset: const Offset(0, -20),
-            spreadRadius: 0,
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, -10),
           ),
         ],
       ),
       child: BlocListener<LoginBloc, LoginState>(
         listener: (context, state) {
           if (state.status == FormzSubmissionStatus.success) {
-            // Navigate to OTP screen with phone number
-            Navigator.pushNamed(
-              context, 
-              '/get-otp',
-              arguments: state.phoneInput.value,
-            );
-          } else if (state.status == FormzSubmissionStatus.failure) {
+            // Navigate to OTP screen
+            Navigator.pushNamed(context, AuthRoutes.otp, arguments: state.phoneInput.cleanValue);
+          } else if (state.status == FormzSubmissionStatus.failure && state.hasError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.error ?? 'Submission failed'),
+                content: Text(state.error!),
                 backgroundColor: AppColors.error,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppConstants.kBorderRadius),
-                ),
-                action: SnackBarAction(
-                  label: 'Dismiss',
-                  textColor: AppColors.textLight,
-                  onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
             );
@@ -230,70 +149,43 @@ class _BottomCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Welcome header with modern styling
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppConstants.kPaddingMedium,
-                    vertical: AppConstants.kPaddingSmall,
+                  const Text(
+                    'Welcome 👋',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(AppConstants.kPaddingMedium),
-                  ),
-                  child: const Text(
-                    '👋',
-                    style: TextStyle(fontSize: AppConstants.kIconSize),
-                  ),
-                ),
-                const SizedBox(width: AppConstants.kPaddingMedium),
-                Text(
-                  'Welcome',
-                  style: TextStyle(
-                    fontSize: context.isMobile ? AppConstants.kTitleTextSize : 32,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.5,
-                  ),
-                ),
                 const Spacer(),
                 GestureDetector(
                   onTap: () => _showInfoDialog(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(AppConstants.kPaddingSmall),
-                    decoration: BoxDecoration(
-                      color: AppColors.teal.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.info_outline,
-                      color: AppColors.teal,
-                      size: AppConstants.kIconSize,
-                    ),
+                  child: const Icon(
+                    Icons.info_outline,
+                    color: AppColors.cyan,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: AppConstants.kPaddingMedium),
+            const SizedBox(height: 8),
             Text(
               'Enter your mobile number for quick and secure access to deliveries',
               style: TextStyle(
-                fontSize: AppConstants.kBodyTextSize,
+                fontSize: 16,
                 color: AppColors.textSecondary,
-                height: 1.4,
-                letterSpacing: 0.2,
               ),
             ),
-            const SizedBox(height: AppConstants.kPaddingXLarge),
+            const SizedBox(height: 24),
             const PhoneField(),
-            const SizedBox(height: AppConstants.kPaddingLarge + 4),
+            const SizedBox(height: 24),
             BlocBuilder<LoginBloc, LoginState>(
               builder: (context, state) {
-                final isValid = state.phoneInput.isValid;
+                final isValid = state.isValid;
                 return AnimatedOpacity(
                   opacity: isValid ? 1.0 : 0.0,
-                  duration: AppConstants.kValidationAnimationDuration,
+                  duration: const Duration(milliseconds: 300),
                   child: isValid
                       ? const _ContinueButton()
                       : const SizedBox.shrink(),
@@ -310,40 +202,12 @@ class _BottomCard extends StatelessWidget {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppConstants.kContainerBorderRadius),
-        ),
-        title: const Text(
-          'Why Mobile Number?',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: const Text(
-          'We need your mobile number to send OTP for verification and delivery updates.',
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            height: 1.4,
-          ),
-        ),
+        title: const Text('Why Mobile Number?'),
+        content: const Text('We need your mobile number to send OTP for verification and updates.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(
-              backgroundColor: AppColors.teal.withOpacity(0.1),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: const Text(
-              'Got it',
-              style: TextStyle(
-                color: AppColors.teal,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            child: const Text('OK'),
           ),
         ],
       ),
@@ -356,67 +220,62 @@ class _ContinueButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<LoginBloc, LoginState>(
+  return BlocBuilder<LoginBloc, LoginState>(
       builder: (context, state) {
-        final isLoading = state.status == FormzSubmissionStatus.inProgress;
-        return SizedBox(
+        final isLoading = state.isSubmitting;
+        return Container(
           width: double.infinity,
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: AppColors.buttonGradient,
-              borderRadius: BorderRadius.circular(AppConstants.kButtonBorderRadius),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.teal.withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: ElevatedButton(
-              onPressed: isLoading
-                  ? null
-                  : () => context.read<LoginBloc>().add(SubmitLogin()),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                shadowColor: Colors.transparent,
-                padding: EdgeInsets.symmetric(
-                  vertical: context.isMobile ? 18 : 20,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppConstants.kButtonBorderRadius),
-                ),
-              ),
-              child: isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Continue',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Icon(
-                          Icons.arrow_forward_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ],
+          height: 56,
+          decoration: BoxDecoration(
+            gradient: isLoading 
+                ? null 
+                : const LinearGradient(
+                    colors: AppColors.primaryGradient,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: isLoading 
+                ? null 
+                : [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
                     ),
+                  ],
+          ),
+          child: ElevatedButton(
+            onPressed: isLoading
+                ? null
+                : () => context.read<LoginBloc>().add(const LoginSubmitted()),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isLoading ? AppColors.border : Colors.transparent,
+              shadowColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 0,
             ),
+            child: isLoading
+                ? const SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2.5,
+                    ),
+                  )
+                : const Text(
+                    'Continue →',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
           ),
         );
       },

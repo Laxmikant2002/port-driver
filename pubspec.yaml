@@ -51,6 +51,7 @@ dependencies:
     path: ./packages/trips_repo
   earning_repo:
     path: ./packages/earning_repo
+  intl_phone_field: ^3.2.0
   
 dev_dependencies:
   bloc_test: ^10.0.0
@@ -67,9 +68,6 @@ flutter:
     
     # Images (photos, graphics)
     - assets/images/
-    
-    # Illustrations (login backgrounds, onboarding, etc.)
-    - assets/illustrations/
     
     # Icons and logos  
     - assets/vehicle_icons/
