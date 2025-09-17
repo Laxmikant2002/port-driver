@@ -83,7 +83,7 @@ class _HeaderSection extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(
-              Icons.language_rounded,
+              Icons.translate_rounded,
               size: 32,
               color: AppColors.cyan,
             ),
@@ -156,7 +156,7 @@ class _LanguageForm extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
-                    Icons.translate_rounded,
+                    Icons.language_rounded,
                     color: AppColors.cyan,
                     size: 24,
                   ),
@@ -231,11 +231,12 @@ class _LanguageRadioOptions extends StatelessWidget {
           children: [
             _LanguageOptionTile(
               title: 'English',
-              subtitle: 'English',
+              subtitle: 'English (Recommended)',
               flag: '🇺🇸',
               value: 'English',
               groupValue: state.language.value,
               onChanged: (value) => context.read<LanguageBloc>().add(LanguageChanged(value)),
+              isRecommended: true,
             ),
             const SizedBox(height: 16),
             _LanguageOptionTile(
@@ -269,6 +270,7 @@ class _LanguageOptionTile extends StatelessWidget {
   final String value;
   final String groupValue;
   final void Function(String) onChanged;
+  final bool isRecommended;
 
   const _LanguageOptionTile({
     required this.title,
@@ -277,6 +279,7 @@ class _LanguageOptionTile extends StatelessWidget {
     required this.value,
     required this.groupValue,
     required this.onChanged,
+    this.isRecommended = false,
   });
 
   @override
@@ -318,15 +321,40 @@ class _LanguageOptionTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                      if (isRecommended)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.success.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Recommended',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: AppColors.success,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -381,7 +409,7 @@ class _SubmitButton extends StatelessWidget {
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 24),
           width: double.infinity,
-          height: 52,
+          height: 48,
           decoration: BoxDecoration(
             gradient: state.isValid
                 ? LinearGradient(
@@ -430,7 +458,7 @@ class _SubmitButton extends StatelessWidget {
                       Text(
                         'Setting Language...',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
@@ -449,7 +477,7 @@ class _SubmitButton extends StatelessWidget {
                       Text(
                         'Continue',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: state.isValid ? Colors.white : AppColors.textTertiary,
                         ),

@@ -156,7 +156,7 @@ class _VehicleForm extends StatelessWidget {
                     color: AppColors.cyan.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.local_shipping_rounded,
                     color: AppColors.cyan,
                     size: 24,

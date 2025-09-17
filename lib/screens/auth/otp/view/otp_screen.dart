@@ -195,11 +195,25 @@ class _HeaderSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // App Name
+          // OTP Icon
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.cyan.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              Icons.security_rounded,
+              size: 32,
+              color: AppColors.cyan,
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Welcome Text
           Text(
-            'Electric Loading Gadi',
+            'Verify Your Number',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
               letterSpacing: -0.5,
@@ -208,11 +222,11 @@ class _HeaderSection extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Secure Verification',
+            'Enter the OTP sent to your mobile number',
             style: TextStyle(
               fontSize: 16,
               color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+              height: 1.5,
             ),
             textAlign: TextAlign.center,
           ),

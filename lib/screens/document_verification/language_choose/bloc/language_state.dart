@@ -19,7 +19,7 @@ class LanguageState extends Equatable {
   const LanguageState({
     this.status = LanguageStatus.initial,
     this.language = const LanguageInput.pure(),
-    this.isValid = false,
+    this.isValid = true, // Default to true since English is pre-selected
     this.errorMessage,
   });
 

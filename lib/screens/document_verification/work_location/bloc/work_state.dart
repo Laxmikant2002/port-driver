@@ -1,8 +1,5 @@
 part of 'work_bloc.dart';
 
-/// {@template work_state}
-/// Represents the state of the work location selection form.
-/// {@endtemplate}
 class WorkState extends Equatable {
   /// {@macro work_state}
   const WorkState({

@@ -77,11 +77,25 @@ class _HeaderSection extends StatelessWidget {
       ),
       child: Column(
         children: [
+          // Profile Icon
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.cyan.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              Icons.person_add_rounded,
+              size: 32,
+              color: AppColors.cyan,
+            ),
+          ),
+          const SizedBox(height: 16),
           // Welcome Text
           Text(
             'Complete Your Profile',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
               letterSpacing: -0.5,
@@ -92,7 +106,7 @@ class _HeaderSection extends StatelessWidget {
           Text(
             'Please fill in your details to complete the registration',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               color: AppColors.textSecondary,
               height: 1.5,
             ),
@@ -144,7 +158,7 @@ class _ProfileForm extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
-                    Icons.edit_rounded,
+                    Icons.person_rounded,
                     color: AppColors.cyan,
                     size: 24,
                   ),

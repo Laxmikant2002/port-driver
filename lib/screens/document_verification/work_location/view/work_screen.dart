@@ -3,16 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
 import '../../../../models/work_location.dart';
+import '../../../../widgets/colors.dart';
 import '../bloc/work_bloc.dart';
 
-/// {@template work_location_page}
-/// A page that displays the work location selection screen.
-/// {@endtemplate}
+
 class WorkLocationPage extends StatelessWidget {
-  /// {@macro work_location_page}
   const WorkLocationPage({super.key});
 
-  /// The route name for the work location page.
   static const String routeName = '/work-location';
 
   @override
@@ -24,59 +21,38 @@ class WorkLocationPage extends StatelessWidget {
   }
 }
 
-/// {@template work_location_view}
-/// The view for the work location selection screen.
-/// {@endtemplate}
 class WorkLocationView extends StatelessWidget {
-  /// {@macro work_location_view}
   const WorkLocationView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: BlocListener<WorkBloc, WorkState>(
         listener: (context, state) {
           if (state.status == FormzSubmissionStatus.success) {
             Navigator.pushReplacementNamed(context, '/docs-verification');
           } else if (state.status == FormzSubmissionStatus.failure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.errorMessage ?? 'Something went wrong'),
-                backgroundColor: Colors.red,
-              ),
-            );
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  content: Text(state.errorMessage ?? 'Something went wrong'),
+                  backgroundColor: AppColors.error,
+                ),
+              );
           }
         },
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF6366F1),
-                Color(0xFF8B5CF6),
-                Color(0xFFA855F7),
-              ],
-            ),
-          ),
-          child: SafeArea(
+        child: SafeArea(
+          child: SingleChildScrollView(
             child: Column(
               children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 40),
-                        _buildHeader(),
-                        const SizedBox(height: 48),
-                        _buildFormCard(),
-                      ],
-                    ),
-                  ),
-                ),
-                _buildBottomSection(),
+                const _HeaderSection(),
+                const SizedBox(height: 24),
+                const _WorkLocationForm(),
+                const SizedBox(height: 32),
+                const _SubmitButton(),
+                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -85,107 +61,209 @@ class WorkLocationView extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Icon(
-            Icons.attach_money_rounded,
-            color: Colors.white,
-            size: 24,
-          ),
+}
+
+class _HeaderSection extends StatelessWidget {
+  const _HeaderSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withOpacity(0.1),
+            AppColors.cyan.withOpacity(0.05),
+          ],
         ),
-        const SizedBox(width: 16),
-        const Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Earn with',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                'Decide when, where, and how you want to earn.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white70,
-                ),
-              ),
-            ],
+      ),
+      child: Column(
+        children: [
+          // Work Location Icon
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.cyan.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              Icons.location_on_rounded,
+              size: 32,
+              color: AppColors.cyan,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 16),
+          // Welcome Text
+          Text(
+            'Choose Your Work Location',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Select where you want to earn and optionally enter a referral code',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
+}
 
-  Widget _buildFormCard() {
-    return Card(
-      elevation: 8,
-      shadowColor: Colors.black26,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+class _WorkLocationForm extends StatelessWidget {
+  const _WorkLocationForm();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.08),
+            blurRadius: 32,
+            offset: const Offset(0, 12),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: AppColors.border.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+            spreadRadius: 0,
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildLocationDropdown(),
+            // Form Header
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.cyan.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.work_outline_rounded,
+                    color: AppColors.cyan,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Work Location & Referral',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      Text(
+                        'Select your earning location below',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            // Form Fields
+            const _LocationDropdown(),
             const SizedBox(height: 24),
-            _buildReferralCodeField(),
+            const _ReferralCodeField(),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildLocationDropdown() {
+class _LocationDropdown extends StatelessWidget {
+  const _LocationDropdown();
+
+  @override
+  Widget build(BuildContext context) {
     return BlocBuilder<WorkBloc, WorkState>(
       builder: (context, state) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Where would you like to earn?',
+            Text(
+              'Work Location',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF1F2937),
+                color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: state.workLocationInput.displayError != null
-                      ? Colors.red
-                      : Colors.transparent,
+                      ? AppColors.error
+                      : AppColors.border,
+                  width: 1,
                 ),
               ),
               child: DropdownButtonFormField<WorkLocation>(
                 value: state.selectedLocation,
-                decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.symmetric(
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 16,
                   ),
                   border: InputBorder.none,
                   hintText: 'Select your city',
                   hintStyle: TextStyle(
-                    color: Color(0xFF6B7280),
+                    color: AppColors.textTertiary,
                     fontSize: 16,
+                  ),
+                  prefixIcon: Container(
+                    margin: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.cyan.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.location_on_outlined,
+                      color: AppColors.cyan,
+                      size: 20,
+                    ),
                   ),
                 ),
                 items: state.locations.map((location) {
@@ -193,9 +271,10 @@ class WorkLocationView extends StatelessWidget {
                     value: location,
                     child: Text(
                       location.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
-                        color: Color(0xFF1F2937),
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   );
@@ -207,14 +286,15 @@ class WorkLocationView extends StatelessWidget {
                         );
                   }
                 },
-                icon: const Icon(
+                icon: Icon(
                   Icons.keyboard_arrow_down_rounded,
-                  color: Color(0xFF6B7280),
+                  color: AppColors.textTertiary,
                 ),
-                dropdownColor: Colors.white,
-                style: const TextStyle(
-                  color: Color(0xFF1F2937),
-                  fontSize: 16,
+                dropdownColor: AppColors.surface,
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
@@ -223,9 +303,10 @@ class WorkLocationView extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 8, left: 4),
                 child: Text(
                   state.workLocationInput.displayError!,
-                  style: const TextStyle(
-                    color: Colors.red,
+                  style: TextStyle(
+                    color: AppColors.error,
                     fontSize: 12,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -234,145 +315,200 @@ class WorkLocationView extends StatelessWidget {
       },
     );
   }
+}
 
-  Widget _buildReferralCodeField() {
+class _ReferralCodeField extends StatelessWidget {
+  const _ReferralCodeField();
+
+  @override
+  Widget build(BuildContext context) {
     return BlocBuilder<WorkBloc, WorkState>(
       builder: (context, state) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Referral code (optional)',
+            Text(
+              'Referral Code',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '(Optional)',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textTertiary,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              onChanged: (value) {
+                context.read<WorkBloc>().add(ReferralCodeChanged(value));
+              },
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1F2937),
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
               ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: state.referralCode.displayError != null
-                      ? Colors.red
-                      : Colors.transparent,
-                ),
-              ),
-              child: TextFormField(
-                onChanged: (value) {
-                  context.read<WorkBloc>().add(ReferralCodeChanged(value));
-                },
-                decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 16,
-                  ),
-                  border: InputBorder.none,
-                  hintText: 'Enter referral code',
-                  hintStyle: TextStyle(
-                    color: Color(0xFF6B7280),
-                    fontSize: 16,
-                  ),
-                ),
-                style: const TextStyle(
+              decoration: InputDecoration(
+                hintText: 'Enter referral code',
+                hintStyle: TextStyle(
+                  color: AppColors.textTertiary,
                   fontSize: 16,
-                  color: Color(0xFF1F2937),
+                ),
+                prefixIcon: Container(
+                  margin: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.cyan.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.card_giftcard_outlined,
+                    color: AppColors.cyan,
+                    size: 20,
+                  ),
+                ),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.border,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.cyan,
+                    width: 2,
+                  ),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 1,
+                  ),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 2,
+                  ),
+                ),
+                errorText: state.referralCode.displayError != null
+                    ? 'Please enter a valid referral code'
+                    : null,
+                errorStyle: TextStyle(
+                  color: AppColors.error,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-            if (state.referralCode.displayError != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8, left: 4),
-                child: Text(
-                  state.referralCode.displayError == ReferralCodeValidationError.invalid
-                      ? 'Please enter a valid referral code'
-                      : 'Invalid referral code',
-                  style: const TextStyle(
-                    color: Colors.red,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
           ],
         );
       },
     );
   }
+}
 
-  Widget _buildBottomSection() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
-          _buildTermsText(),
-          const SizedBox(height: 24),
-          _buildNextButton(),
-        ],
-      ),
-    );
-  }
+class _SubmitButton extends StatelessWidget {
+  const _SubmitButton();
 
-  Widget _buildTermsText() {
-    return const Text(
-      'By proceeding, I agree that Uber or its representatives may contact me by email, phone, or SMS (including by automatic telephone dialing system) at the email address or number I provide, including for marketing purposes.',
-      style: TextStyle(
-        fontSize: 12,
-        color: Colors.white70,
-        height: 1.4,
-      ),
-      textAlign: TextAlign.center,
-    );
-  }
-
-  Widget _buildNextButton() {
+  @override
+  Widget build(BuildContext context) {
     return BlocBuilder<WorkBloc, WorkState>(
+      buildWhen: (previous, current) =>
+          previous.status != current.status ||
+          previous.isValid != current.isValid,
       builder: (context, state) {
-        return SizedBox(
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 24),
           width: double.infinity,
-          height: 56,
+          height: 48,
+          decoration: BoxDecoration(
+            gradient: state.isValid
+                ? LinearGradient(
+                    colors: [AppColors.cyan, AppColors.primary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: state.isValid
+                ? [
+                    BoxShadow(
+                      color: AppColors.cyan.withOpacity(0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ]
+                : null,
+          ),
           child: ElevatedButton(
-            onPressed: state.isValid && state.status != FormzSubmissionStatus.inProgress
-                ? () {
-                    context.read<WorkBloc>().add(const WorkFormSubmitted());
-                  }
+            onPressed: state.isValid
+                ? () => context.read<WorkBloc>().add(const WorkFormSubmitted())
                 : null,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF6366F1),
+              backgroundColor: state.isValid ? Colors.transparent : AppColors.border,
+              foregroundColor: Colors.white,
+              shadowColor: Colors.transparent,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
               ),
               elevation: 0,
-              disabledBackgroundColor: Colors.white.withOpacity(0.5),
-              disabledForegroundColor: const Color(0xFF6366F1).withOpacity(0.5),
             ),
             child: state.status == FormzSubmissionStatus.inProgress
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Color(0xFF6366F1),
-                      ),
-                    ),
-                  )
-                : const Row(
+                ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'Next',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                      const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Processing...',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
                       Icon(
                         Icons.arrow_forward_rounded,
                         size: 20,
+                        color: state.isValid ? Colors.white : AppColors.textTertiary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Continue',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: state.isValid ? Colors.white : AppColors.textTertiary,
+                        ),
                       ),
                     ],
                   ),

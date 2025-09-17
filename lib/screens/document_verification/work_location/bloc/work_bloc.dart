@@ -7,18 +7,10 @@ import '../../../../models/work_location.dart';
 part 'work_event.dart';
 part 'work_state.dart';
 
-/// {@template referral_code_validation_error}
-/// Validation errors for referral code input.
-/// {@endtemplate}
 enum ReferralCodeValidationError { 
-  /// Referral code contains invalid characters
   invalid 
 }
 
-/// {@template referral_code}
-/// A Formz input for referral code validation.
-/// Referral code is optional but must be alphanumeric if provided.
-/// {@endtemplate}
 class ReferralCode extends FormzInput<String, ReferralCodeValidationError> {
   /// Pure referral code input.
   const ReferralCode.pure() : super.pure('');
@@ -148,7 +140,7 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
   /// Simulates fetching work locations from API.
   Future<List<WorkLocation>> _getWorkLocations() async {
     await Future<void>.delayed(const Duration(milliseconds: 500));
-    
+    // Only Maharashtra cities
     return [
       const WorkLocation(
         id: 'mumbai',
@@ -156,35 +148,21 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
         state: 'Maharashtra',
       ),
       const WorkLocation(
-        id: 'delhi',
-        name: 'Delhi',
-        state: 'Delhi',
-      ),
-      const WorkLocation(
-        id: 'bangalore',
-        name: 'Bangalore',
-        state: 'Karnataka',
-      ),
-      const WorkLocation(
-        id: 'hyderabad',
-        name: 'Hyderabad',
-        state: 'Telangana',
-      ),
-      const WorkLocation(
         id: 'pune',
         name: 'Pune',
         state: 'Maharashtra',
       ),
       const WorkLocation(
-        id: 'chennai',
-        name: 'Chennai',
-        state: 'Tamil Nadu',
+        id: 'nanded',
+        name: 'Nanded',
+        state: 'Maharashtra',
       ),
       const WorkLocation(
-        id: 'kolkata',
-        name: 'Kolkata',
-        state: 'West Bengal',
+        id: 'nagpur',
+        name: 'Nagpur',
+        state: 'Maharashtra',
       ),
+      // Add more Maharashtra cities as needed
     ];
   }
 
