@@ -1,10 +1,10 @@
-import 'package:equatable/equatable.dart';
-import '../models/vehicle.dart';
+part of 'vehicle_bloc.dart';
 
 abstract class VehicleEvent extends Equatable {
   const VehicleEvent();
+
   @override
-  List<Object?> get props => [];
+  List<Object> get props => [];
 }
 
 class VehicleLoadRequested extends VehicleEvent {
@@ -12,10 +12,12 @@ class VehicleLoadRequested extends VehicleEvent {
 }
 
 class VehicleSelected extends VehicleEvent {
-  final Vehicle vehicle;
   const VehicleSelected(this.vehicle);
+
+  final Vehicle vehicle;
+
   @override
-  List<Object?> get props => [vehicle];
+  List<Object> get props => [vehicle];
 }
 
 class VehicleSelectionSubmitted extends VehicleEvent {

@@ -1,8 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
+import 'package:equatable/equatable.dart';
 import '../models/vehicle.dart';
-import 'vehicle_event.dart';
-import 'vehicle_state.dart';
+
+part 'vehicle_event.dart';
+part 'vehicle_state.dart';
 
 class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
   VehicleBloc() : super(const VehicleState()) {
@@ -39,8 +41,18 @@ class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
   void _onSubmitted(VehicleSelectionSubmitted event, Emitter<VehicleState> emit) async {
     if (state.isValid) {
       emit(state.copyWith(status: VehicleStatus.loading));
-      await Future<void>.delayed(const Duration(seconds: 1));
-      emit(state.copyWith(status: VehicleStatus.success));
+      try {
+        // TODO: Implement vehicle selection to API
+        await Future<void>.delayed(const Duration(seconds: 1)); // Simulate API call
+        emit(state.copyWith(status: VehicleStatus.success));
+      } catch (error) {
+        emit(
+          state.copyWith(
+            status: VehicleStatus.failure,
+            errorMessage: error.toString(),
+          ),
+        );
+      }
     }
   }
 
@@ -54,15 +66,6 @@ class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
         maxPrice: 385,
         capacity: 2500,
         dimensions: '9ft x 6ft',
-      ),
-      const Vehicle(
-        id: '2',
-        name: 'Pickup 8ft',
-        imageAsset: 'assets/vehicle_icons/Bike.png',
-        minPrice: 1050,
-        maxPrice: 1080,
-        capacity: 1000,
-        dimensions: '8ft x 5.5ft',
       ),
       const Vehicle(
         id: '3',

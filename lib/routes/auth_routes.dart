@@ -20,7 +20,10 @@ class AuthRoutes {
     return {
       login: (context) => const LoginScreen(),
       otp: (context) => const OtpScreen(),
-      profile: (context) => const ProfileScreen(),
+      profile: (context) {
+        final phone = ModalRoute.of(context)?.settings.arguments as String;
+        return ProfileScreen(phone: phone);
+      },
       language: (context) => const LanguageScreen(),
       vehicleSelection: (context) => const VehicleScreen(),
       workLocation: (context) => const WorkLocationPage(),

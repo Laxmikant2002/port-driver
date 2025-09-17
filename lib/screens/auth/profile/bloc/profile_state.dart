@@ -1,5 +1,4 @@
-import 'package:equatable/equatable.dart';
-import 'package:formz/formz.dart';
+part of 'profile_bloc.dart';
 
 enum FirstNameValidationError { empty }
 

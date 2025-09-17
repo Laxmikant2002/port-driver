@@ -1,43 +1,39 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
+import 'package:equatable/equatable.dart';
 
-import 'language_event.dart';
-import 'language_state.dart';
+part 'language_event.dart';
+part 'language_state.dart';
 
 class LanguageBloc extends Bloc<LanguageEvent, LanguageState> {
   LanguageBloc() : super(const LanguageState()) {
-    on<LanguageDropdownChanged>(_onDropdownChanged);
-    on<LanguageRadioChanged>(_onRadioChanged);
+    on<LanguageChanged>(_onLanguageChanged);
     on<LanguageSubmitted>(_onSubmitted);
   }
 
-  void _onDropdownChanged(LanguageDropdownChanged event, Emitter<LanguageState> emit) {
-    final dropdown = LanguageDropdownInput.dirty(event.dropdownValue);
+  void _onLanguageChanged(LanguageChanged event, Emitter<LanguageState> emit) {
+    final language = LanguageInput.dirty(event.language);
     emit(state.copyWith(
-      dropdown: dropdown,
-      isValid: Formz.validate([
-        dropdown,
-        state.radio,
-      ]),
-    ));
-  }
-
-  void _onRadioChanged(LanguageRadioChanged event, Emitter<LanguageState> emit) {
-    final radio = LanguageRadioInput.dirty(event.radioValue);
-    emit(state.copyWith(
-      radio: radio,
-      isValid: Formz.validate([
-        state.dropdown,
-        radio,
-      ]),
+      language: language,
+      isValid: Formz.validate([language]),
     ));
   }
 
   void _onSubmitted(LanguageSubmitted event, Emitter<LanguageState> emit) async {
     if (state.isValid) {
       emit(state.copyWith(status: LanguageStatus.loading));
-      await Future<void>.delayed(const Duration(seconds: 1));
-      emit(state.copyWith(status: LanguageStatus.success));
+      try {
+        // TODO: Implement language selection to API
+        await Future<void>.delayed(const Duration(seconds: 1)); // Simulate API call
+        emit(state.copyWith(status: LanguageStatus.success));
+      } catch (error) {
+        emit(
+          state.copyWith(
+            status: LanguageStatus.failure,
+            errorMessage: error.toString(),
+          ),
+        );
+      }
     }
   }
 }

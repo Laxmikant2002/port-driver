@@ -1,14 +1,14 @@
-import 'package:equatable/equatable.dart';
-import 'package:formz/formz.dart';
-import '../models/vehicle.dart';
+part of 'vehicle_bloc.dart';
 
-class VehicleSelectionInput extends FormzInput<Vehicle?, String> {
+enum VehicleSelectionValidationError { empty }
+
+class VehicleSelectionInput extends FormzInput<Vehicle?, VehicleSelectionValidationError> {
   const VehicleSelectionInput.pure() : super.pure(null);
   const VehicleSelectionInput.dirty([super.value]) : super.dirty();
   
   @override
-  String? validator(Vehicle? value) {
-    if (value == null) return 'Please select a vehicle';
+  VehicleSelectionValidationError? validator(Vehicle? value) {
+    if (value == null) return VehicleSelectionValidationError.empty;
     return null;
   }
 }

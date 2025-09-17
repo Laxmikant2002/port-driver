@@ -95,7 +95,7 @@ class _VerifyButton extends StatelessWidget {
         
         return Container(
           width: double.infinity,
-          height: 56,
+          height: 52,
           decoration: BoxDecoration(
             gradient: isDisabled 
                 ? null 
@@ -229,7 +229,7 @@ class _OtpCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(24),
@@ -256,27 +256,27 @@ class _OtpCard extends StatelessWidget {
             'Verify Your Number',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
               letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
             'We sent a 4-digit OTP to your number.\nPlease enter it below to continue.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 14,
               color: AppColors.textSecondary,
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 32),
-          const OtpField(),
           const SizedBox(height: 24),
+          const OtpField(),
+          const SizedBox(height: 16),
           const _ResendText(),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
           _VerifyButton(),
         ],
       ),

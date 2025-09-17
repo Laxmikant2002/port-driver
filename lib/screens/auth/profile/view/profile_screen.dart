@@ -3,16 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../widgets/colors.dart';
 
 import '../bloc/profile_bloc.dart';
-import '../bloc/profile_state.dart';
-import '../bloc/profile_event.dart';
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+  final String phone;
+  const ProfileScreen({Key? key, required this.phone}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final phone = ModalRoute.of(context)!.settings.arguments as String;
-
     return BlocProvider(
       create: (_) => ProfileBloc(phone: phone),
       child: const ProfileView(),
@@ -28,25 +25,20 @@ class ProfileView extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: BlocListener<ProfileBloc, ProfileState>(
-        listener: (context, state) {
-          if (state.status == ProfileStatus.success) {
-            // Navigate to language selection screen
-            Navigator.of(context).pushReplacementNamed('/language');
-          } else if (state.status == ProfileStatus.failure) {
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Text(state.errorMessage ?? 'Profile setup failed'),
-                  backgroundColor: AppColors.error,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+          listener: (context, state) {
+            if (state.status == ProfileStatus.success) {
+              Navigator.of(context).pushReplacementNamed('/language');
+            } else if (state.status == ProfileStatus.failure) {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to complete profile'),
+                    backgroundColor: Colors.red,
                   ),
-                ),
-              );
-          }
-        },
+                );
+            }
+          },
         child: SafeArea(
           child: SingleChildScrollView(
             child: Column(
@@ -89,7 +81,7 @@ class _HeaderSection extends StatelessWidget {
           Text(
             'Complete Your Profile',
             style: TextStyle(
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
               letterSpacing: -0.5,
@@ -100,7 +92,7 @@ class _HeaderSection extends StatelessWidget {
           Text(
             'Please fill in your details to complete the registration',
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 14,
               color: AppColors.textSecondary,
               height: 1.5,
             ),
@@ -138,7 +130,7 @@ class _ProfileForm extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(32.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -157,26 +149,32 @@ class _ProfileForm extends StatelessWidget {
                     size: 24,
                   ),
                 ),
-                const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Personal Information',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Personal Information',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
-                    ),
-                    Text(
-                      'Fill in your details below',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
+                      Text(
+                        'Fill in your details below',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -695,7 +693,7 @@ class _SubmitButton extends StatelessWidget {
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 24),
           width: double.infinity,
-          height: 56,
+          height: 52,
           decoration: BoxDecoration(
             gradient: state.isValid
                 ? LinearGradient(

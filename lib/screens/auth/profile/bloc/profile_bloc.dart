@@ -1,8 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
+import 'package:equatable/equatable.dart';
 
-import 'profile_event.dart';
-import 'profile_state.dart';
+part 'profile_event.dart';
+part 'profile_state.dart';
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   ProfileBloc({required String phone}) : super(ProfileState(phone: phone)) {

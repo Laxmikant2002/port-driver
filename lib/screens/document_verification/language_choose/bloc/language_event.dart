@@ -1,23 +1,19 @@
-import 'package:equatable/equatable.dart';
+part of 'language_bloc.dart';
 
 abstract class LanguageEvent extends Equatable {
   const LanguageEvent();
+
   @override
-  List<Object?> get props => [];
+  List<Object> get props => [];
 }
 
-class LanguageDropdownChanged extends LanguageEvent {
-  final String dropdownValue;
-  const LanguageDropdownChanged(this.dropdownValue);
-  @override
-  List<Object?> get props => [dropdownValue];
-}
+class LanguageChanged extends LanguageEvent {
+  const LanguageChanged(this.language);
 
-class LanguageRadioChanged extends LanguageEvent {
-  final String radioValue;
-  const LanguageRadioChanged(this.radioValue);
+  final String language;
+
   @override
-  List<Object?> get props => [radioValue];
+  List<Object> get props => [language];
 }
 
 class LanguageSubmitted extends LanguageEvent {
