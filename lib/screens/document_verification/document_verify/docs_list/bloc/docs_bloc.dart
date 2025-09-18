@@ -135,14 +135,14 @@ class DocsBloc extends Bloc<DocsEvent, DocsState> {
         type: DocumentType.registrationCertificate,
         title: 'Registration Certificate (RC)',
         description: 'Upload RC & enter vehicle details',
-        isRequired: true,
+        isRequired: false,
         status: DocumentStatus.pending,
       ),
       const Document(
         type: DocumentType.vehicleInsurance,
         title: 'Vehicle Insurance',
         description: 'Upload insurance certificate',
-        isRequired: true,
+        isRequired: false,
         status: DocumentStatus.pending,
       ),
     ];
