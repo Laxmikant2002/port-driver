@@ -70,7 +70,7 @@ class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
       const Vehicle(
         id: '4wheeler',
         name: '4 Wheeler',
-        imageAsset: 'assets/vehicle_icons/Mini.png',
+        imageAsset: 'assets/vehicle_icons/4wheeler.png',
         minPrice: 600,
         maxPrice: 800,
         capacity: 1250,
@@ -79,7 +79,7 @@ class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
       const Vehicle(
         id: 'long4wheeler',
         name: 'Long 4 Wheeler',
-        imageAsset: 'assets/vehicle_icons/Sedan.png',
+        imageAsset: 'assets/vehicle_icons/long4wheeler.png',
         minPrice: 800,
         maxPrice: 1000,
         capacity: 1750,
