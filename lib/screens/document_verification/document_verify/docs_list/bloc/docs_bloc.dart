@@ -14,12 +14,7 @@ class DocsBloc extends Bloc<DocsEvent, DocsState> {
   DocsBloc() : super(const DocsState()) {
     on<DocsLoaded>(_onDocsLoaded);
     on<DocumentUploadStarted>(_onDocumentUploadStarted);
-    on<DocumentUploadProgress>(_onDocumentUploadProgress);
-    on<DocumentUploadCompleted>(_onDocumentUploadCompleted);
-    on<DocumentUploadFailed>(_onDocumentUploadFailed);
-    on<DocumentVerificationStarted>(_onDocumentVerificationStarted);
-    on<DocumentVerified>(_onDocumentVerified);
-    on<DocumentRejected>(_onDocumentRejected);
+    on<DocumentStatusUpdated>(_onDocumentStatusUpdated);
     on<DocsSubmitted>(_onDocsSubmitted);
   }
 
@@ -31,7 +26,8 @@ class DocsBloc extends Bloc<DocsEvent, DocsState> {
     emit(state.copyWith(status: DocsStatus.loading));
 
     try {
-      final documents = _getRequiredDocuments();
+      // TODO: Replace with actual API call to get document status from backend
+      final documents = await _fetchDocumentStatusFromBackend();
       
       emit(state.copyWith(
         status: DocsStatus.loaded,
@@ -51,123 +47,21 @@ class DocsBloc extends Bloc<DocsEvent, DocsState> {
     DocumentUploadStarted event,
     Emitter<DocsState> emit,
   ) async {
-    final updatedDocuments = state.documents.map((doc) {
-      if (doc.type == event.documentType) {
-        return doc.copyWith(
-          status: DocumentStatus.uploading,
-          uploadProgress: 0.0,
-        );
-      }
-      return doc;
-    }).toList();
-
-    emit(state.copyWith(
-      status: DocsStatus.uploading,
-      documents: updatedDocuments,
-    ));
-
-    // Simulate upload process
-    try {
-      await _simulateUpload(event.documentType, emit);
-    } catch (error) {
-      add(DocumentUploadFailed(
-        documentType: event.documentType,
-        error: error.toString(),
-      ));
-    }
+    // Navigate to specific document screen instead of simulating upload
+    // This will be handled by the UI navigation
   }
 
-  /// Handles upload progress updates.
-  void _onDocumentUploadProgress(
-    DocumentUploadProgress event,
-    Emitter<DocsState> emit,
-  ) {
-    final updatedDocuments = state.documents.map((doc) {
-      if (doc.type == event.documentType) {
-        return doc.copyWith(uploadProgress: event.progress);
-      }
-      return doc;
-    }).toList();
-
-    emit(state.copyWith(documents: updatedDocuments));
-  }
-
-  /// Handles successful document upload completion.
-  void _onDocumentUploadCompleted(
-    DocumentUploadCompleted event,
+  /// Handles document status update from backend.
+  void _onDocumentStatusUpdated(
+    DocumentStatusUpdated event,
     Emitter<DocsState> emit,
   ) {
     final updatedDocuments = state.documents.map((doc) {
       if (doc.type == event.documentType) {
         return doc.copyWith(
-          status: DocumentStatus.uploaded,
-          uploadProgress: 1.0,
-          frontImagePath: event.frontImageUrl,
-          backImagePath: event.backImageUrl,
+          status: event.status,
+          rejectionReason: event.rejectionReason,
         );
-      }
-      return doc;
-    }).toList();
-
-    // Start verification automatically after upload
-    add(DocumentVerificationStarted(event.documentType));
-
-    emit(state.copyWith(
-      status: DocsStatus.loaded,
-      documents: updatedDocuments,
-    ));
-  }
-
-  /// Handles failed document upload.
-  void _onDocumentUploadFailed(
-    DocumentUploadFailed event,
-    Emitter<DocsState> emit,
-  ) {
-    final updatedDocuments = state.documents.map((doc) {
-      if (doc.type == event.documentType) {
-        return doc.copyWith(
-          status: DocumentStatus.pending,
-          uploadProgress: 0.0,
-        );
-      }
-      return doc;
-    }).toList();
-
-    emit(state.copyWith(
-      status: DocsStatus.failure,
-      documents: updatedDocuments,
-      errorMessage: event.error,
-    ));
-  }
-
-  /// Handles document verification start.
-  void _onDocumentVerificationStarted(
-    DocumentVerificationStarted event,
-    Emitter<DocsState> emit,
-  ) {
-    final updatedDocuments = state.documents.map((doc) {
-      if (doc.type == event.documentType) {
-        return doc.copyWith(status: DocumentStatus.verifying);
-      }
-      return doc;
-    }).toList();
-
-    emit(state.copyWith(documents: updatedDocuments));
-
-    // Simulate verification (in real app, this would be done by backend)
-    Future.delayed(const Duration(seconds: 2), () {
-      add(DocumentVerified(event.documentType));
-    });
-  }
-
-  /// Handles successful document verification.
-  void _onDocumentVerified(
-    DocumentVerified event,
-    Emitter<DocsState> emit,
-  ) {
-    final updatedDocuments = state.documents.map((doc) {
-      if (doc.type == event.documentType) {
-        return doc.copyWith(status: DocumentStatus.verified);
       }
       return doc;
     }).toList();
@@ -182,27 +76,6 @@ class DocsBloc extends Bloc<DocsEvent, DocsState> {
       status: completedCount == state.totalDocuments 
           ? DocsStatus.completed 
           : DocsStatus.loaded,
-    ));
-  }
-
-  /// Handles document rejection.
-  void _onDocumentRejected(
-    DocumentRejected event,
-    Emitter<DocsState> emit,
-  ) {
-    final updatedDocuments = state.documents.map((doc) {
-      if (doc.type == event.documentType) {
-        return doc.copyWith(
-          status: DocumentStatus.rejected,
-          rejectionReason: event.reason,
-        );
-      }
-      return doc;
-    }).toList();
-
-    emit(state.copyWith(
-      documents: updatedDocuments,
-      status: DocsStatus.loaded,
     ));
   }
 
@@ -226,8 +99,15 @@ class DocsBloc extends Bloc<DocsEvent, DocsState> {
     }
   }
 
-  /// Returns the list of required documents.
-  List<Document> _getRequiredDocuments() {
+  /// Fetches document status from backend API.
+  Future<List<Document>> _fetchDocumentStatusFromBackend() async {
+    // TODO: Replace with actual API call
+    // This should call your backend API to get the current status of all documents
+    // Example API call:
+    // final response = await apiClient.get('/driver/documents/status');
+    // return response.data.map((doc) => Document.fromJson(doc)).toList();
+    
+    // For now, return documents with pending status
     return [
       const Document(
         type: DocumentType.drivingLicense,
@@ -235,56 +115,36 @@ class DocsBloc extends Bloc<DocsEvent, DocsState> {
         description: 'Upload front & back photos',
         isRequired: true,
         isRecommendedNext: true,
-      ),
-      const Document(
-        type: DocumentType.registrationCertificate,
-        title: 'Registration Certificate (RC)',
-        description: 'Upload RC & enter vehicle details',
-        isRequired: true,
-      ),
-      const Document(
-        type: DocumentType.vehicleInsurance,
-        title: 'Vehicle Insurance',
-        description: 'Upload insurance certificate',
-        isRequired: true,
+        status: DocumentStatus.pending,
       ),
       const Document(
         type: DocumentType.profilePicture,
         title: 'Profile Picture',
         description: 'Take a clear selfie photo',
         isRequired: true,
+        status: DocumentStatus.pending,
       ),
       const Document(
         type: DocumentType.aadhaarCard,
         title: 'Aadhaar Card',
         description: 'Upload front & back photos',
         isRequired: true,
+        status: DocumentStatus.pending,
+      ),
+      const Document(
+        type: DocumentType.registrationCertificate,
+        title: 'Registration Certificate (RC)',
+        description: 'Upload RC & enter vehicle details',
+        isRequired: true,
+        status: DocumentStatus.pending,
+      ),
+      const Document(
+        type: DocumentType.vehicleInsurance,
+        title: 'Vehicle Insurance',
+        description: 'Upload insurance certificate',
+        isRequired: true,
+        status: DocumentStatus.pending,
       ),
     ];
-  }
-
-  /// Simulates the upload process with progress updates.
-  Future<void> _simulateUpload(
-    DocumentType documentType,
-    Emitter<DocsState> emit,
-  ) async {
-    // Simulate upload progress
-    for (int i = 0; i <= 100; i += 10) {
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-      add(DocumentUploadProgress(
-        documentType: documentType,
-        progress: i / 100,
-      ));
-    }
-
-    // Complete upload
-    add(DocumentUploadCompleted(
-      documentType: documentType,
-      frontImageUrl: 'https://example.com/front_${documentType.name}.jpg',
-      backImageUrl: documentType == DocumentType.drivingLicense || 
-                   documentType == DocumentType.aadhaarCard
-          ? 'https://example.com/back_${documentType.name}.jpg'
-          : null,
-    ));
   }
 }

@@ -65,11 +65,11 @@ class DocsView extends StatelessWidget {
 
                     return Column(
                       children: [
-                          const SizedBox(height: 16),
                         const SizedBox(height: 16),
                         Expanded(
                           child: _buildDocumentsList(context, state),
                         ),
+                        _buildActionButtons(context),
                       ],
                     );
                   },
@@ -95,327 +95,23 @@ class DocsView extends StatelessWidget {
   }
 
   Widget _buildDocumentCard(BuildContext context, Document document) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: _getBorderColor(document.status),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: AppColors.border.withOpacity(0.04),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                _buildDocumentIcon(document),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              document.title,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
-                          ),
-                          if (document.isRequired)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.error.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                'Required',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: AppColors.error,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        document.description,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                          height: 1.4,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (document.isRecommendedNext && 
-                          document.status == DocumentStatus.pending)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.success.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              'Recommended next step',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.success,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                _buildStatusWidget(context, document),
-              ],
-            ),
-            if (document.status == DocumentStatus.uploading)
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
-                child: Column(
-                  children: [
-                    LinearProgressIndicator(
-                      value: document.uploadProgress,
-                      backgroundColor: AppColors.backgroundSecondary,
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.cyan),
-                      minHeight: 6,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Uploading... ${(document.uploadProgress * 100).toInt()}%',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textTertiary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            if (document.status == DocumentStatus.rejected && 
-                document.rejectionReason != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.errorLight,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppColors.error.withOpacity(0.2),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.error_outline_rounded,
-                        color: AppColors.error,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          document.rejectionReason!,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.error,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
+    // Replace with a simple ListTile for now
+    return ListTile(
+      title: Text(document.type.toString()),
+      subtitle: Text(document.status.toString()),
+      trailing: Icon(Icons.arrow_forward_ios),
+      onTap: () {},
     );
   }
 
-  Widget _buildDocumentIcon(Document document) {
-    IconData iconData;
-    Color iconColor;
+  // Removed conversion helpers and navigation to ModernDocsScreen
 
-    switch (document.type) {
-      case DocumentType.drivingLicense:
-        iconData = Icons.credit_card_rounded;
-        iconColor = AppColors.info;
-        break;
-      case DocumentType.registrationCertificate:
-        iconData = Icons.description_rounded;
-        iconColor = AppColors.primary;
-        break;
-      case DocumentType.vehicleInsurance:
-        iconData = Icons.security_rounded;
-        iconColor = AppColors.success;
-        break;
-      case DocumentType.profilePicture:
-        iconData = Icons.person_rounded;
-        iconColor = AppColors.warning;
-        break;
-      case DocumentType.aadhaarCard:
-        iconData = Icons.badge_rounded;
-        iconColor = AppColors.error;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: iconColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Icon(
-        iconData,
-        color: iconColor,
-        size: 24,
-      ),
-    );
+  Widget _buildActionButtons(BuildContext context) {
+    // Removed ModernDocsScreen and VerificationStatusScreen navigation
+    return SizedBox.shrink();
   }
 
-  Widget _buildStatusWidget(BuildContext context, Document document) {
-    switch (document.status) {
-      case DocumentStatus.pending:
-        return _buildUploadButton(context, document);
-      case DocumentStatus.uploading:
-        return const SizedBox(
-          height: 20,
-          width: 20,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.cyan),
-          ),
-        );
-      case DocumentStatus.uploaded:
-      case DocumentStatus.verifying:
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppColors.warningLight,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            'Verifying',
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.warning,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        );
-      case DocumentStatus.verified:
-        return Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.success.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            Icons.check_circle_rounded,
-            color: AppColors.success,
-            size: 24,
-          ),
-        );
-      case DocumentStatus.rejected:
-        return _buildUploadButton(context, document, isRetry: true);
-    }
-  }
-
-  Widget _buildUploadButton(
-    BuildContext context, 
-    Document document, {
-    bool isRetry = false,
-  }) {
-    return ElevatedButton(
-      onPressed: () => _handleUpload(context, document),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.cyan,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        elevation: 0,
-      ),
-      child: Text(
-        isRetry ? 'Retry' : 'Upload',
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: Colors.white,
-        ),
-      ),
-    );
-  }
-
-  Color _getBorderColor(DocumentStatus status) {
-    switch (status) {
-      case DocumentStatus.pending:
-        return AppColors.border;
-      case DocumentStatus.uploading:
-      case DocumentStatus.uploaded:
-      case DocumentStatus.verifying:
-        return AppColors.cyan;
-      case DocumentStatus.verified:
-        return AppColors.success;
-      case DocumentStatus.rejected:
-        return AppColors.error;
-    }
-  }
-
-  void _handleUpload(BuildContext context, Document document) {
-    // In a real app, this would open camera/gallery picker
-    // For now, we'll just simulate upload
-    context.read<DocsBloc>().add(
-          DocumentUploadStarted(
-            documentType: document.type,
-            frontImagePath: 'mock_front_path.jpg',
-            backImagePath: document.requiresBothSides 
-                ? 'mock_back_path.jpg' 
-                : null,
-          ),
-        );
-  }
+  // Removed navigation helpers for ModernDocsScreen and VerificationStatusScreen
 }
 
 class _HeaderSection extends StatelessWidget {
@@ -437,25 +133,46 @@ class _HeaderSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Document Icon
+          // Location Banner
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.cyan.withOpacity(0.1),
+              color: AppColors.backgroundSecondary,
               borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.border),
             ),
-            child: Icon(
-              Icons.upload_file_rounded,
-              size: 32,
-              color: AppColors.cyan,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.directions_car_rounded,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Signing up for Karimnagar • Rides',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           // Welcome Text
           Text(
-            'Document Verification',
+            'Welcome, Laxmikant',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
               letterSpacing: -0.5,
@@ -464,9 +181,9 @@ class _HeaderSection extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Upload your documents to complete the registration process',
+            'Here\'s what you need to do to set up your account',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               color: AppColors.textSecondary,
               height: 1.5,
             ),

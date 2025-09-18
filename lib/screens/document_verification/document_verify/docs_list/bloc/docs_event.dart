@@ -43,116 +43,28 @@ class DocumentUploadStarted extends DocsEvent {
   List<Object?> get props => [documentType, frontImagePath, backImagePath];
 }
 
-/// {@template document_upload_progress}
-/// Event triggered when document upload progress changes.
+/// {@template document_status_updated}
+/// Event triggered when document status is updated from backend.
 /// {@endtemplate}
-class DocumentUploadProgress extends DocsEvent {
-  /// {@macro document_upload_progress}
-  const DocumentUploadProgress({
+class DocumentStatusUpdated extends DocsEvent {
+  /// {@macro document_status_updated}
+  const DocumentStatusUpdated({
     required this.documentType,
-    required this.progress,
+    required this.status,
+    this.rejectionReason,
   });
 
-  /// The type of document being uploaded.
+  /// The type of document that was updated.
   final DocumentType documentType;
 
-  /// Upload progress (0.0 to 1.0).
-  final double progress;
+  /// The new status of the document.
+  final DocumentStatus status;
+
+  /// The reason for rejection (if applicable).
+  final String? rejectionReason;
 
   @override
-  List<Object?> get props => [documentType, progress];
-}
-
-/// {@template document_upload_completed}
-/// Event triggered when document upload is completed.
-/// {@endtemplate}
-class DocumentUploadCompleted extends DocsEvent {
-  /// {@macro document_upload_completed}
-  const DocumentUploadCompleted({
-    required this.documentType,
-    this.frontImageUrl,
-    this.backImageUrl,
-  });
-
-  /// The type of document that was uploaded.
-  final DocumentType documentType;
-
-  /// URL of the uploaded front image.
-  final String? frontImageUrl;
-
-  /// URL of the uploaded back image.
-  final String? backImageUrl;
-
-  @override
-  List<Object?> get props => [documentType, frontImageUrl, backImageUrl];
-}
-
-/// {@template document_upload_failed}
-/// Event triggered when document upload fails.
-/// {@endtemplate}
-class DocumentUploadFailed extends DocsEvent {
-  /// {@macro document_upload_failed}
-  const DocumentUploadFailed({
-    required this.documentType,
-    required this.error,
-  });
-
-  /// The type of document that failed to upload.
-  final DocumentType documentType;
-
-  /// The error message.
-  final String error;
-
-  @override
-  List<Object?> get props => [documentType, error];
-}
-
-/// {@template document_verification_started}
-/// Event triggered when document verification starts.
-/// {@endtemplate}
-class DocumentVerificationStarted extends DocsEvent {
-  /// {@macro document_verification_started}
-  const DocumentVerificationStarted(this.documentType);
-
-  /// The type of document being verified.
-  final DocumentType documentType;
-
-  @override
-  List<Object?> get props => [documentType];
-}
-
-/// {@template document_verified}
-/// Event triggered when document verification is completed successfully.
-/// {@endtemplate}
-class DocumentVerified extends DocsEvent {
-  /// {@macro document_verified}
-  const DocumentVerified(this.documentType);
-
-  /// The type of document that was verified.
-  final DocumentType documentType;
-
-  @override
-  List<Object?> get props => [documentType];
-}
-
-/// {@template document_rejected}
-/// Event triggered when document verification is rejected.
-/// {@endtemplate}
-class DocumentRejected extends DocsEvent {
-  /// {@macro document_rejected}
-  const DocumentRejected({
-    required this.documentType,
-    required this.reason,
-  });
-
-  /// The type of document that was rejected.
-  final DocumentType documentType;
-
-  /// The reason for rejection.
-  final String reason;
-
-  @override
-  List<Object?> get props => [documentType, reason];
+  List<Object?> get props => [documentType, status, rejectionReason];
 }
 
 /// {@template docs_submitted}
