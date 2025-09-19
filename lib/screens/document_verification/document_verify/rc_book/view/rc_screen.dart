@@ -26,15 +26,19 @@ class RcView extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: BlocListener<RcBloc, RcState>(
         listener: (context, state) {
-          if (state.status == RcStatus.success) {
+          if (state.isSuccess) {
             Navigator.of(context).pop(); // Go back to docs screen
-          } else if (state.status == RcStatus.failure) {
+          } else if (state.hasError) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
                   content: Text(state.errorMessage ?? 'Failed to submit RC'),
                   backgroundColor: AppColors.error,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               );
           }
@@ -287,11 +291,7 @@ class _VehicleNumberField extends StatelessWidget {
                     width: 2,
                   ),
                 ),
-                errorText: state.vehicleNumber.displayError != null
-                    ? (state.vehicleNumber.error == VehicleNumberValidationError.empty
-                        ? 'Vehicle number is required'
-                        : 'Enter a valid vehicle number (e.g., KA01AB1234)')
-                    : null,
+                errorText: state.vehicleNumber.errorMessage,
                 errorStyle: TextStyle(
                   color: AppColors.error,
                   fontSize: 12,
@@ -390,11 +390,7 @@ class _RcNumberField extends StatelessWidget {
                     width: 2,
                   ),
                 ),
-                errorText: state.rcNumber.displayError != null
-                    ? (state.rcNumber.error == RcNumberValidationError.empty
-                        ? 'RC number is required'
-                        : 'Enter a valid RC number')
-                    : null,
+                errorText: state.rcNumber.errorMessage,
                 errorStyle: TextStyle(
                   color: AppColors.error,
                   fontSize: 12,
@@ -438,10 +434,10 @@ class _RcImageField extends StatelessWidget {
                   color: AppColors.background,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: state.rcImage.displayError != null
+                    color: state.rcImage.errorMessage != null
                         ? AppColors.error
                         : AppColors.border,
-                    width: state.rcImage.displayError != null ? 2 : 1,
+                    width: state.rcImage.errorMessage != null ? 2 : 1,
                   ),
                 ),
                 child: state.rcImage.value.isEmpty
@@ -513,11 +509,11 @@ class _RcImageField extends StatelessWidget {
                       ),
               ),
             ),
-            if (state.rcImage.displayError != null)
+            if (state.rcImage.errorMessage != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
-                  'RC book image is required',
+                  state.rcImage.errorMessage!,
                   style: TextStyle(
                     color: AppColors.error,
                     fontSize: 12,
@@ -752,7 +748,7 @@ class _SubmitButton extends StatelessWidget {
               ),
               elevation: 0,
             ),
-            child: state.status == RcStatus.loading
+            child: state.isSubmitting
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

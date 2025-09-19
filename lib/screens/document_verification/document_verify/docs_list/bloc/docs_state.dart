@@ -1,10 +1,7 @@
 part of 'docs_bloc.dart';
 
-/// {@template docs_state}
-/// Represents the state of document verification.
-/// {@endtemplate}
-class DocsState extends Equatable {
-  /// {@macro docs_state}
+/// Document verification state containing data and status
+final class DocsState extends Equatable {
   const DocsState({
     this.documents = const [],
     this.status = DocsStatus.initial,
@@ -13,43 +10,54 @@ class DocsState extends Equatable {
     this.errorMessage,
   });
 
-  /// List of all documents required for verification.
   final List<Document> documents;
-
-  /// The current status of document verification.
   final DocsStatus status;
-
-  /// Number of completed documents.
   final int completedDocuments;
-
-  /// Total number of required documents.
   final int totalDocuments;
-
-  /// Error message if any operation fails.
   final String? errorMessage;
 
-  /// Returns the progress percentage (0.0 to 1.0).
+  /// Returns the progress percentage (0.0 to 1.0)
   double get progressPercentage {
     if (totalDocuments == 0) return 0.0;
     return completedDocuments / totalDocuments;
   }
 
-  /// Returns whether all required documents are completed.
+  /// Returns whether all required documents are completed
   bool get isCompleted {
     return documents
         .where((doc) => doc.isRequired)
         .every((doc) => doc.status == DocumentStatus.verified);
   }
 
-  /// Returns the next recommended document to upload.
+  /// Returns whether documents are being loaded
+  bool get isLoading => status == DocsStatus.loading;
+
+  /// Returns whether documents are loaded
+  bool get isLoaded => status == DocsStatus.loaded;
+
+  /// Returns whether documents are being uploaded
+  bool get isUploading => status == DocsStatus.uploading;
+
+  /// Returns whether all documents are submitted
+  bool get isSubmitted => status == DocsStatus.submitted;
+
+  /// Returns whether verification is completed
+  bool get isVerificationCompleted => status == DocsStatus.completed;
+
+  /// Returns whether there's an error
+  bool get hasError => status == DocsStatus.failure && errorMessage != null;
+
+  /// Returns the next recommended document to upload
   Document? get nextRecommendedDocument {
-    return documents.firstWhere(
-      (doc) => doc.status == DocumentStatus.pending && doc.isRequired,
-      orElse: () => documents.first,
-    );
+    try {
+      return documents.firstWhere(
+        (doc) => doc.status == DocumentStatus.pending && doc.isRequired,
+      );
+    } catch (e) {
+      return documents.isNotEmpty ? documents.first : null;
+    }
   }
 
-  /// Creates a copy of this state with the given fields replaced.
   DocsState copyWith({
     List<Document>? documents,
     DocsStatus? status,
@@ -62,7 +70,7 @@ class DocsState extends Equatable {
       status: status ?? this.status,
       completedDocuments: completedDocuments ?? this.completedDocuments,
       totalDocuments: totalDocuments ?? this.totalDocuments,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: errorMessage,
     );
   }
 
@@ -74,11 +82,20 @@ class DocsState extends Equatable {
         totalDocuments,
         errorMessage,
       ];
+
+  @override
+  String toString() {
+    return 'DocsState('
+        'documents: ${documents.length}, '
+        'status: $status, '
+        'completedDocuments: $completedDocuments, '
+        'totalDocuments: $totalDocuments, '
+        'errorMessage: $errorMessage'
+        ')';
+  }
 }
 
-/// {@template docs_status}
-/// Enum representing the overall status of document verification.
-/// {@endtemplate}
+/// Enum representing the overall status of document verification
 enum DocsStatus {
   /// Initial state
   initial,

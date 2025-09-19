@@ -5,14 +5,14 @@ import 'package:equatable/equatable.dart';
 part 'insurance_event.dart';
 part 'insurance_state.dart';
 
+/// BLoC responsible for managing Insurance verification state and business logic
 class InsuranceBloc extends Bloc<InsuranceEvent, InsuranceState> {
   InsuranceBloc() : super(const InsuranceState()) {
     on<InsuranceImageChanged>(_onImageChanged);
-    on<InsurancePolicyNumberChanged>(_onPolicyNumberChanged);
-    on<InsuranceExpiryDateChanged>(_onExpiryDateChanged);
     on<InsuranceSubmitted>(_onSubmitted);
   }
 
+  /// Handles insurance image changes
   void _onImageChanged(
     InsuranceImageChanged event,
     Emitter<InsuranceState> emit,
@@ -21,67 +21,44 @@ class InsuranceBloc extends Bloc<InsuranceEvent, InsuranceState> {
     emit(
       state.copyWith(
         insuranceImage: insuranceImage,
-        isValid: Formz.validate([
-          insuranceImage,
-          state.policyNumber,
-          state.expiryDate,
-        ]),
+        status: FormzSubmissionStatus.initial,
       ),
     );
   }
 
-  void _onPolicyNumberChanged(
-    InsurancePolicyNumberChanged event,
-    Emitter<InsuranceState> emit,
-  ) {
-    final policyNumber = InsurancePolicyNumber.dirty(event.policyNumber);
-    emit(
-      state.copyWith(
-        policyNumber: policyNumber,
-        isValid: Formz.validate([
-          state.insuranceImage,
-          policyNumber,
-          state.expiryDate,
-        ]),
-      ),
-    );
-  }
-
-  void _onExpiryDateChanged(
-    InsuranceExpiryDateChanged event,
-    Emitter<InsuranceState> emit,
-  ) {
-    final expiryDate = InsuranceExpiryDate.dirty(event.expiryDate);
-    emit(
-      state.copyWith(
-        expiryDate: expiryDate,
-        isValid: Formz.validate([
-          state.insuranceImage,
-          state.policyNumber,
-          expiryDate,
-        ]),
-      ),
-    );
-  }
-
-  void _onSubmitted(
+  /// Handles insurance form submission
+  Future<void> _onSubmitted(
     InsuranceSubmitted event,
     Emitter<InsuranceState> emit,
   ) async {
-    if (state.isValid) {
-      emit(state.copyWith(status: InsuranceStatus.loading));
-      try {
-        // TODO: Implement insurance certificate upload to API
-        await Future<void>.delayed(const Duration(seconds: 2)); // Simulate API call
-        emit(state.copyWith(status: InsuranceStatus.success));
-      } catch (error) {
-        emit(
-          state.copyWith(
-            status: InsuranceStatus.failure,
-            errorMessage: error.toString(),
-          ),
-        );
-      }
+    // Validate image before submission
+    final insuranceImage = InsuranceImage.dirty(state.insuranceImage.value);
+
+    emit(state.copyWith(
+      insuranceImage: insuranceImage,
+      status: FormzSubmissionStatus.initial,
+    ));
+
+    if (!state.isValid) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: insuranceImage.errorMessage ?? 'Please upload a valid insurance document',
+      ));
+      return;
+    }
+
+    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
+
+    try {
+      // TODO: Implement insurance certificate upload to API
+      // The API will extract policy number and expiry date from the uploaded image
+      await Future<void>.delayed(const Duration(seconds: 2)); // Simulate API call
+      emit(state.copyWith(status: FormzSubmissionStatus.success));
+    } catch (error) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: 'Failed to upload insurance document. Please try again.',
+      ));
     }
   }
 }

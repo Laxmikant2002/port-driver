@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import '../../../../../../widgets/colors.dart';
 import '../bloc/license_bloc.dart';
@@ -26,15 +27,19 @@ class LicenseView extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: BlocListener<LicenseBloc, LicenseState>(
         listener: (context, state) {
-          if (state.status == LicenseStatus.success) {
+          if (state.isSuccess) {
             Navigator.of(context).pop(); // Go back to docs screen
-          } else if (state.status == LicenseStatus.failure) {
+          } else if (state.hasError) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
                   content: Text(state.errorMessage ?? 'Failed to submit License'),
                   backgroundColor: AppColors.error,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               );
           }
@@ -91,7 +96,7 @@ class _HeaderSection extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Verify Your License',
+            'Upload Driving License',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -102,7 +107,7 @@ class _HeaderSection extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Upload your driving license for verification',
+            'Upload front and back photos of your driving license or PDF document',
             style: TextStyle(
               fontSize: 16,
               color: AppColors.textSecondary,
@@ -176,7 +181,7 @@ class _LicenseForm extends StatelessWidget {
                         maxLines: 1,
                       ),
                       Text(
-                        'Enter your license details and upload image',
+                        'Upload front and back photos or PDF of your driving license',
                         style: TextStyle(
                           fontSize: 13,
                           color: AppColors.textSecondary,
@@ -190,11 +195,9 @@ class _LicenseForm extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 32),
-            const _LicenseNumberField(),
+            const _LicenseFrontImageField(),
             const SizedBox(height: 24),
-            const _LicenseDobField(),
-            const SizedBox(height: 24),
-            const _LicenseImageField(),
+            const _LicenseBackImageField(),
           ],
         ),
       ),
@@ -202,395 +205,264 @@ class _LicenseForm extends StatelessWidget {
   }
 }
 
-class _LicenseNumberField extends StatelessWidget {
-  const _LicenseNumberField();
+class _LicenseFrontImageField extends StatelessWidget {
+  const _LicenseFrontImageField();
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LicenseBloc, LicenseState>(
-      buildWhen: (previous, current) => previous.licenseNumber != current.licenseNumber,
+      buildWhen: (previous, current) => previous.frontImage != current.frontImage,
       builder: (context, state) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'License Number',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              onChanged: (licenseNumber) => context
-                  .read<LicenseBloc>()
-                  .add(LicenseNumberChanged(licenseNumber)),
-              keyboardType: TextInputType.text,
-              maxLength: 16,
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Enter your license number',
-                hintStyle: TextStyle(
-                  color: AppColors.textTertiary,
-                  fontSize: 16,
-                ),
-                prefixIcon: Container(
-                  margin: const EdgeInsets.all(12),
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.cyan.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.credit_card_outlined,
-                    color: AppColors.cyan,
-                    size: 20,
-                  ),
-                ),
-                filled: true,
-                fillColor: AppColors.background,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.border,
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.cyan,
-                    width: 2,
-                  ),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.error,
-                    width: 1,
-                  ),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.error,
-                    width: 2,
-                  ),
-                ),
-                errorText: state.licenseNumber.displayError != null
-                    ? (state.licenseNumber.error == LicenseNumberValidationError.empty
-                        ? 'License number is required'
-                        : 'Enter a valid license number')
-                    : null,
-                errorStyle: TextStyle(
-                  color: AppColors.error,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-                counterText: '',
-              ),
-            ),
-          ],
+        return _ImageUploadCard(
+          title: 'License Front Photo',
+          subtitle: 'Take a clear photo of the front side',
+          icon: Icons.card_membership_rounded,
+          imagePath: state.frontImage.value,
+                errorText: state.frontImage.errorMessage,
+          onImageSelected: (path) => context
+              .read<LicenseBloc>()
+              .add(LicenseFrontImageChanged(path)),
         );
       },
     );
   }
 }
 
-class _LicenseDobField extends StatelessWidget {
-  const _LicenseDobField();
+class _LicenseBackImageField extends StatelessWidget {
+  const _LicenseBackImageField();
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LicenseBloc, LicenseState>(
-      buildWhen: (previous, current) => previous.dob != current.dob,
+      buildWhen: (previous, current) => previous.backImage != current.backImage,
       builder: (context, state) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Date of Birth',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              onChanged: (dob) => context
-                  .read<LicenseBloc>()
-                  .add(LicenseDobChanged(dob)),
-              keyboardType: TextInputType.datetime,
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: InputDecoration(
-                hintText: 'DD/MM/YYYY or YYYY-MM-DD',
-                hintStyle: TextStyle(
-                  color: AppColors.textTertiary,
-                  fontSize: 16,
-                ),
-                prefixIcon: Container(
-                  margin: const EdgeInsets.all(12),
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.cyan.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.calendar_today_outlined,
-                    color: AppColors.cyan,
-                    size: 20,
-                  ),
-                ),
-                suffixIcon: GestureDetector(
-                  onTap: () => _selectDate(context),
-                  child: Container(
-                    margin: const EdgeInsets.all(12),
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.cyan.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.calendar_month_outlined,
-                      color: AppColors.cyan,
-                      size: 20,
-                    ),
-                  ),
-                ),
-                filled: true,
-                fillColor: AppColors.background,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.border,
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.cyan,
-                    width: 2,
-                  ),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.error,
-                    width: 1,
-                  ),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.error,
-                    width: 2,
-                  ),
-                ),
-                errorText: state.dob.displayError != null
-                    ? (state.dob.error == LicenseDobValidationError.empty
-                        ? 'Date of birth is required'
-                        : 'Enter a valid date (DD/MM/YYYY or YYYY-MM-DD)')
-                    : null,
-                errorStyle: TextStyle(
-                  color: AppColors.error,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
+        return _ImageUploadCard(
+          title: 'License Back Photo',
+          subtitle: 'Take a clear photo of the back side',
+          icon: Icons.card_membership_rounded,
+          imagePath: state.backImage.value,
+                errorText: state.backImage.errorMessage,
+          onImageSelected: (path) => context
+              .read<LicenseBloc>()
+              .add(LicenseBackImageChanged(path)),
         );
       },
     );
   }
+}
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: AppColors.cyan,
-              onPrimary: Colors.white,
-              surface: AppColors.surface,
-              onSurface: AppColors.textPrimary,
-            ),
+class _ImageUploadCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final String imagePath;
+  final String? errorText;
+  final Function(String) onImageSelected;
+
+  const _ImageUploadCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.imagePath,
+    required this.onImageSelected,
+    this.errorText,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
           ),
-          child: child!,
-        );
-      },
-    );
-    
-    if (picked != null) {
-      final formattedDate = '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
-      context.read<LicenseBloc>().add(LicenseDobChanged(formattedDate));
-    }
-  }
-}
-
-class _LicenseImageField extends StatelessWidget {
-  const _LicenseImageField();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<LicenseBloc, LicenseState>(
-      buildWhen: (previous, current) => previous.licenseImage != current.licenseImage,
-      builder: (context, state) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'License Image',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () => _showImagePickerOptions(context),
+          child: Container(
+            height: 160,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: errorText != null ? AppColors.error : AppColors.border,
+                width: errorText != null ? 2 : 1,
               ),
             ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () => _showImagePickerOptions(context),
-              child: Container(
-                height: 160,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: state.licenseImage.displayError != null
-                        ? AppColors.error
-                        : AppColors.border,
-                    width: state.licenseImage.displayError != null ? 2 : 1,
-                  ),
-                ),
-                child: state.licenseImage.value.isEmpty
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: AppColors.cyan.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.add_photo_alternate_outlined,
-                              color: AppColors.cyan,
-                              size: 32,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Tap to upload license image',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Camera or Gallery',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textTertiary,
-                            ),
-                          ),
-                        ],
-                      )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.file(
-                          File(state.licenseImage.value),
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: 160,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: AppColors.background,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.error_outline,
-                                    color: AppColors.error,
-                                    size: 32,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Failed to load image',
-                                    style: TextStyle(
-                                      color: AppColors.error,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+            child: imagePath.isEmpty
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.cyan.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.add_photo_alternate_outlined,
+                          color: AppColors.cyan,
+                          size: 32,
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Camera, Gallery or File',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                    ],
+                  )
+                : _buildFilePreview(imagePath),
+          ),
+        ),
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Text(
+              errorText!,
+              style: TextStyle(
+                color: AppColors.error,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
               ),
             ),
-            if (state.licenseImage.displayError != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(
-                  'License image is required',
-                  style: TextStyle(
-                    color: AppColors.error,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+          ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _ImageOptionButton(
+                icon: Icons.camera_alt_outlined,
+                label: 'Take Photo',
+                onTap: () => _takePhoto(context),
               ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _ImageOptionButton(
-                    icon: Icons.camera_alt_outlined,
-                    label: 'Take Photo',
-                    onTap: () => _takePhoto(context),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _ImageOptionButton(
-                    icon: Icons.photo_library_outlined,
-                    label: 'Choose from Gallery',
-                    onTap: () => _pickFromGallery(context),
-                  ),
-                ),
-              ],
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _ImageOptionButton(
+                icon: Icons.photo_library_outlined,
+                label: 'Gallery',
+                onTap: () => _pickFromGallery(context),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _ImageOptionButton(
+                icon: Icons.attach_file_outlined,
+                label: 'Upload File',
+                onTap: () => _pickFile(context),
+              ),
             ),
           ],
-        );
-      },
+        ),
+      ],
     );
+  }
+
+  Widget _buildFilePreview(String filePath) {
+    final file = File(filePath);
+    final extension = filePath.split('.').last.toLowerCase();
+    
+    if (extension == 'pdf') {
+      return Container(
+        height: 160,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.error.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.picture_as_pdf,
+                color: AppColors.error,
+                size: 32,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'PDF Document',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              filePath.split('/').last,
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      );
+    } else {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.file(
+          file,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: 160,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: AppColors.background,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    color: AppColors.error,
+                    size: 32,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Failed to load image',
+                    style: TextStyle(
+                      color: AppColors.error,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+    }
   }
 
   void _showImagePickerOptions(BuildContext context) {
@@ -635,7 +507,7 @@ class _LicenseImageField extends StatelessWidget {
                     },
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Expanded(
                   child: _ImageOptionButton(
                     icon: Icons.photo_library_outlined,
@@ -643,6 +515,17 @@ class _LicenseImageField extends StatelessWidget {
                     onTap: () {
                       Navigator.pop(context);
                       _pickFromGallery(context);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _ImageOptionButton(
+                    icon: Icons.attach_file_outlined,
+                    label: 'File',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _pickFile(context);
                     },
                   ),
                 ),
@@ -666,7 +549,7 @@ class _LicenseImageField extends StatelessWidget {
       );
       
       if (image != null) {
-        context.read<LicenseBloc>().add(LicenseImageChanged(image.path));
+        onImageSelected(image.path);
       }
     } catch (e) {
       _showErrorSnackBar(context, 'Failed to take photo: ${e.toString()}');
@@ -684,10 +567,26 @@ class _LicenseImageField extends StatelessWidget {
       );
       
       if (image != null) {
-        context.read<LicenseBloc>().add(LicenseImageChanged(image.path));
+        onImageSelected(image.path);
       }
     } catch (e) {
       _showErrorSnackBar(context, 'Failed to pick image: ${e.toString()}');
+    }
+  }
+
+  void _pickFile(BuildContext context) async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        onImageSelected(result.files.single.path!);
+      }
+    } catch (e) {
+      _showErrorSnackBar(context, 'Failed to pick file: ${e.toString()}');
     }
   }
 
@@ -794,7 +693,7 @@ class _SubmitButton extends StatelessWidget {
               ),
               elevation: 0,
             ),
-            child: state.status == LicenseStatus.loading
+            child: state.isSubmitting
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

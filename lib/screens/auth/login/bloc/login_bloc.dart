@@ -2,27 +2,28 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:equatable/equatable.dart';
+import 'package:auth_repo/auth_repo.dart';
 
 part 'login_event.dart';
 part 'login_state.dart';
 
 /// Bloc responsible for managing login form state and business logic
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
-  LoginBloc() : super(const LoginState()) {
-    on<PhoneChanged>(_onPhoneChanged);
+  LoginBloc({required this.authRepo}) : super(const LoginState()) {
+    on<LoginPhoneChanged>(_onPhoneChanged);
     on<LoginSubmitted>(_onLoginSubmitted);
-    on<ResendOtpRequested>(_onResendOtpRequested);
-    on<LoginReset>(_onLoginReset);
   }
 
+  final AuthRepo authRepo;
+
   /// Handles phone number changes
-  void _onPhoneChanged(PhoneChanged event, Emitter<LoginState> emit) {
+  void _onPhoneChanged(LoginPhoneChanged event, Emitter<LoginState> emit) {
     final phoneInput = PhoneInput.dirty(event.phone);
     
     emit(state.copyWith(
       phoneInput: phoneInput,
       status: FormzSubmissionStatus.initial,
-      clearError: true,
+      errorMessage: null,
     ));
   }
 
@@ -31,86 +32,61 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     LoginSubmitted event,
     Emitter<LoginState> emit,
   ) async {
-    if (!state.isValid) {
+    // Validate form before submission
+    final phoneInput = PhoneInput.dirty(state.phoneInput.value);
+    
+    emit(state.copyWith(
+      phoneInput: phoneInput,
+      status: FormzSubmissionStatus.initial,
+    ));
+
+    if (!Formz.validate([phoneInput])) {
       emit(state.copyWith(
         status: FormzSubmissionStatus.failure,
-        errorMessage: 'Please enter a valid phone number',
+        errorMessage: phoneInput.displayError ?? 'Please enter a valid phone number',
       ));
       return;
     }
 
-    emit(state.copyWith(
-      status: FormzSubmissionStatus.inProgress,
-      clearError: true,
-    ));
+    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
 
     try {
-      // Simulate API call for sending OTP
-      await Future<void>.delayed(const Duration(seconds: 2));
+      // First check if phone exists
+      final checkResponse = await authRepo.checkPhone(phoneInput.cleanValue);
       
-      emit(state.copyWith(
-        status: FormzSubmissionStatus.success,
-        otpSent: true,
-        errorMessage: 'OTP sent to ${state.phoneInput.cleanValue}',
-      ));
-    } catch (e) {
-      emit(state.copyWith(
-        status: FormzSubmissionStatus.failure,
-        errorMessage: 'Failed to send OTP. Please try again.',
-      ));
-    }
-  }
-
-  /// Handles OTP resend request
-  Future<void> _onResendOtpRequested(
-    ResendOtpRequested event,
-    Emitter<LoginState> emit,
-  ) async {
-    if (!state.canResend) return;
-
-    emit(state.copyWith(
-      status: FormzSubmissionStatus.inProgress,
-      clearError: true,
-    ));
-
-    try {
-      // Simulate API call for resending OTP
-      await Future<void>.delayed(const Duration(seconds: 1));
-      
-      // Start cooldown timer
-      _startResendCooldown(emit);
-      
-      emit(state.copyWith(
-        status: FormzSubmissionStatus.success,
-        errorMessage: 'OTP resent to ${state.phoneInput.cleanValue}',
-      ));
-    } catch (e) {
-      emit(state.copyWith(
-        status: FormzSubmissionStatus.failure,
-        errorMessage: 'Failed to resend OTP. Please try again.',
-      ));
-    }
-  }
-
-  /// Handles form reset
-  void _onLoginReset(LoginReset event, Emitter<LoginState> emit) {
-    emit(const LoginState());
-  }
-
-  /// Starts the resend cooldown timer
-  void _startResendCooldown(Emitter<LoginState> emit) {
-    const cooldownDuration = 30; // 30 seconds
-    int remainingTime = cooldownDuration;
-    
-    Timer.periodic(const Duration(seconds: 1), (timer) {
-      remainingTime--;
-      
-      if (remainingTime <= 0) {
-        timer.cancel();
-        emit(state.copyWith(resendCooldown: 0));
-      } else {
-        emit(state.copyWith(resendCooldown: remainingTime));
+      if (!checkResponse.success) {
+        emit(state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: checkResponse.message ?? 'Failed to check phone number',
+        ));
+        return;
       }
-    });
+
+      // Send OTP
+      final request = LoginRequest(
+        phone: phoneInput.cleanValue,
+        countryCode: '+91',
+      );
+      
+      final response = await authRepo.sendOtp(request);
+      
+      if (response.success && response.otpSent) {
+        emit(state.copyWith(
+          status: FormzSubmissionStatus.success,
+          phoneExists: checkResponse.user?.isNewUser == false,
+        ));
+      } else {
+        emit(state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: response.message ?? 'Failed to send OTP. Please try again.',
+        ));
+      }
+    } catch (e) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: 'Network error. Please try again.',
+      ));
+    }
   }
+
 }

@@ -1,6 +1,6 @@
 part of 'insurance_bloc.dart';
 
-enum InsuranceImageValidationError { empty }
+enum InsuranceImageValidationError { empty, invalidFormat }
 
 class InsuranceImage extends FormzInput<String, InsuranceImageValidationError> {
   const InsuranceImage.pure() : super.pure('');
@@ -9,74 +9,73 @@ class InsuranceImage extends FormzInput<String, InsuranceImageValidationError> {
   @override
   InsuranceImageValidationError? validator(String value) {
     if (value.isEmpty) return InsuranceImageValidationError.empty;
+    
+    // Check if it's a valid image file (PDF, PNG, JPG, JPEG)
+    final validExtensions = ['.pdf', '.png', '.jpg', '.jpeg'];
+    final hasValidExtension = validExtensions.any((ext) => 
+        value.toLowerCase().endsWith(ext));
+    
+    if (!hasValidExtension) {
+      return InsuranceImageValidationError.invalidFormat;
+    }
+    
     return null;
   }
-}
 
-enum InsurancePolicyNumberValidationError { empty, invalid }
-
-class InsurancePolicyNumber extends FormzInput<String, InsurancePolicyNumberValidationError> {
-  const InsurancePolicyNumber.pure() : super.pure('');
-  const InsurancePolicyNumber.dirty([super.value = '']) : super.dirty();
-
+  /// Returns a user-friendly error message for the current error
   @override
-  InsurancePolicyNumberValidationError? validator(String value) {
-    if (value.isEmpty) return InsurancePolicyNumberValidationError.empty;
-    if (value.length < 6) return InsurancePolicyNumberValidationError.invalid;
-    return null;
+  InsuranceImageValidationError? get displayError {
+    return error;
+  }
+
+  /// Returns a user-friendly error message string
+  String? get errorMessage {
+    if (error == null) return null;
+    switch (error!) {
+      case InsuranceImageValidationError.empty:
+        return 'Insurance document is required';
+      case InsuranceImageValidationError.invalidFormat:
+        return 'Please upload a valid document (PDF, PNG, JPG)';
+    }
   }
 }
 
-enum InsuranceExpiryDateValidationError { empty, invalid }
-
-class InsuranceExpiryDate extends FormzInput<String, InsuranceExpiryDateValidationError> {
-  const InsuranceExpiryDate.pure() : super.pure('');
-  const InsuranceExpiryDate.dirty([super.value = '']) : super.dirty();
-
-  @override
-  InsuranceExpiryDateValidationError? validator(String value) {
-    if (value.isEmpty) return InsuranceExpiryDateValidationError.empty;
-    // Simple date format check (DD/MM/YYYY or YYYY-MM-DD)
-    final dateRegExp = RegExp(r'^(\d{2}/\d{2}/\d{4}|\d{4}-\d{2}-\d{2})$');
-    if (!dateRegExp.hasMatch(value)) return InsuranceExpiryDateValidationError.invalid;
-    return null;
-  }
-}
-
-enum InsuranceStatus { initial, loading, success, failure }
-
-class InsuranceState extends Equatable {
+/// Insurance state containing form data and submission status
+final class InsuranceState extends Equatable {
   const InsuranceState({
-    this.status = InsuranceStatus.initial,
+    this.status = FormzSubmissionStatus.initial,
     this.insuranceImage = const InsuranceImage.pure(),
-    this.policyNumber = const InsurancePolicyNumber.pure(),
-    this.expiryDate = const InsuranceExpiryDate.pure(),
-    this.isValid = false,
     this.errorMessage,
   });
 
-  final InsuranceStatus status;
+  final FormzSubmissionStatus status;
   final InsuranceImage insuranceImage;
-  final InsurancePolicyNumber policyNumber;
-  final InsuranceExpiryDate expiryDate;
-  final bool isValid;
   final String? errorMessage;
 
+  /// Returns true if the form is valid and ready for submission
+  bool get isValid => Formz.validate([insuranceImage]);
+
+  /// Returns true if the form is currently being submitted
+  bool get isSubmitting => status == FormzSubmissionStatus.inProgress;
+
+  /// Returns true if the submission was successful
+  bool get isSuccess => status == FormzSubmissionStatus.success;
+
+  /// Returns true if the submission failed
+  bool get isFailure => status == FormzSubmissionStatus.failure;
+
+  /// Returns true if there's an error
+  bool get hasError => isFailure && errorMessage != null;
+
   InsuranceState copyWith({
-    InsuranceStatus? status,
+    FormzSubmissionStatus? status,
     InsuranceImage? insuranceImage,
-    InsurancePolicyNumber? policyNumber,
-    InsuranceExpiryDate? expiryDate,
-    bool? isValid,
     String? errorMessage,
   }) {
     return InsuranceState(
       status: status ?? this.status,
       insuranceImage: insuranceImage ?? this.insuranceImage,
-      policyNumber: policyNumber ?? this.policyNumber,
-      expiryDate: expiryDate ?? this.expiryDate,
-      isValid: isValid ?? this.isValid,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: errorMessage,
     );
   }
 
@@ -84,9 +83,15 @@ class InsuranceState extends Equatable {
   List<Object?> get props => [
         status,
         insuranceImage,
-        policyNumber,
-        expiryDate,
-        isValid,
         errorMessage,
       ];
+
+  @override
+  String toString() {
+    return 'InsuranceState('
+        'status: $status, '
+        'insuranceImage: $insuranceImage, '
+        'errorMessage: $errorMessage'
+        ')';
+  }
 }

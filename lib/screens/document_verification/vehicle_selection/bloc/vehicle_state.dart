@@ -11,41 +11,83 @@ class VehicleSelectionInput extends FormzInput<Vehicle?, VehicleSelectionValidat
     if (value == null) return VehicleSelectionValidationError.empty;
     return null;
   }
+
+  @override
+  VehicleSelectionValidationError? get displayError {
+    return error;
+  }
 }
 
-enum VehicleStatus { initial, loading, loaded, success, failure }
-
-class VehicleState extends Equatable {
+/// Vehicle selection state containing form data and submission status
+final class VehicleState extends Equatable {
   const VehicleState({
-    this.status = VehicleStatus.initial,
+    this.status = FormzSubmissionStatus.initial,
+    this.loadingStatus = VehicleLoadingStatus.initial,
     this.vehicles = const [],
     this.selectedVehicle = const VehicleSelectionInput.pure(),
-    this.isValid = false,
     this.errorMessage,
   });
 
-  final VehicleStatus status;
+  final FormzSubmissionStatus status;
+  final VehicleLoadingStatus loadingStatus;
   final List<Vehicle> vehicles;
   final VehicleSelectionInput selectedVehicle;
-  final bool isValid;
   final String? errorMessage;
 
+  /// Returns true if the form is valid and ready for submission
+  bool get isValid => Formz.validate([selectedVehicle]);
+
+  /// Returns true if the form is currently being submitted
+  bool get isSubmitting => status == FormzSubmissionStatus.inProgress;
+
+  /// Returns true if the submission was successful
+  bool get isSuccess => status == FormzSubmissionStatus.success;
+
+  /// Returns true if the submission failed
+  bool get isFailure => status == FormzSubmissionStatus.failure;
+
+  /// Returns true if there's an error
+  bool get hasError => isFailure && errorMessage != null;
+
+  /// Returns true if vehicles are being loaded
+  bool get isLoading => loadingStatus == VehicleLoadingStatus.loading;
+
+  /// Returns true if vehicles have been loaded
+  bool get isLoaded => loadingStatus == VehicleLoadingStatus.loaded;
+
+  /// Returns true if vehicle loading failed
+  bool get isLoadingFailure => loadingStatus == VehicleLoadingStatus.failure;
+
   VehicleState copyWith({
-    VehicleStatus? status,
+    FormzSubmissionStatus? status,
+    VehicleLoadingStatus? loadingStatus,
     List<Vehicle>? vehicles,
     VehicleSelectionInput? selectedVehicle,
-    bool? isValid,
     String? errorMessage,
   }) {
     return VehicleState(
       status: status ?? this.status,
+      loadingStatus: loadingStatus ?? this.loadingStatus,
       vehicles: vehicles ?? this.vehicles,
       selectedVehicle: selectedVehicle ?? this.selectedVehicle,
-      isValid: isValid ?? this.isValid,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: errorMessage,
     );
   }
 
   @override
-  List<Object?> get props => [status, vehicles, selectedVehicle, isValid, errorMessage];
+  List<Object?> get props => [status, loadingStatus, vehicles, selectedVehicle, errorMessage];
+
+  @override
+  String toString() {
+    return 'VehicleState('
+        'status: $status, '
+        'loadingStatus: $loadingStatus, '
+        'vehicles: ${vehicles.length}, '
+        'selectedVehicle: $selectedVehicle, '
+        'errorMessage: $errorMessage'
+        ')';
+  }
 }
+
+/// Enum for vehicle loading status (separate from form submission)
+enum VehicleLoadingStatus { initial, loading, loaded, failure }

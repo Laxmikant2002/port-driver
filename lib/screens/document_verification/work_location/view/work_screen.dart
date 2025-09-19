@@ -30,15 +30,19 @@ class WorkLocationView extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: BlocListener<WorkBloc, WorkState>(
         listener: (context, state) {
-          if (state.status == FormzSubmissionStatus.success) {
+          if (state.isSuccess) {
             Navigator.pushReplacementNamed(context, '/docs-verification');
-          } else if (state.status == FormzSubmissionStatus.failure) {
+          } else if (state.hasError) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
                   content: Text(state.errorMessage ?? 'Something went wrong'),
                   backgroundColor: AppColors.error,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               );
           }
@@ -470,7 +474,7 @@ class _SubmitButton extends StatelessWidget {
               ),
               elevation: 0,
             ),
-            child: state.status == FormzSubmissionStatus.inProgress
+            child: state.isSubmitting
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

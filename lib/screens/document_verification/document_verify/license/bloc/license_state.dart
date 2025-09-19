@@ -1,94 +1,118 @@
 part of 'license_bloc.dart';
 
-enum LicenseNumberValidationError { empty, invalid }
+enum LicenseFrontImageValidationError { empty }
 
-class LicenseNumber extends FormzInput<String, LicenseNumberValidationError> {
-  const LicenseNumber.pure() : super.pure('');
-  const LicenseNumber.dirty([super.value = '']) : super.dirty();
+class LicenseFrontImage extends FormzInput<String, LicenseFrontImageValidationError> {
+  const LicenseFrontImage.pure() : super.pure('');
+  const LicenseFrontImage.dirty([super.value = '']) : super.dirty();
 
   @override
-  LicenseNumberValidationError? validator(String value) {
-    if (value.isEmpty) return LicenseNumberValidationError.empty;
-    if (value.length < 6) {
-      return LicenseNumberValidationError.invalid;
+  LicenseFrontImageValidationError? validator(String value) {
+    if (value.isEmpty) return LicenseFrontImageValidationError.empty;
+    return null;
+  }
+
+  /// Returns a user-friendly error message
+  @override
+  LicenseFrontImageValidationError? get displayError {
+    return error;
+  }
+
+  String? get errorMessage {
+    if (error == null) return null;
+    switch (error!) {
+      case LicenseFrontImageValidationError.empty:
+        return 'Front image is required';
     }
-    return null;
   }
 }
 
-enum LicenseImageValidationError { empty }
+enum LicenseBackImageValidationError { empty }
 
-class LicenseImage extends FormzInput<String, LicenseImageValidationError> {
-  const LicenseImage.pure() : super.pure('');
-  const LicenseImage.dirty([super.value = '']) : super.dirty();
+class LicenseBackImage extends FormzInput<String, LicenseBackImageValidationError> {
+  const LicenseBackImage.pure() : super.pure('');
+  const LicenseBackImage.dirty([super.value = '']) : super.dirty();
 
   @override
-  LicenseImageValidationError? validator(String value) {
-    if (value.isEmpty) return LicenseImageValidationError.empty;
+  LicenseBackImageValidationError? validator(String value) {
+    if (value.isEmpty) return LicenseBackImageValidationError.empty;
     return null;
   }
-}
 
-enum LicenseDobValidationError { empty, invalid }
-
-class LicenseDob extends FormzInput<String, LicenseDobValidationError> {
-  const LicenseDob.pure() : super.pure('');
-  const LicenseDob.dirty([super.value = '']) : super.dirty();
-
+  /// Returns a user-friendly error message
   @override
-  LicenseDobValidationError? validator(String value) {
-    if (value.isEmpty) return LicenseDobValidationError.empty;
-    // Simple date format check (YYYY-MM-DD or DD/MM/YYYY)
-    final dateRegExp = RegExp(r'^(\d{2}/\d{2}/\d{4}|\d{4}-\d{2}-\d{2})$');
-    if (!dateRegExp.hasMatch(value)) return LicenseDobValidationError.invalid;
-    return null;
+  LicenseBackImageValidationError? get displayError {
+    return error;
+  }
+
+  String? get errorMessage {
+    if (error == null) return null;
+    switch (error!) {
+      case LicenseBackImageValidationError.empty:
+        return 'Back image is required';
+    }
   }
 }
 
-enum LicenseStatus { initial, loading, success, failure }
 
-class LicenseState extends Equatable {
+/// License state containing form data and submission status
+final class LicenseState extends Equatable {
   const LicenseState({
-    this.status = LicenseStatus.initial,
-    this.licenseNumber = const LicenseNumber.pure(),
-    this.licenseImage = const LicenseImage.pure(),
-    this.dob = const LicenseDob.pure(),
-    this.isValid = false,
+    this.status = FormzSubmissionStatus.initial,
+    this.frontImage = const LicenseFrontImage.pure(),
+    this.backImage = const LicenseBackImage.pure(),
     this.errorMessage,
   });
 
-  final LicenseStatus status;
-  final LicenseNumber licenseNumber;
-  final LicenseImage licenseImage;
-  final LicenseDob dob;
-  final bool isValid;
+  final FormzSubmissionStatus status;
+  final LicenseFrontImage frontImage;
+  final LicenseBackImage backImage;
   final String? errorMessage;
 
+  /// Returns true if the form is valid and ready for submission
+  bool get isValid => Formz.validate([frontImage, backImage]);
+
+  /// Returns true if the form is currently being submitted
+  bool get isSubmitting => status == FormzSubmissionStatus.inProgress;
+
+  /// Returns true if the submission was successful
+  bool get isSuccess => status == FormzSubmissionStatus.success;
+
+  /// Returns true if the submission failed
+  bool get isFailure => status == FormzSubmissionStatus.failure;
+
+  /// Returns true if there's an error
+  bool get hasError => isFailure && errorMessage != null;
+
   LicenseState copyWith({
-    LicenseStatus? status,
-    LicenseNumber? licenseNumber,
-    LicenseImage? licenseImage,
-    LicenseDob? dob,
-    bool? isValid,
+    FormzSubmissionStatus? status,
+    LicenseFrontImage? frontImage,
+    LicenseBackImage? backImage,
     String? errorMessage,
   }) {
     return LicenseState(
       status: status ?? this.status,
-      licenseNumber: licenseNumber ?? this.licenseNumber,
-      licenseImage: licenseImage ?? this.licenseImage,
-      dob: dob ?? this.dob,
-      isValid: isValid ?? this.isValid,
-      errorMessage: errorMessage ?? this.errorMessage,
+      frontImage: frontImage ?? this.frontImage,
+      backImage: backImage ?? this.backImage,
+      errorMessage: errorMessage,
     );
   }
 
   @override
   List<Object?> get props => [
         status,
-        licenseNumber,
-        licenseImage,
-        dob,
-        isValid,
+        frontImage,
+        backImage,
         errorMessage,
       ];
+
+  @override
+  String toString() {
+    return 'LicenseState('
+        'status: $status, '
+        'frontImage: $frontImage, '
+        'backImage: $backImage, '
+        'errorMessage: $errorMessage'
+        ')';
+  }
 }

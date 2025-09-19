@@ -25,34 +25,52 @@ class OtpInput extends FormzInput<String, String> {
   }
 }
 
+/// OTP state containing form data and submission status
 final class OtpState extends Equatable {
   const OtpState({
     this.otpInput = const OtpInput.pure(),
     this.status = FormzSubmissionStatus.initial,
-    this.error,
+    this.user,
+    this.errorMessage,
     this.canResend = true,
-    this.resendTimer = 24,
+    this.resendTimer = 30,
   });
 
   final OtpInput otpInput;
   final FormzSubmissionStatus status;
-  final String? error;
+  final AuthUser? user;
+  final String? errorMessage;
   final bool canResend;
   final int resendTimer;
 
+  /// Returns true if the form is valid and ready for submission
   bool get isValid => Formz.validate([otpInput]);
+
+  /// Returns true if the form is currently being submitted
+  bool get isSubmitting => status == FormzSubmissionStatus.inProgress;
+
+  /// Returns true if the submission was successful
+  bool get isSuccess => status == FormzSubmissionStatus.success;
+
+  /// Returns true if the submission failed
+  bool get isFailure => status == FormzSubmissionStatus.failure;
+
+  /// Returns true if there's an error
+  bool get hasError => isFailure && errorMessage != null;
 
   OtpState copyWith({
     OtpInput? otpInput,
     FormzSubmissionStatus? status,
-    String? error,
+    AuthUser? user,
+    String? errorMessage,
     bool? canResend,
     int? resendTimer,
   }) =>
       OtpState(
         otpInput: otpInput ?? this.otpInput,
         status: status ?? this.status,
-        error: error ?? this.error,
+        user: user ?? this.user,
+        errorMessage: errorMessage,
         canResend: canResend ?? this.canResend,
         resendTimer: resendTimer ?? this.resendTimer,
       );
@@ -61,8 +79,21 @@ final class OtpState extends Equatable {
   List<Object?> get props => [
         otpInput,
         status,
-        error,
+        user,
+        errorMessage,
         canResend,
         resendTimer,
       ];
+
+  @override
+  String toString() {
+    return 'OtpState('
+        'otpInput: $otpInput, '
+        'status: $status, '
+        'user: $user, '
+        'errorMessage: $errorMessage, '
+        'canResend: $canResend, '
+        'resendTimer: $resendTimer'
+        ')';
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
+import 'package:auth_repo/auth_repo.dart';
 import '../bloc/login_bloc.dart';
 import 'phone_field.dart';
 import '../../../../widgets/colors.dart';
@@ -12,7 +13,9 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => LoginBloc(),
+      create: (context) => LoginBloc(
+        authRepo: context.read<AuthRepo>(),
+      ),
       child: const _LoginView(),
     );
   }
@@ -154,13 +157,13 @@ class _BottomCard extends StatelessWidget {
       ),
       child: BlocListener<LoginBloc, LoginState>(
         listener: (context, state) {
-          if (state.status == FormzSubmissionStatus.success) {
+          if (state.isSuccess) {
             // Navigate to OTP screen
             Navigator.pushNamed(context, AuthRoutes.otp, arguments: state.phoneInput.cleanValue);
-          } else if (state.status == FormzSubmissionStatus.failure && state.hasError) {
+          } else if (state.hasError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.error!),
+                content: Text(state.errorMessage!),
                 backgroundColor: AppColors.error,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(

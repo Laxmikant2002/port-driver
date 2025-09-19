@@ -60,37 +60,48 @@ class AlternativePhone extends FormzInput<String, AlternativePhoneValidationErro
   }
 }
 
-enum ProfileStatus { initial, loading, success, failure }
-
-class ProfileState extends Equatable {
+/// Profile state containing form data and submission status
+final class ProfileState extends Equatable {
   const ProfileState({
-    this.status = ProfileStatus.initial,
+    this.status = FormzSubmissionStatus.initial,
     this.firstName = const FirstName.pure(),
     this.lastName = const LastName.pure(),
     this.email = const Email.pure(),
     this.alternativePhone = const AlternativePhone.pure(),
     this.phone = '',
-    this.isValid = false,
     this.errorMessage,
   });
 
-  final ProfileStatus status;
+  final FormzSubmissionStatus status;
   final FirstName firstName;
   final LastName lastName;
   final Email email;
   final AlternativePhone alternativePhone;
   final String phone;
-  final bool isValid;
   final String? errorMessage;
 
+  /// Returns true if the form is valid and ready for submission
+  bool get isValid => Formz.validate([firstName, lastName, email, alternativePhone]);
+
+  /// Returns true if the form is currently being submitted
+  bool get isSubmitting => status == FormzSubmissionStatus.inProgress;
+
+  /// Returns true if the submission was successful
+  bool get isSuccess => status == FormzSubmissionStatus.success;
+
+  /// Returns true if the submission failed
+  bool get isFailure => status == FormzSubmissionStatus.failure;
+
+  /// Returns true if there's an error
+  bool get hasError => isFailure && errorMessage != null;
+
   ProfileState copyWith({
-    ProfileStatus? status,
+    FormzSubmissionStatus? status,
     FirstName? firstName,
     LastName? lastName,
     Email? email,
     AlternativePhone? alternativePhone,
     String? phone,
-    bool? isValid,
     String? errorMessage,
   }) {
     return ProfileState(
@@ -100,8 +111,7 @@ class ProfileState extends Equatable {
       email: email ?? this.email,
       alternativePhone: alternativePhone ?? this.alternativePhone,
       phone: phone ?? this.phone,
-      isValid: isValid ?? this.isValid,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: errorMessage,
     );
   }
 
@@ -113,7 +123,19 @@ class ProfileState extends Equatable {
         email,
         alternativePhone,
         phone,
-        isValid,
         errorMessage,
       ];
+
+  @override
+  String toString() {
+    return 'ProfileState('
+        'status: $status, '
+        'firstName: $firstName, '
+        'lastName: $lastName, '
+        'email: $email, '
+        'alternativePhone: $alternativePhone, '
+        'phone: $phone, '
+        'errorMessage: $errorMessage'
+        ')';
+  }
 }

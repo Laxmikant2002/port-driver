@@ -1,46 +1,44 @@
 part of 'work_bloc.dart';
 
-class WorkState extends Equatable {
-  /// {@macro work_state}
+/// Work location state containing form data and submission status
+final class WorkState extends Equatable {
   const WorkState({
     this.selectedLocation,
     this.workLocationInput = const WorkLocationInput.pure(),
     this.referralCode = const ReferralCode.pure(),
     this.locations = const [],
     this.status = FormzSubmissionStatus.initial,
-    this.isValid = false,
     this.errorMessage,
   });
 
-  /// The currently selected work location.
   final WorkLocation? selectedLocation;
-
-  /// The work location input field with validation.
   final WorkLocationInput workLocationInput;
-
-  /// The referral code field with validation.
   final ReferralCode referralCode;
-
-  /// List of available work locations.
   final List<WorkLocation> locations;
-
-  /// The current form submission status.
   final FormzSubmissionStatus status;
-
-  /// Whether the form is valid and can be submitted.
-  final bool isValid;
-
-  /// Error message if form submission fails.
   final String? errorMessage;
 
-  /// Creates a copy of this state with the given fields replaced.
+  /// Returns true if the form is valid and ready for submission
+  bool get isValid => Formz.validate([workLocationInput, referralCode]);
+
+  /// Returns true if the form is currently being submitted
+  bool get isSubmitting => status == FormzSubmissionStatus.inProgress;
+
+  /// Returns true if the submission was successful
+  bool get isSuccess => status == FormzSubmissionStatus.success;
+
+  /// Returns true if the submission failed
+  bool get isFailure => status == FormzSubmissionStatus.failure;
+
+  /// Returns true if there's an error
+  bool get hasError => isFailure && errorMessage != null;
+
   WorkState copyWith({
     WorkLocation? selectedLocation,
     WorkLocationInput? workLocationInput,
     ReferralCode? referralCode,
     List<WorkLocation>? locations,
     FormzSubmissionStatus? status,
-    bool? isValid,
     String? errorMessage,
   }) {
     return WorkState(
@@ -49,8 +47,7 @@ class WorkState extends Equatable {
       referralCode: referralCode ?? this.referralCode,
       locations: locations ?? this.locations,
       status: status ?? this.status,
-      isValid: isValid ?? this.isValid,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: errorMessage,
     );
   }
 
@@ -61,7 +58,18 @@ class WorkState extends Equatable {
         referralCode,
         locations,
         status,
-        isValid,
         errorMessage,
       ];
+
+  @override
+  String toString() {
+    return 'WorkState('
+        'selectedLocation: $selectedLocation, '
+        'workLocationInput: $workLocationInput, '
+        'referralCode: $referralCode, '
+        'locations: ${locations.length}, '
+        'status: $status, '
+        'errorMessage: $errorMessage'
+        ')';
+  }
 }

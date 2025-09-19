@@ -12,6 +12,22 @@ class RcNumber extends FormzInput<String, RcNumberValidationError> {
     if (value.length < 6) return RcNumberValidationError.invalid;
     return null;
   }
+
+  /// Returns a user-friendly error message
+  @override
+  RcNumberValidationError? get displayError {
+    return error;
+  }
+
+  String? get errorMessage {
+    if (error == null) return null;
+    switch (error!) {
+      case RcNumberValidationError.empty:
+        return 'RC number is required';
+      case RcNumberValidationError.invalid:
+        return 'RC number must be at least 6 characters';
+    }
+  }
 }
 
 enum RcImageValidationError { empty }
@@ -24,6 +40,20 @@ class RcImage extends FormzInput<String, RcImageValidationError> {
   RcImageValidationError? validator(String value) {
     if (value.isEmpty) return RcImageValidationError.empty;
     return null;
+  }
+
+  /// Returns a user-friendly error message
+  @override
+  RcImageValidationError? get displayError {
+    return error;
+  }
+
+  String? get errorMessage {
+    if (error == null) return null;
+    switch (error!) {
+      case RcImageValidationError.empty:
+        return 'RC image is required';
+    }
   }
 }
 
@@ -43,33 +73,61 @@ class VehicleNumber extends FormzInput<String, VehicleNumberValidationError> {
     }
     return null;
   }
+
+  /// Returns a user-friendly error message
+  @override
+  VehicleNumberValidationError? get displayError {
+    return error;
+  }
+
+  String? get errorMessage {
+    if (error == null) return null;
+    switch (error!) {
+      case VehicleNumberValidationError.empty:
+        return 'Vehicle number is required';
+      case VehicleNumberValidationError.invalid:
+        return 'Please enter a valid vehicle number (e.g., MH12AB1234)';
+    }
+  }
 }
 
-enum RcStatus { initial, loading, success, failure }
 
-class RcState extends Equatable {
+/// RC state containing form data and submission status
+final class RcState extends Equatable {
   const RcState({
-    this.status = RcStatus.initial,
+    this.status = FormzSubmissionStatus.initial,
     this.rcNumber = const RcNumber.pure(),
     this.rcImage = const RcImage.pure(),
     this.vehicleNumber = const VehicleNumber.pure(),
-    this.isValid = false,
     this.errorMessage,
   });
 
-  final RcStatus status;
+  final FormzSubmissionStatus status;
   final RcNumber rcNumber;
   final RcImage rcImage;
   final VehicleNumber vehicleNumber;
-  final bool isValid;
   final String? errorMessage;
 
+  /// Returns true if the form is valid and ready for submission
+  bool get isValid => Formz.validate([rcNumber, rcImage, vehicleNumber]);
+
+  /// Returns true if the form is currently being submitted
+  bool get isSubmitting => status == FormzSubmissionStatus.inProgress;
+
+  /// Returns true if the submission was successful
+  bool get isSuccess => status == FormzSubmissionStatus.success;
+
+  /// Returns true if the submission failed
+  bool get isFailure => status == FormzSubmissionStatus.failure;
+
+  /// Returns true if there's an error
+  bool get hasError => isFailure && errorMessage != null;
+
   RcState copyWith({
-    RcStatus? status,
+    FormzSubmissionStatus? status,
     RcNumber? rcNumber,
     RcImage? rcImage,
     VehicleNumber? vehicleNumber,
-    bool? isValid,
     String? errorMessage,
   }) {
     return RcState(
@@ -77,8 +135,7 @@ class RcState extends Equatable {
       rcNumber: rcNumber ?? this.rcNumber,
       rcImage: rcImage ?? this.rcImage,
       vehicleNumber: vehicleNumber ?? this.vehicleNumber,
-      isValid: isValid ?? this.isValid,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: errorMessage,
     );
   }
 
@@ -88,7 +145,17 @@ class RcState extends Equatable {
         rcNumber,
         rcImage,
         vehicleNumber,
-        isValid,
         errorMessage,
       ];
+
+  @override
+  String toString() {
+    return 'RcState('
+        'status: $status, '
+        'rcNumber: $rcNumber, '
+        'rcImage: $rcImage, '
+        'vehicleNumber: $vehicleNumber, '
+        'errorMessage: $errorMessage'
+        ')';
+  }
 }

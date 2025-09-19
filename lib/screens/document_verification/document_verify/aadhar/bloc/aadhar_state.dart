@@ -1,73 +1,107 @@
 part of 'aadhar_bloc.dart';
 
-enum AadharNumberValidationError { empty, invalid }
+enum AadharFrontImageValidationError { empty }
 
-class AadharNumber extends FormzInput<String, AadharNumberValidationError> {
-  const AadharNumber.pure() : super.pure('');
-  const AadharNumber.dirty([super.value = '']) : super.dirty();
+class AadharFrontImage extends FormzInput<String, AadharFrontImageValidationError> {
+  const AadharFrontImage.pure() : super.pure('');
+  const AadharFrontImage.dirty([super.value = '']) : super.dirty();
 
   @override
-  AadharNumberValidationError? validator(String value) {
-    if (value.isEmpty) return AadharNumberValidationError.empty;
-    if (value.length != 12 || !RegExp(r'^\d{12}$').hasMatch(value)) {
-      return AadharNumberValidationError.invalid;
+  AadharFrontImageValidationError? validator(String value) {
+    if (value.isEmpty) return AadharFrontImageValidationError.empty;
+    return null;
+  }
+
+  /// Returns a user-friendly error message
+  String? get displayErrorMessage {
+    if (error == null) return null;
+    switch (error!) {
+      case AadharFrontImageValidationError.empty:
+        return 'Aadhaar front image is required';
     }
-    return null;
   }
 }
 
-enum AadharImageValidationError { empty }
+enum AadharBackImageValidationError { empty }
 
-class AadharImage extends FormzInput<String, AadharImageValidationError> {
-  const AadharImage.pure() : super.pure('');
-  const AadharImage.dirty([super.value = '']) : super.dirty();
+class AadharBackImage extends FormzInput<String, AadharBackImageValidationError> {
+  const AadharBackImage.pure() : super.pure('');
+  const AadharBackImage.dirty([super.value = '']) : super.dirty();
 
   @override
-  AadharImageValidationError? validator(String value) {
-    if (value.isEmpty) return AadharImageValidationError.empty;
+  AadharBackImageValidationError? validator(String value) {
+    if (value.isEmpty) return AadharBackImageValidationError.empty;
     return null;
+  }
+
+  /// Returns a user-friendly error message
+  String? get displayErrorMessage {
+    if (error == null) return null;
+    switch (error!) {
+      case AadharBackImageValidationError.empty:
+        return 'Aadhaar back image is required';
+    }
   }
 }
 
-enum AadharStatus { initial, loading, success, failure }
-
-class AadharState extends Equatable {
+/// Aadhar state containing form data and submission status
+final class AadharState extends Equatable {
   const AadharState({
-    this.status = AadharStatus.initial,
-    this.aadharNumber = const AadharNumber.pure(),
-    this.aadharImage = const AadharImage.pure(),
-    this.isValid = false,
+    this.status = FormzSubmissionStatus.initial,
+    this.frontImage = const AadharFrontImage.pure(),
+    this.backImage = const AadharBackImage.pure(),
     this.errorMessage,
   });
 
-  final AadharStatus status;
-  final AadharNumber aadharNumber;
-  final AadharImage aadharImage;
-  final bool isValid;
+  final FormzSubmissionStatus status;
+  final AadharFrontImage frontImage;
+  final AadharBackImage backImage;
   final String? errorMessage;
 
+  /// Returns true if the form is valid and ready for submission
+  bool get isValid => Formz.validate([frontImage, backImage]);
+
+  /// Returns true if the form is currently being submitted
+  bool get isSubmitting => status == FormzSubmissionStatus.inProgress;
+
+  /// Returns true if the submission was successful
+  bool get isSuccess => status == FormzSubmissionStatus.success;
+
+  /// Returns true if the submission failed
+  bool get isFailure => status == FormzSubmissionStatus.failure;
+
+  /// Returns true if there's an error
+  bool get hasError => isFailure && errorMessage != null;
+
   AadharState copyWith({
-    AadharStatus? status,
-    AadharNumber? aadharNumber,
-    AadharImage? aadharImage,
-    bool? isValid,
+    FormzSubmissionStatus? status,
+    AadharFrontImage? frontImage,
+    AadharBackImage? backImage,
     String? errorMessage,
   }) {
     return AadharState(
       status: status ?? this.status,
-      aadharNumber: aadharNumber ?? this.aadharNumber,
-      aadharImage: aadharImage ?? this.aadharImage,
-      isValid: isValid ?? this.isValid,
-      errorMessage: errorMessage ?? this.errorMessage,
+      frontImage: frontImage ?? this.frontImage,
+      backImage: backImage ?? this.backImage,
+      errorMessage: errorMessage,
     );
   }
 
   @override
   List<Object?> get props => [
         status,
-        aadharNumber,
-        aadharImage,
-        isValid,
+        frontImage,
+        backImage,
         errorMessage,
       ];
+
+  @override
+  String toString() {
+    return 'AadharState('
+        'status: $status, '
+        'frontImage: $frontImage, '
+        'backImage: $backImage, '
+        'errorMessage: $errorMessage'
+        ')';
+  }
 }

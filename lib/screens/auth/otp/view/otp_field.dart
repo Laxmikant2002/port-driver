@@ -15,7 +15,7 @@ class OtpField extends StatelessWidget {
         return Pinput(
           length: 4,
           onChanged: (value) {
-            context.read<OtpBloc>().add(ChangeOtp(value));
+            context.read<OtpBloc>().add(OtpChanged(value));
           },
           defaultPinTheme: PinTheme(
             width: 56,

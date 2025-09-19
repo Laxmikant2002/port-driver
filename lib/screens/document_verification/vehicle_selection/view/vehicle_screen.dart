@@ -25,15 +25,19 @@ class VehicleView extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: BlocListener<VehicleBloc, VehicleState>(
           listener: (context, state) {
-            if (state.status == VehicleStatus.success) {
+            if (state.isSuccess) {
               Navigator.of(context).pushReplacementNamed('/work-location');
-            } else if (state.status == VehicleStatus.failure) {
+            } else if (state.hasError) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
                 ..showSnackBar(
                   SnackBar(
-                    content: Text('Failed to select vehicle'),
-                    backgroundColor: Colors.red,
+                    content: Text(state.errorMessage ?? 'Failed to select vehicle'),
+                    backgroundColor: AppColors.error,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 );
             }
@@ -227,7 +231,7 @@ class _VehicleOptions extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<VehicleBloc, VehicleState>(
       builder: (context, state) {
-        if (state.status == VehicleStatus.loading) {
+        if (state.isLoading) {
           return const Center(
             child: Padding(
               padding: EdgeInsets.all(40),
@@ -238,7 +242,7 @@ class _VehicleOptions extends StatelessWidget {
           );
         }
         
-        if (state.status == VehicleStatus.failure) {
+        if (state.isLoadingFailure) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(40),
@@ -450,7 +454,7 @@ class _SubmitButton extends StatelessWidget {
               ),
               elevation: 0,
             ),
-            child: state.status == VehicleStatus.loading && state.isValid
+            child: state.isSubmitting
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

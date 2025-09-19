@@ -6,6 +6,7 @@ import 'package:driver/services/google_map_services.dart';
 import 'package:driver/services/socket_service.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:formz/formz.dart';
 
 part 'rides_event.dart';
 part 'rides_state.dart';

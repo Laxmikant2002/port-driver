@@ -11,37 +11,59 @@ class LanguageInput extends FormzInput<String, LanguageValidationError> {
     if (value.isEmpty) return LanguageValidationError.empty;
     return null;
   }
+
+  @override
+  LanguageValidationError? get displayError => error;
 }
 
-enum LanguageStatus { initial, loading, success, failure }
-
-class LanguageState extends Equatable {
+/// Language state containing form data and submission status
+final class LanguageState extends Equatable {
   const LanguageState({
-    this.status = LanguageStatus.initial,
+    this.status = FormzSubmissionStatus.initial,
     this.language = const LanguageInput.pure(),
-    this.isValid = true, // Default to true since English is pre-selected
     this.errorMessage,
   });
 
-  final LanguageStatus status;
+  final FormzSubmissionStatus status;
   final LanguageInput language;
-  final bool isValid;
   final String? errorMessage;
 
+  /// Returns true if the form is valid and ready for submission
+  bool get isValid => Formz.validate([language]);
+
+  /// Returns true if the form is currently being submitted
+  bool get isSubmitting => status == FormzSubmissionStatus.inProgress;
+
+  /// Returns true if the submission was successful
+  bool get isSuccess => status == FormzSubmissionStatus.success;
+
+  /// Returns true if the submission failed
+  bool get isFailure => status == FormzSubmissionStatus.failure;
+
+  /// Returns true if there's an error
+  bool get hasError => isFailure && errorMessage != null;
+
   LanguageState copyWith({
-    LanguageStatus? status,
+    FormzSubmissionStatus? status,
     LanguageInput? language,
-    bool? isValid,
     String? errorMessage,
   }) {
     return LanguageState(
       status: status ?? this.status,
       language: language ?? this.language,
-      isValid: isValid ?? this.isValid,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: errorMessage,
     );
   }
 
   @override
-  List<Object?> get props => [status, language, isValid, errorMessage];
+  List<Object?> get props => [status, language, errorMessage];
+
+  @override
+  String toString() {
+    return 'LanguageState('
+        'status: $status, '
+        'language: $language, '
+        'errorMessage: $errorMessage'
+        ')';
+  }
 }

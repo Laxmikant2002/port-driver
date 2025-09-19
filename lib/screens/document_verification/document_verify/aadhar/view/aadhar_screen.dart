@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 import '../../../../../../widgets/colors.dart';
 import '../bloc/aadhar_bloc.dart';
 
@@ -24,15 +27,19 @@ class AadharView extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: BlocListener<AadharBloc, AadharState>(
         listener: (context, state) {
-          if (state.status == AadharStatus.success) {
+          if (state.isSuccess) {
             Navigator.of(context).pop(); // Go back to docs screen
-          } else if (state.status == AadharStatus.failure) {
+          } else if (state.hasError) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
                   content: Text(state.errorMessage ?? 'Failed to submit Aadhaar'),
                   backgroundColor: AppColors.error,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               );
           }
@@ -89,7 +96,7 @@ class _HeaderSection extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Verify Your Identity',
+            'Upload Aadhaar Card',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -100,7 +107,7 @@ class _HeaderSection extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Upload your Aadhaar card for verification',
+            'Upload front and back photos of your Aadhaar card or PDF document',
             style: TextStyle(
               fontSize: 16,
               color: AppColors.textSecondary,
@@ -164,7 +171,7 @@ class _AadharForm extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Aadhaar Verification',
+                        'Aadhaar Card Photos',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -172,7 +179,7 @@ class _AadharForm extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Enter your Aadhaar number and upload image',
+                        'Upload front and back photos or PDF of your Aadhaar card',
                         style: TextStyle(
                           fontSize: 13,
                           color: AppColors.textSecondary,
@@ -184,9 +191,9 @@ class _AadharForm extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 32),
-            const _AadharNumberField(),
+            const _AadharFrontImageField(),
             const SizedBox(height: 24),
-            const _AadharImageField(),
+            const _AadharBackImageField(),
           ],
         ),
       ),
@@ -194,160 +201,46 @@ class _AadharForm extends StatelessWidget {
   }
 }
 
-class _AadharNumberField extends StatelessWidget {
-  const _AadharNumberField();
+class _AadharFrontImageField extends StatelessWidget {
+  const _AadharFrontImageField();
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AadharBloc, AadharState>(
-      buildWhen: (previous, current) => previous.aadharNumber != current.aadharNumber,
+      buildWhen: (previous, current) => previous.frontImage != current.frontImage,
       builder: (context, state) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Aadhaar Number',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              onChanged: (aadharNumber) => context
-                  .read<AadharBloc>()
-                  .add(AadharNumberChanged(aadharNumber)),
-              keyboardType: TextInputType.number,
-              maxLength: 12,
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Enter your 12-digit Aadhaar number',
-                hintStyle: TextStyle(
-                  color: AppColors.textTertiary,
-                  fontSize: 16,
-                ),
-                prefixIcon: Container(
-                  margin: const EdgeInsets.all(12),
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.cyan.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.credit_card_outlined,
-                    color: AppColors.cyan,
-                    size: 20,
-                  ),
-                ),
-                filled: true,
-                fillColor: AppColors.background,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.border,
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.cyan,
-                    width: 2,
-                  ),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.error,
-                    width: 1,
-                  ),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.error,
-                    width: 2,
-                  ),
-                ),
-                errorText: state.aadharNumber.displayError != null
-                    ? (state.aadharNumber.error == AadharNumberValidationError.empty
-                        ? 'Aadhaar number is required'
-                        : 'Enter a valid 12-digit Aadhaar number')
-                    : null,
-                errorStyle: TextStyle(
-                  color: AppColors.error,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-                counterText: '',
-              ),
-            ),
-          ],
+        return _ImageUploadCard(
+          title: 'Aadhaar Front Photo',
+          subtitle: 'Take a clear photo of the front side',
+          icon: Icons.credit_card_rounded,
+          imagePath: state.frontImage.value,
+          errorText: state.frontImage.displayErrorMessage,
+          onImageSelected: (path) => context
+              .read<AadharBloc>()
+              .add(AadharFrontImageChanged(path)),
         );
       },
     );
   }
 }
 
-class _AadharImageField extends StatelessWidget {
-  const _AadharImageField();
+class _AadharBackImageField extends StatelessWidget {
+  const _AadharBackImageField();
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AadharBloc, AadharState>(
-      buildWhen: (previous, current) => previous.aadharImage != current.aadharImage,
+      buildWhen: (previous, current) => previous.backImage != current.backImage,
       builder: (context, state) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Aadhaar Card Image',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () {
-                // TODO: Implement image picker
-              },
-              child: Container(
-                height: 160,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: state.aadharImage.value.isEmpty
-                    ? Center(
-                        child: Icon(Icons.badge_rounded, color: AppColors.cyan, size: 48),
-                      )
-                    : Center(
-                        child: Text('Image selected', style: TextStyle(color: AppColors.cyan)),
-                      ),
-              ),
-            ),
-            if (state.aadharImage.displayError != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(
-                  'Aadhaar image is required',
-                  style: TextStyle(color: AppColors.error, fontSize: 12),
-                ),
-              ),
-          ],
+        return _ImageUploadCard(
+          title: 'Aadhaar Back Photo',
+          subtitle: 'Take a clear photo of the back side',
+          icon: Icons.credit_card_rounded,
+          imagePath: state.backImage.value,
+          errorText: state.backImage.displayErrorMessage,
+          onImageSelected: (path) => context
+              .read<AadharBloc>()
+              .add(AadharBackImageChanged(path)),
         );
       },
     );
@@ -400,7 +293,7 @@ class _SubmitButton extends StatelessWidget {
               ),
               elevation: 0,
             ),
-            child: state.status == AadharStatus.loading
+            child: state.isSubmitting
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -458,5 +351,401 @@ class _SubmitButton extends StatelessWidget {
       ),
     );
     Navigator.of(context).pop();
+  }
+}
+
+class _ImageUploadCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final String imagePath;
+  final String? errorText;
+  final Function(String) onImageSelected;
+
+  const _ImageUploadCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.imagePath,
+    required this.onImageSelected,
+    this.errorText,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () => _showImagePickerOptions(context),
+          child: Container(
+            height: 160,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: errorText != null ? AppColors.error : AppColors.border,
+                width: errorText != null ? 2 : 1,
+              ),
+            ),
+            child: imagePath.isEmpty
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.cyan.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.add_photo_alternate_outlined,
+                          color: AppColors.cyan,
+                          size: 32,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Camera or Gallery',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                    ],
+                  )
+                : _buildFilePreview(imagePath),
+          ),
+        ),
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Text(
+              errorText!,
+              style: TextStyle(
+                color: AppColors.error,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _ImageOptionButton(
+                icon: Icons.camera_alt_outlined,
+                label: 'Take Photo',
+                onTap: () => _takePhoto(context),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _ImageOptionButton(
+                icon: Icons.photo_library_outlined,
+                label: 'Gallery',
+                onTap: () => _pickFromGallery(context),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _ImageOptionButton(
+                icon: Icons.attach_file_outlined,
+                label: 'Upload File',
+                onTap: () => _pickFile(context),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  void _showImagePickerOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Select Image Source',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: _ImageOptionButton(
+                    icon: Icons.camera_alt_outlined,
+                    label: 'Camera',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _takePhoto(context);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _ImageOptionButton(
+                    icon: Icons.photo_library_outlined,
+                    label: 'Gallery',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _pickFromGallery(context);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _ImageOptionButton(
+                    icon: Icons.attach_file_outlined,
+                    label: 'File',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _pickFile(context);
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _takePhoto(BuildContext context) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+        maxWidth: 1024,
+        maxHeight: 1024,
+      );
+      
+      if (image != null) {
+        onImageSelected(image.path);
+      }
+    } catch (e) {
+      _showErrorSnackBar(context, 'Failed to take photo: ${e.toString()}');
+    }
+  }
+
+  void _pickFromGallery(BuildContext context) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+        maxWidth: 1024,
+        maxHeight: 1024,
+      );
+      
+      if (image != null) {
+        onImageSelected(image.path);
+      }
+    } catch (e) {
+      _showErrorSnackBar(context, 'Failed to pick image: ${e.toString()}');
+    }
+  }
+
+  void _pickFile(BuildContext context) async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        onImageSelected(result.files.single.path!);
+      }
+    } catch (e) {
+      _showErrorSnackBar(context, 'Failed to pick file: ${e.toString()}');
+    }
+  }
+
+  Widget _buildFilePreview(String filePath) {
+    final file = File(filePath);
+    final extension = filePath.split('.').last.toLowerCase();
+    
+    if (extension == 'pdf') {
+      return Container(
+        height: 160,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.error.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.picture_as_pdf,
+                color: AppColors.error,
+                size: 32,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'PDF Document',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              filePath.split('/').last,
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      );
+    } else {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.file(
+          file,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: 160,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: AppColors.background,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    color: AppColors.error,
+                    size: 32,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Failed to load image',
+                    style: TextStyle(
+                      color: AppColors.error,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+    }
+  }
+
+  void _showErrorSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+}
+
+class _ImageOptionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ImageOptionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: AppColors.cyan,
+              size: 24,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

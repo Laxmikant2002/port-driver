@@ -1,18 +1,24 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:equatable/equatable.dart';
+import 'package:auth_repo/auth_repo.dart';
 
 part 'profile_event.dart';
 part 'profile_state.dart';
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
-  ProfileBloc({required String phone}) : super(ProfileState(phone: phone)) {
+  ProfileBloc({
+    required String phone,
+    required this.authRepo,
+  }) : super(ProfileState(phone: phone)) {
     on<ProfileFirstNameChanged>(_onFirstNameChanged);
     on<ProfileLastNameChanged>(_onLastNameChanged);
     on<ProfileEmailChanged>(_onEmailChanged);
     on<ProfileAlternativePhoneChanged>(_onAlternativePhoneChanged);
     on<ProfileSubmitted>(_onSubmitted);
   }
+
+  final AuthRepo authRepo;
 
   void _onFirstNameChanged(
     ProfileFirstNameChanged event,
@@ -22,12 +28,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     emit(
       state.copyWith(
         firstName: firstName,
-        isValid: Formz.validate([
-          firstName,
-          state.lastName,
-          state.email,
-          state.alternativePhone,
-        ]),
+        status: FormzSubmissionStatus.initial,
       ),
     );
   }
@@ -40,12 +41,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     emit(
       state.copyWith(
         lastName: lastName,
-        isValid: Formz.validate([
-          state.firstName,
-          lastName,
-          state.email,
-          state.alternativePhone,
-        ]),
+        status: FormzSubmissionStatus.initial,
       ),
     );
   }
@@ -58,12 +54,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     emit(
       state.copyWith(
         email: email,
-        isValid: Formz.validate([
-          state.firstName,
-          state.lastName,
-          email,
-          state.alternativePhone,
-        ]),
+        status: FormzSubmissionStatus.initial,
       ),
     );
   }
@@ -76,12 +67,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     emit(
       state.copyWith(
         alternativePhone: alternativePhone,
-        isValid: Formz.validate([
-          state.firstName,
-          state.lastName,
-          state.email,
-          alternativePhone,
-        ]),
+        status: FormzSubmissionStatus.initial,
       ),
     );
   }
@@ -90,20 +76,59 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     ProfileSubmitted event,
     Emitter<ProfileState> emit,
   ) async {
-    if (state.isValid) {
-      emit(state.copyWith(status: ProfileStatus.loading));
-      try {
-        // TODO: Implement profile submission to API
-        await Future<void>.delayed(const Duration(seconds: 2)); // Simulate API call
-        emit(state.copyWith(status: ProfileStatus.success));
-      } catch (error) {
-        emit(
-          state.copyWith(
-            status: ProfileStatus.failure,
-            errorMessage: error.toString(),
-          ),
-        );
+    // Validate all fields before submission
+    final firstName = FirstName.dirty(state.firstName.value);
+    final lastName = LastName.dirty(state.lastName.value);
+    final email = Email.dirty(state.email.value);
+    final alternativePhone = AlternativePhone.dirty(state.alternativePhone.value);
+
+    emit(state.copyWith(
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      alternativePhone: alternativePhone,
+      status: FormzSubmissionStatus.initial,
+    ));
+
+    if (!state.isValid) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: 'Please complete all required fields correctly',
+      ));
+      return;
+    }
+
+    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
+
+    try {
+      // Create user object with profile data
+      final user = AuthUser(
+        id: '', // Will be set by backend
+        phone: state.phone,
+        name: '${firstName.value} ${lastName.value}',
+        email: email.value.isNotEmpty ? email.value : null,
+        isVerified: true,
+        isNewUser: false,
+        profileComplete: true,
+        documentVerified: false,
+      );
+
+      // Update profile using auth repo
+      final response = await authRepo.updateProfile(user);
+      
+      if (response.success) {
+        emit(state.copyWith(status: FormzSubmissionStatus.success));
+      } else {
+        emit(state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: response.message ?? 'Failed to create profile. Please try again.',
+        ));
       }
+    } catch (error) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: 'Network error. Please try again.',
+      ));
     }
   }
 }

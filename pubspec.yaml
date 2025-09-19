@@ -11,8 +11,8 @@ dependencies:
     path: ./packages/api_client
   auth_repo:
     path: ./packages/auth_repo
-  vehicle_repo:
-    path: ./packages/vehicle_repo
+  documents_repo:
+    path: ./packages/documents_repo
   profile_repo:
     path: ./packages/profile_repo
   firebase_messaging: ^14.0.0
@@ -43,15 +43,8 @@ dependencies:
   formz: ^0.5.0
   iconify_flutter: ^0.0.7
   image_picker: ^0.8.7+4
-  location_repo:
-    path: ./packages/location_repo
-  notification_repo:
-    path: ./packages/notification_repo
-  trips_repo:
-    path: ./packages/trips_repo
-  earning_repo:
-    path: ./packages/earning_repo
   intl_phone_field: ^3.2.0
+  file_picker: ^5.2.7
   
 dev_dependencies:
   bloc_test: ^10.0.0

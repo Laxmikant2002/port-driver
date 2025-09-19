@@ -195,7 +195,7 @@ class _PhoneFieldState extends State<PhoneField>
         if (phone.number.length == 10) {
           HapticFeedback.lightImpact();
         }
-        context.read<LoginBloc>().add(PhoneChanged(phone.number));
+        context.read<LoginBloc>().add(LoginPhoneChanged(phone.number));
       },
       style: const TextStyle(
         fontSize: 17,

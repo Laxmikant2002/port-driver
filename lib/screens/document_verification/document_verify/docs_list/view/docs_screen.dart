@@ -28,22 +28,27 @@ class DocsView extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: BlocListener<DocsBloc, DocsState>(
         listener: (context, state) {
-          if (state.status == DocsStatus.completed) {
+          if (state.isVerificationCompleted) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 const SnackBar(
                   content: Text('All documents verified successfully!'),
                   backgroundColor: AppColors.success,
+                  behavior: SnackBarBehavior.floating,
                 ),
               );
-          } else if (state.status == DocsStatus.failure) {
+          } else if (state.hasError) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
                   content: Text(state.errorMessage ?? 'Something went wrong'),
                   backgroundColor: AppColors.error,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               );
           }
@@ -56,7 +61,7 @@ class DocsView extends StatelessWidget {
                 const SizedBox(height: 24),
                 BlocBuilder<DocsBloc, DocsState>(
                   builder: (context, state) {
-                    if (state.status == DocsStatus.loading) {
+                    if (state.isLoading) {
                       return const SizedBox(
                         height: 200,
                         child: Center(

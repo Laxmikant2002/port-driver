@@ -24,15 +24,19 @@ class LanguageView extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: BlocListener<LanguageBloc, LanguageState>(
           listener: (context, state) {
-            if (state.status == LanguageStatus.success) {
+            if (state.isSuccess) {
               Navigator.of(context).pushReplacementNamed('/vehicle-selection');
-            } else if (state.status == LanguageStatus.failure) {
+            } else if (state.hasError) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
                 ..showSnackBar(
                   SnackBar(
-                    content: Text('Failed to select language'),
-                    backgroundColor: Colors.red,
+                    content: Text(state.errorMessage ?? 'Failed to select language'),
+                    backgroundColor: AppColors.error,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 );
             }
@@ -442,7 +446,7 @@ class _SubmitButton extends StatelessWidget {
               ),
               elevation: 0,
             ),
-            child: state.status == LanguageStatus.loading
+            child: state.isSubmitting
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

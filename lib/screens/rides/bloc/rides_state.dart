@@ -1,7 +1,9 @@
 part of 'rides_bloc.dart';
 
+
 class RidesState extends Equatable {
   const RidesState({
+    this.submissionStatus = FormzSubmissionStatus.initial,
     this.currentStatus = 'Idle',
     this.currentAddress,
     this.sourceAddress,
@@ -12,7 +14,10 @@ class RidesState extends Equatable {
     this.isDriverOnline = false,
     this.zoom = 14.0,
     this.currentLocation,
+    this.errorMessage,
   });
+  final FormzSubmissionStatus submissionStatus;
+  final String? errorMessage;
 
   final String currentStatus;
   final Address? currentAddress;
@@ -26,6 +31,7 @@ class RidesState extends Equatable {
   final LatLng? currentLocation;
 
   RidesState copyWith({
+    FormzSubmissionStatus? submissionStatus,
     String? currentStatus,
     Address? currentAddress,
     Address? sourceAddress,
@@ -36,8 +42,10 @@ class RidesState extends Equatable {
     bool? isDriverOnline,
     double? zoom,
     LatLng? currentLocation,
+    String? errorMessage,
   }) {
     return RidesState(
+      submissionStatus: submissionStatus ?? this.submissionStatus,
       currentStatus: currentStatus ?? this.currentStatus,
       currentAddress: currentAddress ?? this.currentAddress,
       sourceAddress: sourceAddress ?? this.sourceAddress,
@@ -48,11 +56,13 @@ class RidesState extends Equatable {
       isDriverOnline: isDriverOnline ?? this.isDriverOnline,
       zoom: zoom ?? this.zoom,
       currentLocation: currentLocation ?? this.currentLocation,
+      errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 
   @override
   List<Object?> get props => [
+        submissionStatus,
         currentStatus,
         currentAddress,
         sourceAddress,
@@ -63,5 +73,6 @@ class RidesState extends Equatable {
         isDriverOnline,
         zoom,
         currentLocation,
+        errorMessage,
       ];
 }

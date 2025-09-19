@@ -89,10 +89,7 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
     emit(state.copyWith(
       selectedLocation: event.location,
       workLocationInput: workLocationInput,
-      isValid: Formz.validate([
-        workLocationInput,
-        state.referralCode,
-      ]),
+      status: FormzSubmissionStatus.initial,
     ));
   }
 
@@ -105,10 +102,7 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
     
     emit(state.copyWith(
       referralCode: referralCode,
-      isValid: Formz.validate([
-        state.workLocationInput,
-        referralCode,
-      ]),
+      status: FormzSubmissionStatus.initial,
     ));
   }
 
@@ -117,7 +111,23 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
     WorkFormSubmitted event,
     Emitter<WorkState> emit,
   ) async {
-    if (!state.isValid) return;
+    // Validate all fields before submission
+    final workLocationInput = WorkLocationInput.dirty(state.selectedLocation);
+    final referralCode = ReferralCode.dirty(state.referralCode.value);
+
+    emit(state.copyWith(
+      workLocationInput: workLocationInput,
+      referralCode: referralCode,
+      status: FormzSubmissionStatus.initial,
+    ));
+
+    if (!state.isValid) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: workLocationInput.displayError ?? 'Please complete all required fields',
+      ));
+      return;
+    }
 
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
 
@@ -132,7 +142,7 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
     } catch (error) {
       emit(state.copyWith(
         status: FormzSubmissionStatus.failure,
-        errorMessage: 'Failed to submit work location: $error',
+        errorMessage: 'Failed to submit work location. Please try again.',
       ));
     }
   }

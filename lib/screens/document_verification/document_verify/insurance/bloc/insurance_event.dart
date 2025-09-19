@@ -1,33 +1,30 @@
 part of 'insurance_bloc.dart';
 
-abstract class InsuranceEvent extends Equatable {
+/// Base class for all Insurance events
+sealed class InsuranceEvent extends Equatable {
   const InsuranceEvent();
 
   @override
   List<Object> get props => [];
 }
 
-class InsuranceImageChanged extends InsuranceEvent {
+/// Event triggered when insurance image is changed
+final class InsuranceImageChanged extends InsuranceEvent {
   const InsuranceImageChanged(this.imagePath);
   final String imagePath;
+
   @override
   List<Object> get props => [imagePath];
-}
 
-class InsurancePolicyNumberChanged extends InsuranceEvent {
-  const InsurancePolicyNumberChanged(this.policyNumber);
-  final String policyNumber;
   @override
-  List<Object> get props => [policyNumber];
+  String toString() => 'InsuranceImageChanged(imagePath: $imagePath)';
 }
 
-class InsuranceExpiryDateChanged extends InsuranceEvent {
-  const InsuranceExpiryDateChanged(this.expiryDate);
-  final String expiryDate;
-  @override
-  List<Object> get props => [expiryDate];
-}
 
-class InsuranceSubmitted extends InsuranceEvent {
+/// Event triggered when insurance form is submitted
+final class InsuranceSubmitted extends InsuranceEvent {
   const InsuranceSubmitted();
+
+  @override
+  String toString() => 'InsuranceSubmitted()';
 }

@@ -52,53 +52,45 @@ class PhoneInput extends FormzInput<String, String> {
 }
 
 /// Login state containing form data and submission status using Equatable
-class LoginState extends Equatable {
+final class LoginState extends Equatable {
   const LoginState({
     this.phoneInput = const PhoneInput.pure(),
     this.status = FormzSubmissionStatus.initial,
+    this.phoneExists = false,
     this.errorMessage,
-    this.otpSent = false,
-    this.resendCooldown = 0,
   });
 
   final PhoneInput phoneInput;
   final FormzSubmissionStatus status;
+  final bool phoneExists;
   final String? errorMessage;
-  final bool otpSent;
-  final int resendCooldown;
 
   /// Returns true if the form is valid and ready for submission
-  bool get isValid => phoneInput.isValid;
+  bool get isValid => Formz.validate([phoneInput]);
 
   /// Returns true if the form is currently being submitted
   bool get isSubmitting => status == FormzSubmissionStatus.inProgress;
 
-  /// Returns true if OTP was successfully sent
-  bool get isOtpSent => otpSent;
+  /// Returns true if the submission was successful
+  bool get isSuccess => status == FormzSubmissionStatus.success;
 
-  /// Returns true if resend is available
-  bool get canResend => resendCooldown == 0;
-
-  /// Returns the current error message if any
-  String? get error => errorMessage;
+  /// Returns true if the submission failed
+  bool get isFailure => status == FormzSubmissionStatus.failure;
 
   /// Returns true if there's an error
-  bool get hasError => errorMessage != null;
+  bool get hasError => isFailure && errorMessage != null;
 
   LoginState copyWith({
     PhoneInput? phoneInput,
     FormzSubmissionStatus? status,
+    bool? phoneExists,
     String? errorMessage,
-    bool? otpSent,
-    int? resendCooldown,
-    bool clearError = false,
   }) {
     return LoginState(
       phoneInput: phoneInput ?? this.phoneInput,
       status: status ?? this.status,
-      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
-      otpSent: otpSent ?? this.otpSent,
-      resendCooldown: resendCooldown ?? this.resendCooldown,
+      phoneExists: phoneExists ?? this.phoneExists,
+      errorMessage: errorMessage,
     );
   }
 
@@ -106,9 +98,8 @@ class LoginState extends Equatable {
   List<Object?> get props => [
         phoneInput,
         status,
+        phoneExists,
         errorMessage,
-        otpSent,
-        resendCooldown,
       ];
 
   @override
@@ -116,9 +107,8 @@ class LoginState extends Equatable {
     return 'LoginState('
         'phoneInput: $phoneInput, '
         'status: $status, '
-        'errorMessage: $errorMessage, '
-        'otpSent: $otpSent, '
-        'resendCooldown: $resendCooldown'
+        'phoneExists: $phoneExists, '
+        'errorMessage: $errorMessage'
         ')';
   }
 }

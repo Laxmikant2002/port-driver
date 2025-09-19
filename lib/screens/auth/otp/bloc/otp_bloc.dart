@@ -8,94 +8,105 @@ import 'package:auth_repo/auth_repo.dart';
 part 'otp_event.dart';
 part 'otp_state.dart';
 
+/// BLoC responsible for managing OTP verification state and business logic
 class OtpBloc extends Bloc<OtpEvent, OtpState> {
   OtpBloc(this.authRepo, this.phone) : super(const OtpState()) {
-    on<ChangeOtp>(_changeOtp);
-    on<VerifyOtp>(_verifyOtp);
-    on<ResendOtp>(_resendOtp);
-    on<ResendTimerTick>(_onResendTimerTick);
+    on<OtpChanged>(_onOtpChanged);
+    on<OtpSubmitted>(_onOtpSubmitted);
+    on<OtpResendRequested>(_onOtpResendRequested);
+    on<_OtpResendTimerTicked>(_onResendTimerTicked);
   }
 
   final AuthRepo authRepo;
   final String phone;
   Timer? _resendTimer;
 
-  void _changeOtp(ChangeOtp event, Emitter<OtpState> emit) {
+  /// Handles OTP input changes
+  void _onOtpChanged(OtpChanged event, Emitter<OtpState> emit) {
     final otpInput = OtpInput.dirty(event.otp);
     emit(
       state.copyWith(
         otpInput: otpInput,
         status: FormzSubmissionStatus.initial,
-        error: null,
+        errorMessage: null,
       ),
     );
   }
 
-  Future<void> _verifyOtp(VerifyOtp event, Emitter<OtpState> emit) async {
-    // Validate OTP
+  /// Handles OTP verification submission
+  Future<void> _onOtpSubmitted(OtpSubmitted event, Emitter<OtpState> emit) async {
+    // Validate OTP before submission
     final otpInput = OtpInput.dirty(state.otpInput.value);
-    final otpError = otpInput.error;
+    
+    emit(state.copyWith(
+      otpInput: otpInput,
+      status: FormzSubmissionStatus.initial,
+    ));
 
-    // Check for validation errors
-    if (otpError != null) {
+    if (!Formz.validate([otpInput])) {
       emit(state.copyWith(
-        otpInput: otpInput,
         status: FormzSubmissionStatus.failure,
-        error: otpInput.errorMessage,
+        errorMessage: otpInput.errorMessage ?? 'Please enter a valid OTP',
       ));
       return;
     }
 
-    // If validation passes, proceed with OTP verification
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
 
     try {
-      final error = await authRepo.verifyOtp(state.otpInput.value);
+      final response = await authRepo.verifyOtp(state.otpInput.value);
       
-      if (error == null) {
-        emit(state.copyWith(status: FormzSubmissionStatus.success));
+      if (response.success && response.user != null) {
+        emit(state.copyWith(
+          status: FormzSubmissionStatus.success,
+          user: response.user,
+        ));
       } else {
         emit(state.copyWith(
           status: FormzSubmissionStatus.failure,
-          error: error,
+          errorMessage: response.message ?? 'OTP verification failed',
         ));
       }
     } catch (e) {
       emit(state.copyWith(
         status: FormzSubmissionStatus.failure,
-        error: 'An unexpected error occurred. Please try again.',
+        errorMessage: 'Network error. Please try again.',
       ));
     }
   }
 
-  Future<void> _resendOtp(ResendOtp event, Emitter<OtpState> emit) async {
+  /// Handles OTP resend request
+  Future<void> _onOtpResendRequested(OtpResendRequested event, Emitter<OtpState> emit) async {
+    if (!state.canResend) return;
+
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
 
     try {
-      final error = await authRepo.resendOtp();
+      final response = await authRepo.resendOtp();
       
-      if (error == null) {
+      if (response.success) {
         emit(state.copyWith(
           status: FormzSubmissionStatus.initial,
           canResend: false,
-          resendTimer: 24,
+          resendTimer: 30,
         ));
         _startResendTimer();
       } else {
         emit(state.copyWith(
           status: FormzSubmissionStatus.failure,
-          error: error,
+          errorMessage: response.message ?? 'Failed to resend OTP',
         ));
       }
     } catch (e) {
       emit(state.copyWith(
         status: FormzSubmissionStatus.failure,
-        error: 'An unexpected error occurred. Please try again.',
+        errorMessage: 'Network error. Please try again.',
       ));
     }
   }
 
-  void _onResendTimerTick(ResendTimerTick event, Emitter<OtpState> emit) {
+  /// Handles resend timer countdown
+  void _onResendTimerTicked(_OtpResendTimerTicked event, Emitter<OtpState> emit) {
     if (state.resendTimer > 0) {
       emit(state.copyWith(resendTimer: state.resendTimer - 1));
     } else {
@@ -107,11 +118,12 @@ class OtpBloc extends Bloc<OtpEvent, OtpState> {
     }
   }
 
+  /// Starts the resend timer countdown
   void _startResendTimer() {
     _resendTimer?.cancel();
     _resendTimer = Timer.periodic(
       const Duration(seconds: 1),
-      (_) => add(const ResendTimerTick()),
+      (_) => add(const _OtpResendTimerTicked()),
     );
   }
 

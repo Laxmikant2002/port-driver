@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:auth_repo/auth_repo.dart';
 import '../../../../widgets/colors.dart';
 
 import '../bloc/profile_bloc.dart';
@@ -11,7 +12,10 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ProfileBloc(phone: phone),
+      create: (_) => ProfileBloc(
+        phone: phone,
+        authRepo: context.read<AuthRepo>(),
+      ),
       child: const ProfileView(),
     );
   }
@@ -26,15 +30,19 @@ class ProfileView extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: BlocListener<ProfileBloc, ProfileState>(
           listener: (context, state) {
-            if (state.status == ProfileStatus.success) {
+            if (state.isSuccess) {
               Navigator.of(context).pushReplacementNamed('/language');
-            } else if (state.status == ProfileStatus.failure) {
+            } else if (state.hasError) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
                 ..showSnackBar(
                   SnackBar(
-                    content: Text('Failed to complete profile'),
-                    backgroundColor: Colors.red,
+                    content: Text(state.errorMessage ?? 'Failed to complete profile'),
+                    backgroundColor: AppColors.error,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 );
             }
@@ -740,7 +748,7 @@ class _SubmitButton extends StatelessWidget {
               ),
               elevation: 0,
             ),
-            child: state.status == ProfileStatus.loading
+            child: state.isSubmitting
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

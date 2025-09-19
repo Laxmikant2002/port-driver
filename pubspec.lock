@@ -175,10 +175,10 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
-  earning_repo:
+  documents_repo:
     dependency: "direct main"
     description:
-      path: "packages/earning_repo"
+      path: "packages/documents_repo"
       relative: true
     source: path
     version: "0.0.1"
@@ -214,6 +214,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.1"
+  file_picker:
+    dependency: "direct main"
+    description:
+      name: file_picker
+      sha256: be325344c1f3070354a1d84a231a1ba75ea85d413774ec4bdf444c023342e030
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.5.0"
   file_selector_linux:
     dependency: transitive
     description:
@@ -705,13 +713,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
-  location_repo:
-    dependency: "direct main"
-    description:
-      path: "packages/location_repo"
-      relative: true
-    source: path
-    version: "1.0.0"
   location_web:
     dependency: transitive
     description:
@@ -792,13 +793,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.2"
-  notification_repo:
-    dependency: "direct main"
-    description:
-      path: "packages/notification_repo"
-      relative: true
-    source: path
-    version: "1.0.0+1"
   package_config:
     dependency: transitive
     description:
@@ -1131,13 +1125,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.11"
-  trips_repo:
-    dependency: "direct main"
-    description:
-      path: "packages/trips_repo"
-      relative: true
-    source: path
-    version: "1.0.0"
   typed_data:
     dependency: transitive
     description:
@@ -1194,13 +1181,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
-  vehicle_repo:
-    dependency: "direct main"
-    description:
-      path: "packages/vehicle_repo"
-      relative: true
-    source: path
-    version: "0.0.1"
   very_good_analysis:
     dependency: "direct dev"
     description:
@@ -1257,6 +1237,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.1"
+  win32:
+    dependency: transitive
+    description:
+      name: win32
+      sha256: "329edf97fdd893e0f1e3b9e88d6a0e627128cc17cc316a8d67fda8f1451178ba"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.13.0"
   xdg_directories:
     dependency: transitive
     description:
@@ -1282,5 +1270,5 @@ packages:
     source: hosted
     version: "3.1.2"
 sdks:
-  dart: ">=3.8.0-0 <4.0.0"
+  dart: ">=3.9.2 <4.0.0"
   flutter: ">=3.27.0"

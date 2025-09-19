@@ -5,83 +5,78 @@ import 'package:equatable/equatable.dart';
 part 'license_event.dart';
 part 'license_state.dart';
 
+/// BLoC responsible for managing License verification state and business logic
 class LicenseBloc extends Bloc<LicenseEvent, LicenseState> {
   LicenseBloc() : super(const LicenseState()) {
-    on<LicenseNumberChanged>(_onLicenseNumberChanged);
-    on<LicenseImageChanged>(_onLicenseImageChanged);
-    on<LicenseDobChanged>(_onLicenseDobChanged);
+    on<LicenseFrontImageChanged>(_onFrontImageChanged);
+    on<LicenseBackImageChanged>(_onBackImageChanged);
     on<LicenseSubmitted>(_onSubmitted);
   }
 
-  void _onLicenseNumberChanged(
-    LicenseNumberChanged event,
+  /// Handles license front image changes
+  void _onFrontImageChanged(
+    LicenseFrontImageChanged event,
     Emitter<LicenseState> emit,
   ) {
-    final licenseNumber = LicenseNumber.dirty(event.licenseNumber);
+    final frontImage = LicenseFrontImage.dirty(event.frontImage);
     emit(
       state.copyWith(
-        licenseNumber: licenseNumber,
-        isValid: Formz.validate([
-          licenseNumber,
-          state.licenseImage,
-          state.dob,
-        ]),
+        frontImage: frontImage,
+        status: FormzSubmissionStatus.initial,
       ),
     );
   }
 
-  void _onLicenseImageChanged(
-    LicenseImageChanged event,
+  /// Handles license back image changes
+  void _onBackImageChanged(
+    LicenseBackImageChanged event,
     Emitter<LicenseState> emit,
   ) {
-    final licenseImage = LicenseImage.dirty(event.licenseImage);
+    final backImage = LicenseBackImage.dirty(event.backImage);
     emit(
       state.copyWith(
-        licenseImage: licenseImage,
-        isValid: Formz.validate([
-          state.licenseNumber,
-          licenseImage,
-          state.dob,
-        ]),
+        backImage: backImage,
+        status: FormzSubmissionStatus.initial,
       ),
     );
   }
 
-  void _onLicenseDobChanged(
-    LicenseDobChanged event,
-    Emitter<LicenseState> emit,
-  ) {
-    final dob = LicenseDob.dirty(event.dob);
-    emit(
-      state.copyWith(
-        dob: dob,
-        isValid: Formz.validate([
-          state.licenseNumber,
-          state.licenseImage,
-          dob,
-        ]),
-      ),
-    );
-  }
-
-  void _onSubmitted(
+  /// Handles license form submission
+  Future<void> _onSubmitted(
     LicenseSubmitted event,
     Emitter<LicenseState> emit,
   ) async {
-    if (state.isValid) {
-      emit(state.copyWith(status: LicenseStatus.loading));
-      try {
-        // TODO: Implement license submission to API
-        await Future<void>.delayed(const Duration(seconds: 2)); // Simulate API call
-        emit(state.copyWith(status: LicenseStatus.success));
-      } catch (error) {
-        emit(
-          state.copyWith(
-            status: LicenseStatus.failure,
-            errorMessage: error.toString(),
-          ),
-        );
-      }
+    // Validate all fields before submission
+    final frontImage = LicenseFrontImage.dirty(state.frontImage.value);
+    final backImage = LicenseBackImage.dirty(state.backImage.value);
+
+    emit(state.copyWith(
+      frontImage: frontImage,
+      backImage: backImage,
+      status: FormzSubmissionStatus.initial,
+    ));
+
+    if (!state.isValid) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: frontImage.errorMessage ??
+                     backImage.errorMessage ??
+                     'Please upload both front and back images of your driving license',
+      ));
+      return;
+    }
+
+    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
+
+    try {
+      // TODO: Implement license submission to API
+      await Future<void>.delayed(const Duration(seconds: 2)); // Simulate API call
+      emit(state.copyWith(status: FormzSubmissionStatus.success));
+    } catch (error) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: 'Failed to submit license. Please try again.',
+      ));
     }
   }
 }

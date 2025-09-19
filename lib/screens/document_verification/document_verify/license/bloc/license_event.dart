@@ -1,33 +1,41 @@
 part of 'license_bloc.dart';
 
-abstract class LicenseEvent extends Equatable {
+/// Base class for all License events
+sealed class LicenseEvent extends Equatable {
   const LicenseEvent();
 
   @override
   List<Object> get props => [];
 }
 
-class LicenseNumberChanged extends LicenseEvent {
-  const LicenseNumberChanged(this.licenseNumber);
-  final String licenseNumber;
+/// Event triggered when license front image is changed
+final class LicenseFrontImageChanged extends LicenseEvent {
+  const LicenseFrontImageChanged(this.frontImage);
+  final String frontImage;
+
   @override
-  List<Object> get props => [licenseNumber];
+  List<Object> get props => [frontImage];
+
+  @override
+  String toString() => 'LicenseFrontImageChanged(frontImage: $frontImage)';
 }
 
-class LicenseImageChanged extends LicenseEvent {
-  const LicenseImageChanged(this.licenseImage);
-  final String licenseImage;
+/// Event triggered when license back image is changed
+final class LicenseBackImageChanged extends LicenseEvent {
+  const LicenseBackImageChanged(this.backImage);
+  final String backImage;
+
   @override
-  List<Object> get props => [licenseImage];
+  List<Object> get props => [backImage];
+
+  @override
+  String toString() => 'LicenseBackImageChanged(backImage: $backImage)';
 }
 
-class LicenseDobChanged extends LicenseEvent {
-  const LicenseDobChanged(this.dob);
-  final String dob;
-  @override
-  List<Object> get props => [dob];
-}
-
-class LicenseSubmitted extends LicenseEvent {
+/// Event triggered when license form is submitted
+final class LicenseSubmitted extends LicenseEvent {
   const LicenseSubmitted();
+
+  @override
+  String toString() => 'LicenseSubmitted()';
 }

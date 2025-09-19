@@ -6,6 +6,7 @@ import '../models/vehicle.dart';
 part 'vehicle_event.dart';
 part 'vehicle_state.dart';
 
+/// BLoC responsible for managing vehicle selection state and business logic
 class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
   VehicleBloc() : super(const VehicleState()) {
     on<VehicleLoadRequested>(_onLoadRequested);
@@ -13,46 +14,62 @@ class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
     on<VehicleSelectionSubmitted>(_onSubmitted);
   }
 
-  void _onLoadRequested(VehicleLoadRequested event, Emitter<VehicleState> emit) async {
-    emit(state.copyWith(status: VehicleStatus.loading));
+  /// Handles loading available vehicles
+  Future<void> _onLoadRequested(VehicleLoadRequested event, Emitter<VehicleState> emit) async {
+    emit(state.copyWith(loadingStatus: VehicleLoadingStatus.loading));
     try {
       await Future<void>.delayed(const Duration(milliseconds: 500)); // Simulate API call
       final vehicles = _getVehicles();
       emit(state.copyWith(
-        status: VehicleStatus.loaded,
+        loadingStatus: VehicleLoadingStatus.loaded,
         vehicles: vehicles,
       ));
     } catch (error) {
       emit(state.copyWith(
-        status: VehicleStatus.failure,
-        errorMessage: error.toString(),
+        loadingStatus: VehicleLoadingStatus.failure,
+        errorMessage: 'Failed to load vehicles. Please try again.',
       ));
     }
   }
 
+  /// Handles vehicle selection
   void _onVehicleSelected(VehicleSelected event, Emitter<VehicleState> emit) {
     final selectedVehicle = VehicleSelectionInput.dirty(event.vehicle);
     emit(state.copyWith(
       selectedVehicle: selectedVehicle,
-      isValid: Formz.validate([selectedVehicle]),
+      status: FormzSubmissionStatus.initial,
     ));
   }
 
-  void _onSubmitted(VehicleSelectionSubmitted event, Emitter<VehicleState> emit) async {
-    if (state.isValid) {
-      emit(state.copyWith(status: VehicleStatus.loading));
-      try {
-        // TODO: Implement vehicle selection to API
-        await Future<void>.delayed(const Duration(seconds: 1)); // Simulate API call
-        emit(state.copyWith(status: VehicleStatus.success));
-      } catch (error) {
-        emit(
-          state.copyWith(
-            status: VehicleStatus.failure,
-            errorMessage: error.toString(),
-          ),
-        );
-      }
+  /// Handles vehicle selection submission
+  Future<void> _onSubmitted(VehicleSelectionSubmitted event, Emitter<VehicleState> emit) async {
+    // Validate selection before submission
+    final selectedVehicle = VehicleSelectionInput.dirty(state.selectedVehicle.value);
+    
+    emit(state.copyWith(
+      selectedVehicle: selectedVehicle,
+      status: FormzSubmissionStatus.initial,
+    ));
+
+    if (!state.isValid) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: selectedVehicle.displayError?.toString() ?? 'Please select a vehicle',
+      ));
+      return;
+    }
+
+    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
+
+    try {
+      // TODO: Implement vehicle selection to API
+      await Future<void>.delayed(const Duration(seconds: 1)); // Simulate API call
+      emit(state.copyWith(status: FormzSubmissionStatus.success));
+    } catch (error) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: 'Failed to select vehicle. Please try again.',
+      ));
     }
   }
 

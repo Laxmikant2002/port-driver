@@ -6,5 +6,6 @@ class LocalKeys {
   static const String lastLocation = 'last_location';
   static const String driverStatus = 'driver_status';
   static const String accessToken = 'accessToken';
+  static const String refreshToken = 'refreshToken';
   static const String otpToken = 'otpToken';
 }

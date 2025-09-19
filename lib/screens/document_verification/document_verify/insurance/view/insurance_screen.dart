@@ -26,15 +26,19 @@ class InsuranceView extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: BlocListener<InsuranceBloc, InsuranceState>(
         listener: (context, state) {
-          if (state.status == InsuranceStatus.success) {
+          if (state.isSuccess) {
             Navigator.of(context).pop(); // Go back to docs screen
-          } else if (state.status == InsuranceStatus.failure) {
+          } else if (state.hasError) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
                   content: Text(state.errorMessage ?? 'Failed to submit Insurance'),
                   backgroundColor: AppColors.error,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               );
           }
@@ -102,7 +106,7 @@ class _HeaderSection extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Upload your vehicle insurance certificate for verification',
+            'Upload your insurance certificate image (PDF, PNG, JPG) for verification',
             style: TextStyle(
               fontSize: 16,
               color: AppColors.textSecondary,
@@ -176,7 +180,7 @@ class _InsuranceForm extends StatelessWidget {
                         maxLines: 1,
                       ),
                       Text(
-                        'Enter policy details and upload certificate',
+                        'Upload your insurance certificate image',
                         style: TextStyle(
                           fontSize: 13,
                           color: AppColors.textSecondary,
@@ -190,10 +194,6 @@ class _InsuranceForm extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 32),
-            const _PolicyNumberField(),
-            const SizedBox(height: 24),
-            const _ExpiryDateField(),
-            const SizedBox(height: 24),
             const _InsuranceImageField(),
           ],
         ),
@@ -202,252 +202,6 @@ class _InsuranceForm extends StatelessWidget {
   }
 }
 
-class _PolicyNumberField extends StatelessWidget {
-  const _PolicyNumberField();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<InsuranceBloc, InsuranceState>(
-      buildWhen: (previous, current) => previous.policyNumber != current.policyNumber,
-      builder: (context, state) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Policy Number',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              onChanged: (policyNumber) => context
-                  .read<InsuranceBloc>()
-                  .add(InsurancePolicyNumberChanged(policyNumber)),
-              keyboardType: TextInputType.text,
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Enter your insurance policy number',
-                hintStyle: TextStyle(
-                  color: AppColors.textTertiary,
-                  fontSize: 16,
-                ),
-                prefixIcon: Container(
-                  margin: const EdgeInsets.all(12),
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.cyan.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.description_outlined,
-                    color: AppColors.cyan,
-                    size: 20,
-                  ),
-                ),
-                filled: true,
-                fillColor: AppColors.background,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.border,
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.cyan,
-                    width: 2,
-                  ),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.error,
-                    width: 1,
-                  ),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.error,
-                    width: 2,
-                  ),
-                ),
-                errorText: state.policyNumber.displayError != null
-                    ? (state.policyNumber.error == InsurancePolicyNumberValidationError.empty
-                        ? 'Policy number is required'
-                        : 'Enter a valid policy number')
-                    : null,
-                errorStyle: TextStyle(
-                  color: AppColors.error,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _ExpiryDateField extends StatelessWidget {
-  const _ExpiryDateField();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<InsuranceBloc, InsuranceState>(
-      buildWhen: (previous, current) => previous.expiryDate != current.expiryDate,
-      builder: (context, state) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Expiry Date',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              onChanged: (expiryDate) => context
-                  .read<InsuranceBloc>()
-                  .add(InsuranceExpiryDateChanged(expiryDate)),
-              keyboardType: TextInputType.datetime,
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: InputDecoration(
-                hintText: 'DD/MM/YYYY or YYYY-MM-DD',
-                hintStyle: TextStyle(
-                  color: AppColors.textTertiary,
-                  fontSize: 16,
-                ),
-                prefixIcon: Container(
-                  margin: const EdgeInsets.all(12),
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.cyan.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.calendar_today_outlined,
-                    color: AppColors.cyan,
-                    size: 20,
-                  ),
-                ),
-                suffixIcon: GestureDetector(
-                  onTap: () => _selectDate(context),
-                  child: Container(
-                    margin: const EdgeInsets.all(12),
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.cyan.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.calendar_month_outlined,
-                      color: AppColors.cyan,
-                      size: 20,
-                    ),
-                  ),
-                ),
-                filled: true,
-                fillColor: AppColors.background,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.border,
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.cyan,
-                    width: 2,
-                  ),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.error,
-                    width: 1,
-                  ),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.error,
-                    width: 2,
-                  ),
-                ),
-                errorText: state.expiryDate.displayError != null
-                    ? (state.expiryDate.error == InsuranceExpiryDateValidationError.empty
-                        ? 'Expiry date is required'
-                        : 'Enter a valid date (DD/MM/YYYY or YYYY-MM-DD)')
-                    : null,
-                errorStyle: TextStyle(
-                  color: AppColors.error,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().add(const Duration(days: 30)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: AppColors.cyan,
-              onPrimary: Colors.white,
-              surface: AppColors.surface,
-              onSurface: AppColors.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    
-    if (picked != null) {
-      final formattedDate = '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
-      context.read<InsuranceBloc>().add(InsuranceExpiryDateChanged(formattedDate));
-    }
-  }
-}
 
 class _InsuranceImageField extends StatelessWidget {
   const _InsuranceImageField();
@@ -478,10 +232,10 @@ class _InsuranceImageField extends StatelessWidget {
                   color: AppColors.background,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: state.insuranceImage.displayError != null
+                    color: state.insuranceImage.errorMessage != null
                         ? AppColors.error
                         : AppColors.border,
-                    width: state.insuranceImage.displayError != null ? 2 : 1,
+                    width: state.insuranceImage.errorMessage != null ? 2 : 1,
                   ),
                 ),
                 child: state.insuranceImage.value.isEmpty
@@ -553,11 +307,11 @@ class _InsuranceImageField extends StatelessWidget {
                       ),
               ),
             ),
-            if (state.insuranceImage.displayError != null)
+            if (state.insuranceImage.errorMessage != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
-                  'Insurance certificate is required',
+                  state.insuranceImage.errorMessage!,
                   style: TextStyle(
                     color: AppColors.error,
                     fontSize: 12,
@@ -792,7 +546,7 @@ class _SubmitButton extends StatelessWidget {
               ),
               elevation: 0,
             ),
-            child: state.status == InsuranceStatus.loading
+            child: state.isSubmitting
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

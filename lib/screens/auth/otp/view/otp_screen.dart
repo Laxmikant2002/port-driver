@@ -35,18 +35,21 @@ class _OtpScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: BlocListener<OtpBloc, OtpState>(
         listener: (context, state) {
-          if (state.status == FormzSubmissionStatus.success) {
-            // For new users, navigate to profile screen
-            // For existing users, navigate to home
-            // TODO: Check if user is new or existing from API response
-            final phone = ModalRoute.of(context)!.settings.arguments as String;
-            Navigator.pushReplacementNamed(context, '/profile', arguments: phone);
-          } else if (state.status == FormzSubmissionStatus.failure && state.error != null) {
+          if (state.isSuccess && state.user != null) {
+            // Navigate based on user status
+            if (state.user!.isNewUser || !state.user!.profileComplete) {
+              Navigator.pushReplacementNamed(context, '/profile', arguments: state.user!.phone);
+            } else if (!state.user!.documentVerified) {
+              Navigator.pushReplacementNamed(context, '/docs-verification');
+            } else {
+              Navigator.pushReplacementNamed(context, '/dashboard');
+            }
+          } else if (state.hasError) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
-                  content: Text(state.error!),
+                  content: Text(state.errorMessage!),
                   backgroundColor: AppColors.error,
                   duration: const Duration(seconds: 4),
                   behavior: SnackBarBehavior.floating,
@@ -90,7 +93,7 @@ class _VerifyButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<OtpBloc, OtpState>(
       builder: (context, state) {
-        final isLoading = state.status == FormzSubmissionStatus.inProgress;
+        final isLoading = state.isSubmitting;
         final isDisabled = isLoading || !state.isValid;
         
         return Container(
@@ -116,7 +119,7 @@ class _VerifyButton extends StatelessWidget {
                   ],
           ),
           child: ElevatedButton(
-            onPressed: isDisabled ? null : () => context.read<OtpBloc>().add(const VerifyOtp()),
+            onPressed: isDisabled ? null : () => context.read<OtpBloc>().add(const OtpSubmitted()),
             style: ElevatedButton.styleFrom(
               backgroundColor: isDisabled ? AppColors.border : Colors.transparent,
               shadowColor: Colors.transparent,
@@ -327,7 +330,7 @@ class _ResendText extends StatelessWidget {
                 const SizedBox(width: 8),
                 if (state.canResend)
                   GestureDetector(
-                    onTap: () => context.read<OtpBloc>().add(const ResendOtp()),
+                    onTap: () => context.read<OtpBloc>().add(const OtpResendRequested()),
                     child: Text(
                       'Resend OTP',
                       style: TextStyle(
