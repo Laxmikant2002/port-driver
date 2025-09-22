@@ -13,23 +13,23 @@ class LoadPaymentData extends PaymentEvent {
 
 class InitiateWithdrawal extends PaymentEvent {
   final double amount;
-  final String paymentMethod;
-  final String bankAccountId; // Add this property
+  final String bankAccountId;
+  final String? notes;
 
   const InitiateWithdrawal({
     required this.amount,
-    required this.paymentMethod,
-    required this.bankAccountId, // Include in constructor
+    required this.bankAccountId,
+    this.notes,
   });
 
   @override
-  List<Object> get props => [amount, paymentMethod, bankAccountId]; // Add to props
+  List<Object?> get props => [amount, bankAccountId, notes];
 }
 
 class FilterTransactions extends PaymentEvent {
-  final String type;
+  final String? type;
 
-  const FilterTransactions({required this.type});
+  const FilterTransactions({this.type});
 
   @override
   List<Object?> get props => [type];

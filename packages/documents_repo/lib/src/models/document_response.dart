@@ -1,68 +1,63 @@
 import 'package:equatable/equatable.dart';
 import 'document.dart';
 
-/// Response model for document operations
+/// Document response model for API responses
 class DocumentResponse extends Equatable {
   const DocumentResponse({
     required this.success,
-    this.document,
-    this.documents,
     this.message,
+    this.documents,
+    this.document,
   });
 
   final bool success;
-  final Document? document;
-  final List<Document>? documents;
   final String? message;
+  final List<Document>? documents;
+  final Document? document;
 
   factory DocumentResponse.fromJson(Map<String, dynamic> json) {
     return DocumentResponse(
-      success: json['success'] as bool? ?? false,
-      document: json['document'] != null 
-          ? Document.fromJson(json['document'] as Map<String, dynamic>)
-          : null,
+      success: json['success'] as bool,
+      message: json['message'] as String?,
       documents: json['documents'] != null
-          ? (json['documents'] as List)
-              .map((doc) => Document.fromJson(doc as Map<String, dynamic>))
+          ? (json['documents'] as List<dynamic>)
+              .map((e) => Document.fromJson(e as Map<String, dynamic>))
               .toList()
           : null,
-      message: json['message'] as String?,
+      document: json['document'] != null
+          ? Document.fromJson(json['document'] as Map<String, dynamic>)
+          : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'success': success,
-      'document': document?.toJson(),
-      'documents': documents?.map((doc) => doc.toJson()).toList(),
       'message': message,
+      'documents': documents?.map((e) => e.toJson()).toList(),
+      'document': document?.toJson(),
     };
   }
 
   DocumentResponse copyWith({
     bool? success,
-    Document? document,
-    List<Document>? documents,
     String? message,
+    List<Document>? documents,
+    Document? document,
   }) {
     return DocumentResponse(
       success: success ?? this.success,
-      document: document ?? this.document,
-      documents: documents ?? this.documents,
       message: message ?? this.message,
+      documents: documents ?? this.documents,
+      document: document ?? this.document,
     );
   }
 
   @override
-  List<Object?> get props => [success, document, documents, message];
+  List<Object?> get props => [success, message, documents, document];
 
   @override
   String toString() {
-    return 'DocumentResponse('
-        'success: $success, '
-        'document: $document, '
-        'documents: ${documents?.length ?? 0}, '
-        'message: $message'
-        ')';
+    return 'DocumentResponse(success: $success, message: $message, documents: ${documents?.length}, document: $document)';
   }
 }

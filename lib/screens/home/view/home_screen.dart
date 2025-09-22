@@ -82,8 +82,6 @@
 import 'package:flutter/material.dart';
 import 'package:driver/screens/account_screen/views/account_screen.dart';
 import 'package:driver/screens/rides/view/ride_screen.dart';
-import 'package:driver/screens/rides/wallet/wallet_screen.dart';
-import 'package:driver/screens/trips/view/trip_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

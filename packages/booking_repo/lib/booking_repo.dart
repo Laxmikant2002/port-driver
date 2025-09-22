@@ -1,5 +1,5 @@
-/// A Calculator.
-class Calculator {
-  /// Returns [value] plus 1.
-  int addOne(int value) => value + 1;
-}
+library booking_repo;
+
+export 'src/booking_repo.dart';
+export 'src/models/booking.dart';
+export 'src/models/booking_response.dart';

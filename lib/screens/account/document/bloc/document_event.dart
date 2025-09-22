@@ -1,43 +1,93 @@
 part of 'document_bloc.dart';
 
-abstract class DocumentEvent extends Equatable {
+/// Base class for all Document events
+sealed class DocumentEvent extends Equatable {
   const DocumentEvent();
 
   @override
   List<Object> get props => [];
 }
 
-class LoadDocuments extends DocumentEvent {
-  const LoadDocuments();
+/// Event triggered when documents are loaded
+final class DocumentsLoaded extends DocumentEvent {
+  const DocumentsLoaded();
+
+  @override
+  String toString() => 'DocumentsLoaded()';
 }
 
-class UploadDocument extends DocumentEvent {
-  final Map<String, dynamic> document;
+/// Event triggered when a document is selected for viewing/editing
+final class DocumentSelected extends DocumentEvent {
+  const DocumentSelected(this.document);
 
-  const UploadDocument(this.document);
+  final Document document;
 
   @override
   List<Object> get props => [document];
+
+  @override
+  String toString() => 'DocumentSelected(document: $document)';
 }
 
-class DeleteDocument extends DocumentEvent {
-  final String documentId;
+/// Event triggered when a document is uploaded
+final class DocumentUploaded extends DocumentEvent {
+  const DocumentUploaded({
+    required this.documentType,
+    required this.filePath,
+    this.fileName,
+    this.metadata,
+  });
 
-  const DeleteDocument(this.documentId);
+  final DocumentType documentType;
+  final String filePath;
+  final String? fileName;
+  final Map<String, dynamic>? metadata;
+
+  @override
+  List<Object> get props => [documentType, filePath, fileName ?? '', metadata ?? {}];
+
+  @override
+  String toString() => 'DocumentUploaded(documentType: $documentType, filePath: $filePath)';
+}
+
+/// Event triggered when a document is deleted
+final class DocumentDeleted extends DocumentEvent {
+  const DocumentDeleted(this.documentId);
+
+  final String documentId;
 
   @override
   List<Object> get props => [documentId];
-}
-
-class UpdateDocumentStatus extends DocumentEvent {
-  final String documentId;
-  final DocumentStatus status;
-
-  const UpdateDocumentStatus({
-    required this.documentId,
-    required this.status,
-  });
 
   @override
-  List<Object> get props => [documentId, status];
+  String toString() => 'DocumentDeleted(documentId: $documentId)';
+}
+
+/// Event triggered when document upload is retried
+final class DocumentRetryUpload extends DocumentEvent {
+  const DocumentRetryUpload({
+    required this.documentType,
+    required this.filePath,
+    this.fileName,
+    this.metadata,
+  });
+
+  final DocumentType documentType;
+  final String filePath;
+  final String? fileName;
+  final Map<String, dynamic>? metadata;
+
+  @override
+  List<Object> get props => [documentType, filePath, fileName ?? '', metadata ?? {}];
+
+  @override
+  String toString() => 'DocumentRetryUpload(documentType: $documentType, filePath: $filePath)';
+}
+
+/// Event triggered when document status is refreshed
+final class DocumentStatusRefreshed extends DocumentEvent {
+  const DocumentStatusRefreshed();
+
+  @override
+  String toString() => 'DocumentStatusRefreshed()';
 }

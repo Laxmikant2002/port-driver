@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:driver/screens/trips/bloc/trip_bloc.dart';
-import 'package:driver/screens/trips/view/fields/actionbuttons_field.dart';
 import 'package:driver/screens/trips/view/fields/categorybuttons_field.dart';
 import 'package:driver/screens/trips/view/fields/tripdetails_field.dart';
 

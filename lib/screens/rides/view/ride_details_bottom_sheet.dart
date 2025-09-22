@@ -28,7 +28,7 @@ class RideDetailsBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     void _showTripStartConfirmationSheet() async {
-      await showModalBottomSheet(
+      await showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,

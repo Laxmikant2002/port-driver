@@ -1,17 +1,16 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter/material.dart';
 import 'package:equatable/equatable.dart';
 import 'package:formz/formz.dart';
-import 'package:earning_repo/earning_repo.dart';
+import 'package:finance_repo/finance_repo.dart';
 
 part 'payment_event.dart';
 part 'payment_state.dart';
 
 class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
-  final EarningService _earningService;
+  final FinanceRepo _financeRepo;
 
-  PaymentBloc({required EarningService earningService}) 
-      : _earningService = earningService,
+  PaymentBloc({required FinanceRepo financeRepo}) 
+      : _financeRepo = financeRepo,
         super(const PaymentState()) {
     on<LoadPaymentData>(_onLoadPaymentData);
     on<InitiateWithdrawal>(_onInitiateWithdrawal);
@@ -25,63 +24,86 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     
     try {
-      final driverId = await _getDriverId(); // Fetch driverId dynamically
-      if (driverId == null) {
-        throw Exception('Driver ID is missing');
+      // Get wallet balance
+      final balanceResponse = await _financeRepo.getWalletBalance();
+      
+      // Get transactions
+      final transactionsResponse = await _financeRepo.getTransactions(
+        limit: 50,
+        offset: 0,
+      );
+
+      if (balanceResponse.success && balanceResponse.balance != null) {
+        final balance = balanceResponse.balance!;
+        final transactions = transactionsResponse.success && transactionsResponse.transactions != null
+            ? transactionsResponse.transactions!
+            : [];
+
+        // Calculate totals from transactions
+        double totalEarnings = 0.0;
+        double totalWithdrawals = 0.0;
+        
+        for (final transaction in transactions) {
+          if (transaction.type == TransactionType.earning) {
+            totalEarnings += transaction.amount as double;
+          } else if (transaction.type == TransactionType.withdrawal) {
+            totalWithdrawals += transaction.amount as double;
+          }
+        }
+
+        // Convert finance_repo Transaction to PaymentState Transaction
+        final paymentTransactions = transactions.map((transaction) => Transaction(
+          id: transaction.id.toString(),
+          amount: transaction.amount as double,
+          type: transaction.type.value.toString(),
+          status: transaction.status.value.toString(),
+          method: (transaction.description is String ? transaction.description as String : 'Unknown'),
+          date: transaction.createdAt as DateTime,
+          note: (transaction.description is String ? transaction.description as String : transaction.description?.toString() ?? ''),
+        )).toList();
+
+        emit(state.copyWith(
+          totalEarnings: totalEarnings,
+          totalWithdrawals: totalWithdrawals,
+          availableBalance: balance.availableBalance,
+          transactions: paymentTransactions,
+          status: FormzSubmissionStatus.success,
+        ));
+      } else {
+        // Fallback to cached data
+        final cachedBalance = await _financeRepo.getCachedBalance();
+        final cachedTransactions = await _financeRepo.getCachedTransactions();
+        
+        double totalEarnings = 0.0;
+        double totalWithdrawals = 0.0;
+        
+        for (final transaction in cachedTransactions) {
+          if (transaction.type == TransactionType.earning) {
+            totalEarnings += transaction.amount;
+          } else if (transaction.type == TransactionType.withdrawal) {
+            totalWithdrawals += transaction.amount;
+          }
+        }
+
+        // Convert finance_repo Transaction to PaymentState Transaction
+        final paymentTransactions = cachedTransactions.map((transaction) => Transaction(
+          id: transaction.id,
+          amount: transaction.amount,
+          type: transaction.type.value,
+          status: transaction.status.value,
+          method: transaction.description ?? 'Unknown',
+          date: transaction.createdAt,
+          note: transaction.description ?? '',
+        )).toList();
+
+        emit(state.copyWith(
+          totalEarnings: totalEarnings,
+          totalWithdrawals: totalWithdrawals,
+          availableBalance: cachedBalance?.availableBalance ?? 0.0,
+          transactions: paymentTransactions,
+          status: FormzSubmissionStatus.success,
+        ));
       }
-
-      final now = DateTime.now();
-      final startDate = now.subtract(const Duration(days: 30));
-      
-      final earnings = await _earningService.getWeeklyEarnings(
-        EarningRequest(
-          driverId: driverId,
-          startDate: startDate,
-          endDate: now,
-        ),
-      );
-      
-      final withdrawals = await _earningService.getWithdrawalHistory(
-        EarningRequest(
-          driverId: driverId,
-          startDate: startDate,
-          endDate: now,
-        ),
-      );
-
-      final totalEarnings = _earningService.calculateTotalEarnings(earnings);
-      final totalWithdrawals = _earningService.calculateTotalWithdrawals(withdrawals);
-      final availableBalance = totalEarnings - totalWithdrawals;
-
-      // Convert earnings and withdrawals to transactions
-      final transactions = [
-        ...earnings.map((e) => Transaction(
-              id: e.id,
-              amount: e.amount,
-              type: 'earnings',
-              status: e.status,
-              method: e.paymentMethod,
-              date: e.date,
-              note: 'Trip #${e.tripId}',
-            )),
-        ...withdrawals.map((w) => Transaction(
-              id: w.id,
-              amount: w.amount,
-              type: 'withdrawals',
-              status: w.status,
-              method: w.paymentMethod,
-              date: w.date,
-              note: 'Withdrawal',
-            )),
-      ]..sort((a, b) => b.date.compareTo(a.date)); // Sort by date descending
-
-      emit(state.copyWith(
-        totalEarnings: totalEarnings,
-        totalWithdrawals: totalWithdrawals,
-        availableBalance: availableBalance,
-        transactions: transactions,
-        status: FormzSubmissionStatus.success,
-      ));
     } catch (e) {
       emit(state.copyWith(
         status: FormzSubmissionStatus.failure,
@@ -101,20 +123,22 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
   ) async {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     try {
-      final driverId = await _getDriverId(); // Fetch driverId dynamically
-      if (driverId == null) {
-        throw Exception('Driver ID is missing');
-      }
-
-      await _earningService.requestWithdrawal(
-        WithdrawalRequest(
-          driverId: driverId,
-          amount: event.amount,
-          paymentMethod: event.paymentMethod,
-          bankAccountId: event.bankAccountId,
-        ),
+      final withdrawalRequest = WithdrawalRequest(
+        amount: event.amount,
+        bankAccountId: event.bankAccountId,
+        notes: event.notes,
       );
-      add(const LoadPaymentData()); // Reload data after withdrawal
+
+      final response = await _financeRepo.requestWithdrawal(withdrawalRequest);
+      
+      if (response.success) {
+        add(const LoadPaymentData()); // Reload data after withdrawal
+      } else {
+        emit(state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          error: response.message ?? 'Withdrawal failed',
+        ));
+      }
     } catch (e) {
       emit(state.copyWith(
         status: FormzSubmissionStatus.failure,

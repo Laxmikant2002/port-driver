@@ -1,72 +1,153 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:formz/formz.dart';
 import 'package:equatable/equatable.dart';
 
 part 'addvehicle_event.dart';
 part 'addvehicle_state.dart';
 
 class AddVehicleBloc extends Bloc<AddVehicleEvent, AddVehicleState> {
-  AddVehicleBloc() : super(AddVehicleInitial()) {
-    on<LoadVehicles>(_onLoadVehicles);
-    on<AddVehicle>(_onAddVehicle);
-    on<DeleteVehicle>(_onDeleteVehicle);
+  AddVehicleBloc() : super(const AddVehicleState()) {
+    on<VehiclesLoaded>(_onVehiclesLoaded);
+    on<VehicleNameChanged>(_onVehicleNameChanged);
+    on<VehicleNumberChanged>(_onVehicleNumberChanged);
+    on<VehicleYearChanged>(_onVehicleYearChanged);
+    on<VehicleTypeChanged>(_onVehicleTypeChanged);
+    on<VehiclePhotoChanged>(_onVehiclePhotoChanged);
+    on<VehicleSubmitted>(_onVehicleSubmitted);
+    on<VehicleDeleted>(_onVehicleDeleted);
+    on<VehicleSelected>(_onVehicleSelected);
   }
 
-  Future<void> _onLoadVehicles(
-    LoadVehicles event,
+
+  Future<void> _onVehiclesLoaded(
+    VehiclesLoaded event,
     Emitter<AddVehicleState> emit,
   ) async {
+    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
+    
     try {
-      emit(AddVehicleLoading());
-
-      // Simulate fetching vehicles (in real app, fetch from API/db)
-      await Future.delayed(const Duration(seconds: 1));
-      final vehicles = [
-        Vehicle(
-          name: 'Honda City',
-          number: 'MH 12 AB 1234',
-          year: '2022',
-          type: 'Sedan',
-          photoPath: '',
-        ),
-        Vehicle(
-          name: 'Piaggio Auto',
-          number: 'KA 05 XY 9876',
-          year: '2020',
-          type: 'Auto',
-          photoPath: '',
-        ),
-      ];
-
-      emit(AddVehicleLoaded(vehicles: vehicles));
-    } catch (e) {
-      emit(AddVehicleError(message: e.toString()));
+      // TODO: Implement vehicle management through profile repo
+      // For now, simulate with empty list
+      emit(state.copyWith(
+        vehicles: [],
+        status: FormzSubmissionStatus.success,
+        clearError: true,
+      ));
+    } catch (error) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: 'Network error: ${error.toString()}',
+      ));
     }
   }
 
-  Future<void> _onAddVehicle(
-    AddVehicle event,
+  void _onVehicleNameChanged(
+    VehicleNameChanged event,
+    Emitter<AddVehicleState> emit,
+  ) {
+    final vehicleName = VehicleName.dirty(event.vehicleName);
+    emit(state.copyWith(
+      vehicleName: vehicleName,
+      status: FormzSubmissionStatus.initial,
+      clearError: true,
+    ));
+  }
+
+  void _onVehicleNumberChanged(
+    VehicleNumberChanged event,
+    Emitter<AddVehicleState> emit,
+  ) {
+    final vehicleNumber = VehicleNumber.dirty(event.vehicleNumber);
+    emit(state.copyWith(
+      vehicleNumber: vehicleNumber,
+      status: FormzSubmissionStatus.initial,
+      clearError: true,
+    ));
+  }
+
+  void _onVehicleYearChanged(
+    VehicleYearChanged event,
+    Emitter<AddVehicleState> emit,
+  ) {
+    final vehicleYear = VehicleYear.dirty(event.vehicleYear);
+    emit(state.copyWith(
+      vehicleYear: vehicleYear,
+      status: FormzSubmissionStatus.initial,
+      clearError: true,
+    ));
+  }
+
+  void _onVehicleTypeChanged(
+    VehicleTypeChanged event,
+    Emitter<AddVehicleState> emit,
+  ) {
+    final vehicleType = VehicleTypeInput.dirty(event.vehicleType);
+    emit(state.copyWith(
+      vehicleType: vehicleType,
+      status: FormzSubmissionStatus.initial,
+      clearError: true,
+    ));
+  }
+
+  void _onVehiclePhotoChanged(
+    VehiclePhotoChanged event,
+    Emitter<AddVehicleState> emit,
+  ) {
+    emit(state.copyWith(
+      photoPath: event.photoPath,
+      status: FormzSubmissionStatus.initial,
+      clearError: true,
+    ));
+  }
+
+  Future<void> _onVehicleSubmitted(
+    VehicleSubmitted event,
     Emitter<AddVehicleState> emit,
   ) async {
-    if (state is AddVehicleLoaded) {
-      final currentState = state as AddVehicleLoaded;
-      final updatedVehicles = List<Vehicle>.from(currentState.vehicles)
-        ..add(event.vehicle);
+    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
 
-      emit(AddVehicleLoaded(vehicles: updatedVehicles));
+    try {
+      // TODO: Implement vehicle addition through profile repo
+      // For now, simulate success
+      add(const VehiclesLoaded());
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.success,
+        clearError: true,
+      ));
+    } catch (error) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: 'Network error. Please try again.',
+      ));
     }
   }
 
-  Future<void> _onDeleteVehicle(
-    DeleteVehicle event,
+  Future<void> _onVehicleDeleted(
+    VehicleDeleted event,
     Emitter<AddVehicleState> emit,
   ) async {
-    if (state is AddVehicleLoaded) {
-      final currentState = state as AddVehicleLoaded;
-      final updatedVehicles = currentState.vehicles
-          .where((v) => v.number != event.vehicleNumber)
-          .toList();
-
-      emit(AddVehicleLoaded(vehicles: updatedVehicles));
+    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
+    
+    try {
+      // TODO: Implement vehicle deletion through profile repo
+      // For now, simulate success
+      add(const VehiclesLoaded());
+    } catch (error) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: 'Delete error: ${error.toString()}',
+      ));
     }
+  }
+
+  void _onVehicleSelected(
+    VehicleSelected event,
+    Emitter<AddVehicleState> emit,
+  ) {
+    emit(state.copyWith(
+      selectedVehicle: event.vehicle,
+      status: FormzSubmissionStatus.initial,
+      clearError: true,
+    ));
   }
 }

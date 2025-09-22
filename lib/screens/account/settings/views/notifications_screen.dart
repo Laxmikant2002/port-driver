@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:notification_repo/notification_repo.dart' as notification_repo;
+import 'package:notifications_repo/notifications_repo.dart' as notification_repo;
 import 'package:localstorage/localstorage.dart';
 import 'package:driver/services/notification_preferences_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -55,7 +55,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Future<void> _loadPreferences() async {
-    final localStorage = Localstorage(await SharedPreferences.getInstance());
+    final localStorage = Localstorage('driver_app');
     _prefsService = NotificationPreferencesService(localStorage);
 
     setState(() {

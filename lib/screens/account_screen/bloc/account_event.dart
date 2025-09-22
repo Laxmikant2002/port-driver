@@ -1,18 +1,40 @@
 part of 'account_bloc.dart';
-abstract class AccountEvent extends Equatable {
-    @override
-    List<Object> get props => [];
+
+/// Base class for all Account events
+sealed class AccountEvent extends Equatable {
+  const AccountEvent();
+
+  @override
+  List<Object> get props => [];
 }
 
-class LoadAccountData extends AccountEvent {}
+/// Event triggered when account data is loaded
+final class LoadAccountData extends AccountEvent {
+  const LoadAccountData();
 
-class UpdateProfileImage extends AccountEvent {
-    final String imagePath;
-
-    UpdateProfileImage(this.imagePath);
-
-    @override
-    List<Object> get props => [imagePath];
+  @override
+  String toString() => 'LoadAccountData()';
 }
 
-class LogoutRequested extends AccountEvent {}
+
+/// Event triggered when profile image is updated
+final class UpdateProfileImage extends AccountEvent {
+  const UpdateProfileImage(this.imagePath);
+
+  final String imagePath;
+
+  @override
+  List<Object> get props => [imagePath];
+
+  @override
+  String toString() => 'UpdateProfileImage(imagePath: $imagePath)';
+}
+
+
+/// Event triggered when logout is requested
+final class LogoutRequested extends AccountEvent {
+  const LogoutRequested();
+
+  @override
+  String toString() => 'LogoutRequested()';
+}

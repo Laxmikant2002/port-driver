@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:driver/locator.dart';
@@ -78,7 +77,7 @@ class _HomeScreenState extends State<_HomeScreen> with SingleTickerProviderState
   void _showRideDetailsBottomSheet(BuildContext context) async {
     if (!mounted) return;
     try {
-      await showModalBottomSheet(
+      await showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
@@ -316,7 +315,7 @@ class _HomeScreenState extends State<_HomeScreen> with SingleTickerProviderState
                     icon: const Icon(Icons.directions_car),
                     label: const Text('Test Ride Request'),
                     onPressed: () {
-                      showModalBottomSheet(
+                      showModalBottomSheet<void>(
                         context: context,
                         isScrollControlled: true,
                         backgroundColor: Colors.transparent,

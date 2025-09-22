@@ -3,7 +3,7 @@ import 'package:driver/screens/account/ride_history/views/history_screen.dart';
 import 'package:driver/screens/home/view/home_screen.dart';
 import 'package:driver/screens/summary/view/summary_screen.dart';
 import 'package:driver/screens/trips/view/trip_screen.dart';
-import 'package:driver/screens/rides/wallet/send_to_bank_screen.dart';
+import 'package:driver/screens/account/wallet/view/send_to_bank_screen.dart';
 
 
 class DashboardRoutes {
@@ -20,7 +20,7 @@ class DashboardRoutes {
   static Map<String, WidgetBuilder> getRoutes() {
     return {
       home: (context) => const HomeScreen(),
-      sendToBank: (context) => SendToBank(),
+      sendToBank: (context) => const SendToBank(),
       trip: (context) => const TripScreen(),
       summary: (context) => const SummaryScreen(),
       history: (context) => const HistoryScreen(),

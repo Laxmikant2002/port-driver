@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'document.dart';
 
-/// Request model for document upload
+/// Document upload request model
 class DocumentUploadRequest extends Equatable {
   const DocumentUploadRequest({
     required this.type,
@@ -18,9 +18,19 @@ class DocumentUploadRequest extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       'type': type.value,
+      'filePath': filePath,
       'fileName': fileName,
       'metadata': metadata,
     };
+  }
+
+  factory DocumentUploadRequest.fromJson(Map<String, dynamic> json) {
+    return DocumentUploadRequest(
+      type: DocumentType.fromString(json['type'] as String),
+      filePath: json['filePath'] as String,
+      fileName: json['fileName'] as String?,
+      metadata: json['metadata'] as Map<String, dynamic>?,
+    );
   }
 
   DocumentUploadRequest copyWith({
@@ -42,11 +52,6 @@ class DocumentUploadRequest extends Equatable {
 
   @override
   String toString() {
-    return 'DocumentUploadRequest('
-        'type: $type, '
-        'filePath: $filePath, '
-        'fileName: $fileName, '
-        'metadata: $metadata'
-        ')';
+    return 'DocumentUploadRequest(type: $type, filePath: $filePath, fileName: $fileName)';
   }
 }

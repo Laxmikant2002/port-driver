@@ -1,5 +1,5 @@
-/// A Calculator.
-class Calculator {
-  /// Returns [value] plus 1.
-  int addOne(int value) => value + 1;
-}
+library trip_repo;
+
+export 'src/trip_repo.dart';
+export 'src/models/trip.dart';
+export 'src/models/trip_response.dart';
