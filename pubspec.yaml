@@ -31,6 +31,8 @@ dependencies:
     path: ./packages/history_repo
   shared_repo:
     path: ./packages/shared_repo
+  ui_components:
+    path: ./packages/ui_components
   
   firebase_messaging: ^14.0.0
   flutter_local_notifications: ^17.2.3

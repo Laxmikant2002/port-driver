@@ -1,48 +1,79 @@
+import 'package:booking_repo/booking_repo.dart';
 import 'package:flutter/material.dart';
+import 'package:driver/screens/booking_flow/Ride_Progress/ride_progress_screen.dart';
 
 class BookingRoutes {
-  // Booking management
-  static const String bookingRequest = '/booking-request';
+  // Ride matching and booking management
+  static const String incomingRideRequest = '/incoming-ride-request';
   static const String bookingDetails = '/booking-details';
-  static const String acceptBooking = '/accept-booking';
-  static const String rejectBooking = '/reject-booking';
   static const String bookingHistory = '/booking-history';
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
-      // These are typically shown as bottom sheets or modals
-      // rather than full screens, but keeping routes for consistency
-      bookingRequest: (context) {
-        // This would typically be shown as a bottom sheet
-        return const Scaffold(
-          body: Center(
-            child: Text('Booking Request - Usually shown as bottom sheet'),
+      // Incoming ride request bottom sheet
+      incomingRideRequest: (context) {
+        // This would typically be shown as a bottom sheet with a booking
+        // For now, create a mock booking for demonstration
+        final mockBooking = Booking(
+          id: '1',
+          passengerId: 'passenger_1',
+          driverId: 'driver_1',
+          status: BookingStatus.pending,
+          pickupLocation: const BookingLocation(
+            address: '123 Main Street, Downtown',
+            latitude: 40.7128,
+            longitude: -74.0060,
           ),
+          dropoffLocation: const BookingLocation(
+            address: '456 Park Avenue, Uptown',
+            latitude: 40.7589,
+            longitude: -73.9851,
+          ),
+          fare: 25.50,
+          distance: 5.2,
+          estimatedDuration: 15,
+          createdAt: DateTime.now(),
+          passengerName: 'John Doe',
+          passengerPhone: '+1234567890',
+          passengerPhoto: null,
+          vehicleType: 'Sedan',
+          paymentMethod: 'Credit Card',
+        );
+        
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          body: IncomingRideRequestSheet(booking: mockBooking),
         );
       },
       bookingDetails: (context) {
-        // This would typically be shown as a bottom sheet
-        return const Scaffold(
-          body: Center(
-            child: Text('Booking Details - Usually shown as bottom sheet'),
+        // This would typically be shown as a full screen with booking details
+        final mockBooking = Booking(
+          id: '1',
+          passengerId: 'passenger_1',
+          driverId: 'driver_1',
+          status: BookingStatus.accepted,
+          pickupLocation: const BookingLocation(
+            address: '123 Main Street, Downtown',
+            latitude: 40.7128,
+            longitude: -74.0060,
           ),
-        );
-      },
-      acceptBooking: (context) {
-        // This would typically be handled by state management
-        return const Scaffold(
-          body: Center(
-            child: Text('Accept Booking - Handled by state management'),
+          dropoffLocation: const BookingLocation(
+            address: '456 Park Avenue, Uptown',
+            latitude: 40.7589,
+            longitude: -73.9851,
           ),
+          fare: 25.50,
+          distance: 5.2,
+          estimatedDuration: 15,
+          createdAt: DateTime.now(),
+          passengerName: 'John Doe',
+          passengerPhone: '+1234567890',
+          passengerPhoto: null,
+          vehicleType: 'Sedan',
+          paymentMethod: 'Credit Card',
         );
-      },
-      rejectBooking: (context) {
-        // This would typically be handled by state management
-        return const Scaffold(
-          body: Center(
-            child: Text('Reject Booking - Handled by state management'),
-          ),
-        );
+        
+        return RideDetailScreen(booking: mockBooking);
       },
       bookingHistory: (context) {
         // This could be a full screen showing past booking requests

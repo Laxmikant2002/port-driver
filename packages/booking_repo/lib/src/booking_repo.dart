@@ -1,5 +1,4 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:api_client/api_client.dart';
 import 'package:localstorage/localstorage.dart';
 import 'models/booking.dart';
 import 'models/booking_response.dart';
@@ -7,35 +6,34 @@ import 'models/booking_response.dart';
 /// Booking repository for managing ride bookings
 class BookingRepo {
   const BookingRepo({
-    required this.baseUrl,
-    required this.client,
+    required this.apiClient,
     required this.localStorage,
   });
 
-  final String baseUrl;
-  final http.Client client;
+  final ApiClient apiClient;
   final Localstorage localStorage;
 
   /// Get available bookings for driver
   Future<BookingResponse> getAvailableBookings() async {
     try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/booking/available'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
-      );
+      final response = await apiClient.get<Map<String, dynamic>>('/rides/request');
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return BookingResponse.fromJson(json);
-      } else {
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return BookingResponse.fromJson(data);
+      }
+
+      if (response is DataFailed) {
         return BookingResponse(
           success: false,
-          message: 'Failed to fetch available bookings',
+          message: response.error?.getErrorMessage() ?? 'Failed to fetch available bookings',
         );
       }
+
+      return BookingResponse(
+        success: false,
+        message: 'Unexpected error occurred',
+      );
     } catch (e) {
       return BookingResponse(
         success: false,
@@ -47,23 +45,27 @@ class BookingRepo {
   /// Accept a booking
   Future<BookingResponse> acceptBooking(String bookingId) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/booking/$bookingId/accept'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
+      final response = await apiClient.post<Map<String, dynamic>>(
+        '/rides/accept',
+        data: {'bookingId': bookingId},
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return BookingResponse.fromJson(json);
-      } else {
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return BookingResponse.fromJson(data);
+      }
+
+      if (response is DataFailed) {
         return BookingResponse(
           success: false,
-          message: 'Failed to accept booking',
+          message: response.error?.getErrorMessage() ?? 'Failed to accept booking',
         );
       }
+
+      return BookingResponse(
+        success: false,
+        message: 'Unexpected error occurred',
+      );
     } catch (e) {
       return BookingResponse(
         success: false,
@@ -72,27 +74,30 @@ class BookingRepo {
     }
   }
 
-  /// Cancel a booking
-  Future<BookingResponse> cancelBooking(String bookingId, {String? reason}) async {
+  /// Reject a booking
+  Future<BookingResponse> rejectBooking(String bookingId, {String? reason}) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/booking/$bookingId/cancel'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
-        body: jsonEncode({'reason': reason}),
+      final response = await apiClient.post<Map<String, dynamic>>(
+        '/rides/reject',
+        data: {'bookingId': bookingId, 'reason': reason},
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return BookingResponse.fromJson(json);
-      } else {
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return BookingResponse.fromJson(data);
+      }
+
+      if (response is DataFailed) {
         return BookingResponse(
           success: false,
-          message: 'Failed to cancel booking',
+          message: response.error?.getErrorMessage() ?? 'Failed to reject booking',
         );
       }
+
+      return BookingResponse(
+        success: false,
+        message: 'Unexpected error occurred',
+      );
     } catch (e) {
       return BookingResponse(
         success: false,
@@ -104,23 +109,27 @@ class BookingRepo {
   /// Start a booking
   Future<BookingResponse> startBooking(String bookingId) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/booking/$bookingId/start'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
+      final response = await apiClient.post<Map<String, dynamic>>(
+        '/rides/start',
+        data: {'bookingId': bookingId},
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return BookingResponse.fromJson(json);
-      } else {
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return BookingResponse.fromJson(data);
+      }
+
+      if (response is DataFailed) {
         return BookingResponse(
           success: false,
-          message: 'Failed to start booking',
+          message: response.error?.getErrorMessage() ?? 'Failed to start booking',
         );
       }
+
+      return BookingResponse(
+        success: false,
+        message: 'Unexpected error occurred',
+      );
     } catch (e) {
       return BookingResponse(
         success: false,
@@ -132,23 +141,27 @@ class BookingRepo {
   /// Complete a booking
   Future<BookingResponse> completeBooking(String bookingId) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/booking/$bookingId/complete'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
+      final response = await apiClient.post<Map<String, dynamic>>(
+        '/rides/complete',
+        data: {'bookingId': bookingId},
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return BookingResponse.fromJson(json);
-      } else {
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return BookingResponse.fromJson(data);
+      }
+
+      if (response is DataFailed) {
         return BookingResponse(
           success: false,
-          message: 'Failed to complete booking',
+          message: response.error?.getErrorMessage() ?? 'Failed to complete booking',
         );
       }
+
+      return BookingResponse(
+        success: false,
+        message: 'Unexpected error occurred',
+      );
     } catch (e) {
       return BookingResponse(
         success: false,
@@ -160,37 +173,29 @@ class BookingRepo {
   /// Get booking details
   Future<BookingResponse> getBooking(String bookingId) async {
     try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/booking/$bookingId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
-      );
+      final response = await apiClient.get<Map<String, dynamic>>('/booking/$bookingId');
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return BookingResponse.fromJson(json);
-      } else {
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return BookingResponse.fromJson(data);
+      }
+
+      if (response is DataFailed) {
         return BookingResponse(
           success: false,
-          message: 'Failed to fetch booking details',
+          message: response.error?.getErrorMessage() ?? 'Failed to fetch booking details',
         );
       }
+
+      return BookingResponse(
+        success: false,
+        message: 'Unexpected error occurred',
+      );
     } catch (e) {
       return BookingResponse(
         success: false,
         message: 'Network error: ${e.toString()}',
       );
-    }
-  }
-
-  Future<String> _getAuthToken() async {
-    try {
-      final token = await localStorage.getItem('auth_token');
-      return token ?? '';
-    } catch (e) {
-      return '';
     }
   }
 }

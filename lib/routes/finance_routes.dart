@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:driver/screens/account/wallet/view/send_to_bank_screen.dart';
-import 'package:driver/screens/account/wallet/view/wallet_screen.dart';
 
 class FinanceRoutes {
   // Wallet and earnings management (admin handles payouts, no withdrawal needed)
