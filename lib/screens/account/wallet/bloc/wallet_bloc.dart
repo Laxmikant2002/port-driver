@@ -8,206 +8,184 @@ part 'wallet_state.dart';
 
 class WalletBloc extends Bloc<WalletEvent, WalletState> {
   WalletBloc({required this.financeRepo}) : super(const WalletState()) {
-    on<WalletLoaded>(_onWalletLoaded);
-    on<WalletRefreshed>(_onWalletRefreshed);
-    on<TransactionsFiltered>(_onTransactionsFiltered);
-    on<WithdrawalRequested>(_onWithdrawalRequested);
-    on<WithdrawalAmountChanged>(_onWithdrawalAmountChanged);
-    on<BankAccountChanged>(_onBankAccountChanged);
-    on<WithdrawalNotesChanged>(_onWithdrawalNotesChanged);
+    on<WalletBalanceChanged>(_onBalanceChanged);
+    on<WalletWithdrawalAmountChanged>(_onWithdrawalAmountChanged);
+    on<WalletBankAccountChanged>(_onBankAccountChanged);
+    on<WalletWithdrawalSubmitted>(_onWithdrawalSubmitted);
+    on<WalletDataLoaded>(_onDataLoaded);
+    on<WalletTransactionsLoaded>(_onTransactionsLoaded);
+    on<WalletRefreshRequested>(_onRefreshRequested);
   }
 
   final FinanceRepo financeRepo;
 
-  Future<void> _onWalletLoaded(
-    WalletLoaded event,
-    Emitter<WalletState> emit,
-  ) async {
-    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
-    
-    try {
-      final balanceResponse = await financeRepo.getWalletBalance();
-      final transactionsResponse = await financeRepo.getTransactions(
-        limit: event.transactionLimit,
-        offset: event.transactionOffset,
-      );
-      
-      if (balanceResponse.success && balanceResponse.balance != null) {
-        await financeRepo.cacheBalance(balanceResponse.balance!);
-        
-        final transactions = transactionsResponse.success && transactionsResponse.transactions != null
-            ? transactionsResponse.transactions!
-            : await financeRepo.getCachedTransactions();
-        
-        await financeRepo.cacheTransactions(transactions);
-        
-        emit(state.copyWith(
-          balance: balanceResponse.balance!,
-          allTransactions: transactions,
-          filteredTransactions: transactions,
-          status: FormzSubmissionStatus.success,
-          clearError: true,
-        ));
-      } else {
-        // Fallback to cached data
-        final cachedBalance = await financeRepo.getCachedBalance();
-        final cachedTransactions = await financeRepo.getCachedTransactions();
-        
-        emit(state.copyWith(
-          balance: cachedBalance,
-          allTransactions: cachedTransactions,
-          filteredTransactions: cachedTransactions,
-          status: FormzSubmissionStatus.success,
-          clearError: true,
-        ));
-      }
-    } catch (error) {
-      // Fallback to cached data
-      final cachedBalance = await financeRepo.getCachedBalance();
-      final cachedTransactions = await financeRepo.getCachedTransactions();
-      
-      emit(state.copyWith(
-        balance: cachedBalance,
-        allTransactions: cachedTransactions,
-        filteredTransactions: cachedTransactions,
-        status: FormzSubmissionStatus.failure,
-        errorMessage: 'Network error: ${error.toString()}',
-      ));
-    }
-  }
-
-  Future<void> _onWalletRefreshed(
-    WalletRefreshed event,
-    Emitter<WalletState> emit,
-  ) async {
-    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
-    
-    try {
-      // Refresh wallet data to get latest information
-      add(const WalletLoaded());
-    } catch (error) {
-      emit(state.copyWith(
-        status: FormzSubmissionStatus.failure,
-        errorMessage: 'Refresh error: ${error.toString()}',
-      ));
-    }
-  }
-
-  void _onTransactionsFiltered(
-    TransactionsFiltered event,
+  void _onBalanceChanged(
+    WalletBalanceChanged event,
     Emitter<WalletState> emit,
   ) {
-    List<Transaction> filteredTransactions = state.allTransactions;
-    
-    // Apply filters
-    if (event.type != null) {
-      filteredTransactions = filteredTransactions.where((t) => t.type == event.type).toList();
-    }
-    
-    if (event.status != null) {
-      filteredTransactions = filteredTransactions.where((t) => t.status == event.status).toList();
-    }
-    
-    if (event.startDate != null) {
-      filteredTransactions = filteredTransactions.where((t) => t.createdAt.isAfter(event.startDate!)).toList();
-    }
-    
-    if (event.endDate != null) {
-      filteredTransactions = filteredTransactions.where((t) => t.createdAt.isBefore(event.endDate!)).toList();
-    }
-
-    emit(state.copyWith(
-      filteredTransactions: filteredTransactions,
-      status: FormzSubmissionStatus.success,
-      clearError: true,
-    ));
+    final balance = Balance.dirty(event.balance);
+    emit(
+      state.copyWith(
+        balance: balance,
+        status: FormzSubmissionStatus.initial,
+      ),
+    );
   }
 
-  Future<void> _onWithdrawalRequested(
-    WithdrawalRequested event,
+  void _onWithdrawalAmountChanged(
+    WalletWithdrawalAmountChanged event,
+    Emitter<WalletState> emit,
+  ) {
+    final withdrawalAmount = WithdrawalAmount.dirty(event.amount);
+    emit(
+      state.copyWith(
+        withdrawalAmount: withdrawalAmount,
+        status: FormzSubmissionStatus.initial,
+      ),
+    );
+  }
+
+  void _onBankAccountChanged(
+    WalletBankAccountChanged event,
+    Emitter<WalletState> emit,
+  ) {
+    final bankAccount = BankAccount.dirty(event.bankAccount);
+    emit(
+      state.copyWith(
+        bankAccount: bankAccount,
+        status: FormzSubmissionStatus.initial,
+      ),
+    );
+  }
+
+  Future<void> _onWithdrawalSubmitted(
+    WalletWithdrawalSubmitted event,
     Emitter<WalletState> emit,
   ) async {
-    // Validate withdrawal amount
-    final withdrawalAmount = WithdrawalAmount.dirty(event.amount);
-    final bankAccount = BankAccount.dirty(event.bankAccountId);
-    
+    // Validate all fields before submission
+    final withdrawalAmount = WithdrawalAmount.dirty(state.withdrawalAmount.value);
+    final bankAccount = BankAccount.dirty(state.bankAccount.value);
+
     emit(state.copyWith(
       withdrawalAmount: withdrawalAmount,
       bankAccount: bankAccount,
+      status: FormzSubmissionStatus.initial,
     ));
-    
-    if (!Formz.validate([withdrawalAmount, bankAccount])) {
+
+    if (!state.isValid) {
       emit(state.copyWith(
         status: FormzSubmissionStatus.failure,
-        errorMessage: 'Please fix validation errors before submitting',
+        errorMessage: 'Please complete all required fields correctly',
       ));
       return;
     }
 
-    emit(state.copyWith(status: FormzSubmissionStatus.inProgress, clearError: true));
-    
+    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
+
     try {
-      final request = WithdrawalRequest(
-        amount: event.amount,
-        bankAccountId: event.bankAccountId,
+      // Create withdrawal request
+      final withdrawalRequest = WithdrawalRequest(
+        amount: double.tryParse(withdrawalAmount.value) ?? 0.0,
+        bankAccountId: bankAccount.value,
         notes: event.notes,
       );
 
-      final response = await financeRepo.requestWithdrawal(request);
+      // Process withdrawal using finance repo
+      final response = await financeRepo.requestWithdrawal(withdrawalRequest);
       
       if (response.success) {
-        // Refresh wallet after successful withdrawal
-        add(const WalletRefreshed());
+        emit(state.copyWith(status: FormzSubmissionStatus.success));
+        // Reload data after successful withdrawal
+        add(const WalletDataLoaded());
+      } else {
         emit(state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: response.message ?? 'Failed to process withdrawal. Please try again.',
+        ));
+      }
+    } catch (error) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: 'Network error. Please try again.',
+      ));
+    }
+  }
+
+  Future<void> _onDataLoaded(
+    WalletDataLoaded event,
+    Emitter<WalletState> emit,
+  ) async {
+    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
+    
+    try {
+      // Get wallet balance
+      final balanceResponse = await financeRepo.getWalletBalance();
+      
+      if (balanceResponse.success && balanceResponse.balance != null) {
+        final balance = Balance.dirty(balanceResponse.balance!.availableBalance);
+        
+        emit(state.copyWith(
+          balance: balance,
+          availableBalance: balanceResponse.balance!.availableBalance,
+          totalEarnings: balanceResponse.balance!.totalEarnings,
+          totalWithdrawals: balanceResponse.balance!.totalWithdrawals,
           status: FormzSubmissionStatus.success,
           clearError: true,
         ));
       } else {
         emit(state.copyWith(
           status: FormzSubmissionStatus.failure,
-          errorMessage: response.message ?? 'Failed to request withdrawal',
+          errorMessage: balanceResponse.message ?? 'Failed to load wallet data',
         ));
       }
     } catch (error) {
       emit(state.copyWith(
         status: FormzSubmissionStatus.failure,
-        errorMessage: 'Withdrawal error: ${error.toString()}',
+        errorMessage: 'Network error: ${error.toString()}',
       ));
     }
   }
 
-  void _onWithdrawalAmountChanged(
-    WithdrawalAmountChanged event,
+  Future<void> _onTransactionsLoaded(
+    WalletTransactionsLoaded event,
     Emitter<WalletState> emit,
-  ) {
-    final withdrawalAmount = WithdrawalAmount.dirty(event.amount);
-    emit(state.copyWith(
-      withdrawalAmount: withdrawalAmount,
-      status: FormzSubmissionStatus.initial,
-      clearError: true,
-    ));
+  ) async {
+    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
+    
+    try {
+      // Get transactions
+      final response = await financeRepo.getTransactions(
+        limit: event.limit ?? 50,
+        offset: event.offset ?? 0,
+        type: event.type,
+      );
+      
+      if (response.success && response.transactions != null) {
+        emit(state.copyWith(
+          transactions: response.transactions!,
+          status: FormzSubmissionStatus.success,
+          clearError: true,
+        ));
+      } else {
+        emit(state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: response.message ?? 'Failed to load transactions',
+        ));
+      }
+    } catch (error) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: 'Network error: ${error.toString()}',
+      ));
+    }
   }
 
-  void _onBankAccountChanged(
-    BankAccountChanged event,
+  Future<void> _onRefreshRequested(
+    WalletRefreshRequested event,
     Emitter<WalletState> emit,
-  ) {
-    final bankAccount = BankAccount.dirty(event.bankAccountId);
-    emit(state.copyWith(
-      bankAccount: bankAccount,
-      status: FormzSubmissionStatus.initial,
-      clearError: true,
-    ));
-  }
-
-  void _onWithdrawalNotesChanged(
-    WithdrawalNotesChanged event,
-    Emitter<WalletState> emit,
-  ) {
-    emit(state.copyWith(
-      withdrawalNotes: event.notes,
-      status: FormzSubmissionStatus.initial,
-      clearError: true,
-    ));
+  ) async {
+    // Refresh both balance and transactions
+    add(const WalletDataLoaded());
+    add(const WalletTransactionsLoaded());
   }
 }

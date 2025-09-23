@@ -8,106 +8,89 @@ sealed class WalletEvent extends Equatable {
   List<Object> get props => [];
 }
 
-/// Event triggered when wallet is loaded
-final class WalletLoaded extends WalletEvent {
-  const WalletLoaded({
-    this.transactionLimit,
-    this.transactionOffset,
-  });
+/// Event triggered when balance is changed
+final class WalletBalanceChanged extends WalletEvent {
+  const WalletBalanceChanged(this.balance);
 
-  final int? transactionLimit;
-  final int? transactionOffset;
+  final double balance;
 
   @override
-  List<Object> get props => [transactionLimit ?? 0, transactionOffset ?? 0];
+  List<Object> get props => [balance];
 
   @override
-  String toString() => 'WalletLoaded(limit: $transactionLimit, offset: $transactionOffset)';
-}
-
-/// Event triggered when wallet is refreshed
-final class WalletRefreshed extends WalletEvent {
-  const WalletRefreshed();
-
-  @override
-  String toString() => 'WalletRefreshed()';
-}
-
-/// Event triggered when transactions are filtered
-final class TransactionsFiltered extends WalletEvent {
-  const TransactionsFiltered({
-    this.type,
-    this.status,
-    this.startDate,
-    this.endDate,
-  });
-
-  final TransactionType? type;
-  final TransactionStatus? status;
-  final DateTime? startDate;
-  final DateTime? endDate;
-
-  @override
-  List<Object> get props => [type ?? '', status ?? '', startDate ?? DateTime.now(), endDate ?? DateTime.now()];
-
-  @override
-  String toString() => 'TransactionsFiltered(type: $type, status: $status, startDate: $startDate, endDate: $endDate)';
-}
-
-/// Event triggered when withdrawal is requested
-final class WithdrawalRequested extends WalletEvent {
-  const WithdrawalRequested({
-    required this.amount,
-    required this.bankAccountId,
-    this.notes,
-  });
-
-  final double amount;
-  final String bankAccountId;
-  final String? notes;
-
-  @override
-  List<Object> get props => [amount, bankAccountId, notes ?? ''];
-
-  @override
-  String toString() => 'WithdrawalRequested(amount: $amount, bankAccountId: $bankAccountId)';
+  String toString() => 'WalletBalanceChanged(balance: $balance)';
 }
 
 /// Event triggered when withdrawal amount is changed
-final class WithdrawalAmountChanged extends WalletEvent {
-  const WithdrawalAmountChanged(this.amount);
+final class WalletWithdrawalAmountChanged extends WalletEvent {
+  const WalletWithdrawalAmountChanged(this.amount);
 
-  final double amount;
+  final String amount;
 
   @override
   List<Object> get props => [amount];
 
   @override
-  String toString() => 'WithdrawalAmountChanged(amount: $amount)';
+  String toString() => 'WalletWithdrawalAmountChanged(amount: $amount)';
 }
 
 /// Event triggered when bank account is changed
-final class BankAccountChanged extends WalletEvent {
-  const BankAccountChanged(this.bankAccountId);
+final class WalletBankAccountChanged extends WalletEvent {
+  const WalletBankAccountChanged(this.bankAccount);
 
-  final String bankAccountId;
-
-  @override
-  List<Object> get props => [bankAccountId];
+  final String bankAccount;
 
   @override
-  String toString() => 'BankAccountChanged(bankAccountId: $bankAccountId)';
+  List<Object> get props => [bankAccount];
+
+  @override
+  String toString() => 'WalletBankAccountChanged(bankAccount: $bankAccount)';
 }
 
-/// Event triggered when withdrawal notes are changed
-final class WithdrawalNotesChanged extends WalletEvent {
-  const WithdrawalNotesChanged(this.notes);
+/// Event triggered when withdrawal form is submitted
+final class WalletWithdrawalSubmitted extends WalletEvent {
+  const WalletWithdrawalSubmitted({this.notes});
 
-  final String notes;
-
-  @override
-  List<Object> get props => [notes];
+  final String? notes;
 
   @override
-  String toString() => 'WithdrawalNotesChanged(notes: $notes)';
+  List<Object> get props => [notes ?? ''];
+
+  @override
+  String toString() => 'WalletWithdrawalSubmitted(notes: $notes)';
+}
+
+/// Event triggered when wallet data is loaded
+final class WalletDataLoaded extends WalletEvent {
+  const WalletDataLoaded();
+
+  @override
+  String toString() => 'WalletDataLoaded()';
+}
+
+/// Event triggered when transactions are loaded
+final class WalletTransactionsLoaded extends WalletEvent {
+  const WalletTransactionsLoaded({
+    this.limit,
+    this.offset,
+    this.type,
+  });
+
+  final int? limit;
+  final int? offset;
+  final TransactionType? type;
+
+  @override
+  List<Object> get props => [limit ?? 0, offset ?? 0, type ?? ''];
+
+  @override
+  String toString() => 'WalletTransactionsLoaded(limit: $limit, offset: $offset, type: $type)';
+}
+
+/// Event triggered when wallet data is refreshed
+final class WalletRefreshRequested extends WalletEvent {
+  const WalletRefreshRequested();
+
+  @override
+  String toString() => 'WalletRefreshRequested()';
 }

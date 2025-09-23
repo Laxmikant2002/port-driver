@@ -1,5 +1,32 @@
 part of 'ratings_bloc.dart';
 
+enum RatingValueValidationError { empty, invalid }
+
+class RatingValue extends FormzInput<int, RatingValueValidationError> {
+  const RatingValue.pure() : super.pure(0);
+  const RatingValue.dirty([super.value = 0]) : super.dirty();
+
+  @override
+  RatingValueValidationError? validator(int value) {
+    if (value == 0) return RatingValueValidationError.empty;
+    if (value < 1 || value > 5) return RatingValueValidationError.invalid;
+    return null;
+  }
+}
+
+enum CommentValidationError { tooLong }
+
+class Comment extends FormzInput<String, CommentValidationError> {
+  const Comment.pure() : super.pure('');
+  const Comment.dirty([super.value = '']) : super.dirty();
+
+  @override
+  CommentValidationError? validator(String value) {
+    if (value.length > 500) return CommentValidationError.tooLong;
+    return null;
+  }
+}
+
 /// Ratings state containing rating data and submission status
 final class RatingsState extends Equatable {
   const RatingsState({
@@ -9,6 +36,8 @@ final class RatingsState extends Equatable {
     this.averageRating = 0.0,
     this.ratingDistribution = const {},
     this.totalRatings = 0,
+    this.ratingValue = const RatingValue.pure(),
+    this.comment = const Comment.pure(),
     this.status = FormzSubmissionStatus.initial,
     this.errorMessage,
   });
@@ -19,8 +48,13 @@ final class RatingsState extends Equatable {
   final double averageRating;
   final Map<int, int> ratingDistribution;
   final int totalRatings;
+  final RatingValue ratingValue;
+  final Comment comment;
   final FormzSubmissionStatus status;
   final String? errorMessage;
+
+  /// Returns true if the form is valid and ready for submission
+  bool get isValid => Formz.validate([ratingValue, comment]);
 
   /// Returns true if ratings are currently being loaded
   bool get isLoading => status == FormzSubmissionStatus.inProgress;
@@ -159,6 +193,8 @@ final class RatingsState extends Equatable {
     double? averageRating,
     Map<int, int>? ratingDistribution,
     int? totalRatings,
+    RatingValue? ratingValue,
+    Comment? comment,
     FormzSubmissionStatus? status,
     String? errorMessage,
     bool clearError = false,
@@ -170,6 +206,8 @@ final class RatingsState extends Equatable {
       averageRating: averageRating ?? this.averageRating,
       ratingDistribution: ratingDistribution ?? this.ratingDistribution,
       totalRatings: totalRatings ?? this.totalRatings,
+      ratingValue: ratingValue ?? this.ratingValue,
+      comment: comment ?? this.comment,
       status: status ?? this.status,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
@@ -183,6 +221,8 @@ final class RatingsState extends Equatable {
         averageRating,
         ratingDistribution,
         totalRatings,
+        ratingValue,
+        comment,
         status,
         errorMessage,
       ];
@@ -195,6 +235,8 @@ final class RatingsState extends Equatable {
         'selectedRating: $selectedRating, '
         'averageRating: $averageRating, '
         'totalRatings: $totalRatings, '
+        'ratingValue: $ratingValue, '
+        'comment: $comment, '
         'status: $status, '
         'errorMessage: $errorMessage'
         ')';

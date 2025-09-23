@@ -107,9 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.directions_boat), label: 'Watersports'),
-          BottomNavigationBarItem(icon: Icon(Icons.car_rental), label: 'Ride'),
-          BottomNavigationBarItem(icon: Icon(Icons.delivery_dining), label: 'Delivery'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: 'Account'),
         ],
         currentIndex: currentIndex,

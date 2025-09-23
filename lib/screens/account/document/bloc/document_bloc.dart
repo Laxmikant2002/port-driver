@@ -8,6 +8,13 @@ part 'document_state.dart';
 
 class DocumentBloc extends Bloc<DocumentEvent, DocumentState> {
   DocumentBloc({required this.documentsRepo}) : super(const DocumentState()) {
+    on<DocumentDrivingLicenseChanged>(_onDrivingLicenseChanged);
+    on<DocumentAadhaarChanged>(_onAadhaarChanged);
+    on<DocumentPanChanged>(_onPanChanged);
+    on<DocumentAddressProofChanged>(_onAddressProofChanged);
+    on<DocumentRcBookChanged>(_onRcBookChanged);
+    on<DocumentInsuranceChanged>(_onInsuranceChanged);
+    on<DocumentSubmitted>(_onSubmitted);
     on<DocumentsLoaded>(_onDocumentsLoaded);
     on<DocumentSelected>(_onDocumentSelected);
     on<DocumentUploaded>(_onDocumentUploaded);
@@ -17,6 +24,142 @@ class DocumentBloc extends Bloc<DocumentEvent, DocumentState> {
   }
 
   final DocumentsRepo documentsRepo;
+
+  void _onDrivingLicenseChanged(
+    DocumentDrivingLicenseChanged event,
+    Emitter<DocumentState> emit,
+  ) {
+    final drivingLicense = DrivingLicense.dirty(event.drivingLicense);
+    emit(
+      state.copyWith(
+        drivingLicense: drivingLicense,
+        status: FormzSubmissionStatus.initial,
+      ),
+    );
+  }
+
+  void _onAadhaarChanged(
+    DocumentAadhaarChanged event,
+    Emitter<DocumentState> emit,
+  ) {
+    final aadhaar = Aadhaar.dirty(event.aadhaar);
+    emit(
+      state.copyWith(
+        aadhaar: aadhaar,
+        status: FormzSubmissionStatus.initial,
+      ),
+    );
+  }
+
+  void _onPanChanged(
+    DocumentPanChanged event,
+    Emitter<DocumentState> emit,
+  ) {
+    final pan = Pan.dirty(event.pan);
+    emit(
+      state.copyWith(
+        pan: pan,
+        status: FormzSubmissionStatus.initial,
+      ),
+    );
+  }
+
+  void _onAddressProofChanged(
+    DocumentAddressProofChanged event,
+    Emitter<DocumentState> emit,
+  ) {
+    final addressProof = AddressProof.dirty(event.addressProof);
+    emit(
+      state.copyWith(
+        addressProof: addressProof,
+        status: FormzSubmissionStatus.initial,
+      ),
+    );
+  }
+
+  void _onRcBookChanged(
+    DocumentRcBookChanged event,
+    Emitter<DocumentState> emit,
+  ) {
+    final rcBook = RcBook.dirty(event.rcBook);
+    emit(
+      state.copyWith(
+        rcBook: rcBook,
+        status: FormzSubmissionStatus.initial,
+      ),
+    );
+  }
+
+  void _onInsuranceChanged(
+    DocumentInsuranceChanged event,
+    Emitter<DocumentState> emit,
+  ) {
+    final insurance = Insurance.dirty(event.insurance);
+    emit(
+      state.copyWith(
+        insurance: insurance,
+        status: FormzSubmissionStatus.initial,
+      ),
+    );
+  }
+
+  Future<void> _onSubmitted(
+    DocumentSubmitted event,
+    Emitter<DocumentState> emit,
+  ) async {
+    // Validate all fields before submission
+    final drivingLicense = DrivingLicense.dirty(state.drivingLicense.value);
+    final aadhaar = Aadhaar.dirty(state.aadhaar.value);
+    final pan = Pan.dirty(state.pan.value);
+    final addressProof = AddressProof.dirty(state.addressProof.value);
+    final rcBook = RcBook.dirty(state.rcBook.value);
+    final insurance = Insurance.dirty(state.insurance.value);
+
+    emit(state.copyWith(
+      drivingLicense: drivingLicense,
+      aadhaar: aadhaar,
+      pan: pan,
+      addressProof: addressProof,
+      rcBook: rcBook,
+      insurance: insurance,
+      status: FormzSubmissionStatus.initial,
+    ));
+
+    if (!state.isValid) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: 'Please complete all required documents correctly',
+      ));
+      return;
+    }
+
+    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
+
+    try {
+      // Upload documents using documents repo
+      final response = await documentsRepo.uploadDocument(
+        DocumentUploadRequest(
+          type: DocumentType.drivingLicense,
+          filePath: drivingLicense.value,
+          fileName: 'driving_license.pdf',
+        ),
+      );
+      
+      if (response.success) {
+        emit(state.copyWith(status: FormzSubmissionStatus.success));
+      } else {
+        emit(state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: response.message ?? 'Failed to upload documents. Please try again.',
+        ));
+      }
+    } catch (error) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: 'Network error. Please try again.',
+      ));
+    }
+  }
 
   Future<void> _onDocumentsLoaded(
     DocumentsLoaded event,

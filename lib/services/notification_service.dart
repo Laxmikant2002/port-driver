@@ -4,8 +4,10 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:notifications_repo/notifications_repo.dart';
+import 'package:notifications_repo/notifications_repo.dart' as notification_repo;
 import 'package:localstorage/localstorage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 /// Comprehensive notification service for driver app
 class NotificationService {
@@ -15,12 +17,12 @@ class NotificationService {
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
-  final Localstorage _localStorage = Localstorage('driver_app');
+  late final Localstorage _localStorage;
   
-  StreamController<Notification> _notificationController = StreamController<Notification>.broadcast();
-  StreamController<int> _unreadCountController = StreamController<int>.broadcast();
+  final StreamController<notification_repo.Notification> _notificationController = StreamController<notification_repo.Notification>.broadcast();
+  final StreamController<int> _unreadCountController = StreamController<int>.broadcast();
   
-  Stream<Notification> get notificationStream => _notificationController.stream;
+  Stream<notification_repo.Notification> get notificationStream => _notificationController.stream;
   Stream<int> get unreadCountStream => _unreadCountController.stream;
   
   int _unreadCount = 0;
@@ -28,6 +30,8 @@ class NotificationService {
 
   /// Initialize the notification service
   Future<void> initialize() async {
+    final prefs = await SharedPreferences.getInstance();
+    _localStorage = Localstorage(prefs);
     await _initializeFirebaseMessaging();
     await _initializeLocalNotifications();
     await _loadUnreadCount();
@@ -123,22 +127,22 @@ class NotificationService {
   }
 
   /// Parse RemoteMessage to Notification model
-  Notification? _parseRemoteMessage(RemoteMessage message) {
+  notification_repo.Notification? _parseRemoteMessage(RemoteMessage message) {
     try {
       final data = message.data;
       final notification = message.notification;
       
       if (notification == null) return null;
 
-      return Notification(
+      return notification_repo.Notification(
         id: message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString(),
         title: notification.title ?? 'Notification',
         body: notification.body ?? '',
-        type: _parseNotificationType(data['type'] ?? 'system'),
-        priority: _parseNotificationPriority(data['priority'] ?? 'normal'),
+        type: _parseNotificationType((data['type'] ?? 'system').toString()),
+        priority: _parseNotificationPriority((data['priority'] ?? 'normal').toString()),
         createdAt: DateTime.now(),
         isRead: false,
-        data: data,
+        data: data is Map<String, dynamic> ? data : <String, dynamic>{},
       );
     } catch (e) {
       debugPrint('Error parsing notification: $e');
@@ -147,61 +151,61 @@ class NotificationService {
   }
 
   /// Parse notification type from string
-  NotificationType _parseNotificationType(String type) {
+  notification_repo.NotificationType _parseNotificationType(String type) {
     switch (type.toLowerCase()) {
       case 'new_ride_request':
-        return NotificationType.newRideRequest;
+        return notification_repo.NotificationType.newRideRequest;
       case 'booking_confirmed':
-        return NotificationType.bookingConfirmed;
+        return notification_repo.NotificationType.bookingConfirmed;
       case 'booking_cancelled':
-        return NotificationType.bookingCancelled;
+        return notification_repo.NotificationType.bookingCancelled;
       case 'pickup_reminder':
-        return NotificationType.pickupReminder;
+        return notification_repo.NotificationType.pickupReminder;
       case 'document_approved':
-        return NotificationType.documentApproved;
+        return notification_repo.NotificationType.documentApproved;
       case 'document_rejected':
-        return NotificationType.documentRejected;
+        return notification_repo.NotificationType.documentRejected;
       case 'vehicle_assignment_changed':
-        return NotificationType.vehicleAssignmentChanged;
+        return notification_repo.NotificationType.vehicleAssignmentChanged;
       case 'payment_received':
-        return NotificationType.paymentReceived;
+        return notification_repo.NotificationType.paymentReceived;
       case 'weekly_payout_credited':
-        return NotificationType.weeklyPayoutCredited;
+        return notification_repo.NotificationType.weeklyPayoutCredited;
       case 'app_update':
-        return NotificationType.appUpdate;
+        return notification_repo.NotificationType.appUpdate;
       case 'policy_update':
-        return NotificationType.policyUpdate;
+        return notification_repo.NotificationType.policyUpdate;
       case 'work_area_update':
-        return NotificationType.workAreaUpdate;
+        return notification_repo.NotificationType.workAreaUpdate;
       case 'penalty_warning':
-        return NotificationType.penaltyWarning;
+        return notification_repo.NotificationType.penaltyWarning;
       case 'suspension_warning':
-        return NotificationType.suspensionWarning;
+        return notification_repo.NotificationType.suspensionWarning;
       case 'emergency':
-        return NotificationType.emergency;
+        return notification_repo.NotificationType.emergency;
       default:
-        return NotificationType.system;
+        return notification_repo.NotificationType.system;
     }
   }
 
   /// Parse notification priority from string
-  NotificationPriority _parseNotificationPriority(String priority) {
+  notification_repo.NotificationPriority _parseNotificationPriority(String priority) {
     switch (priority.toLowerCase()) {
       case 'high':
-        return NotificationPriority.high;
+        return notification_repo.NotificationPriority.high;
       case 'normal':
-        return NotificationPriority.normal;
+        return notification_repo.NotificationPriority.normal;
       case 'low':
-        return NotificationPriority.low;
+        return notification_repo.NotificationPriority.low;
       case 'urgent':
-        return NotificationPriority.urgent;
+        return notification_repo.NotificationPriority.urgent;
       default:
-        return NotificationPriority.normal;
+        return notification_repo.NotificationPriority.normal;
     }
   }
 
   /// Show in-app notification popup
-  void _showInAppNotification(Notification notification) {
+  void _showInAppNotification(notification_repo.Notification notification) {
     // This would typically be handled by the UI layer
     // For now, we'll just log it
     debugPrint('Showing in-app notification: ${notification.title}');
@@ -214,7 +218,16 @@ class NotificationService {
     if (response.payload != null) {
       try {
         final data = jsonDecode(response.payload!);
-        final notification = Notification.fromJson(data);
+        final notification = notification_repo.Notification(
+          id: data['id'] != null ? data['id'].toString() : DateTime.now().millisecondsSinceEpoch.toString(),
+          title: (data['title'] ?? 'Notification').toString(),
+          body: (data['body'] ?? '').toString(),
+          type: _parseNotificationType((data['type'] ?? 'system').toString()),
+          priority: _parseNotificationPriority((data['priority'] ?? 'normal').toString()),
+          createdAt: DateTime.tryParse((data['createdAt'] ?? '').toString()) ?? DateTime.now(),
+          isRead: data['isRead'] is bool ? data['isRead'] as bool : false,
+          data: data is Map<String, dynamic> ? data as Map<String, dynamic> : <String, dynamic>{},
+        );
         _notificationController.add(notification);
       } catch (e) {
         debugPrint('Error parsing local notification payload: $e');
@@ -253,7 +266,7 @@ class NotificationService {
       id,
       title,
       body,
-      scheduledDate,
+      tz.TZDateTime.from(scheduledDate, tz.local),
       platformDetails,
       payload: payload,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
@@ -294,7 +307,7 @@ class NotificationService {
     
     try {
       // TODO: Implement API call to save token to your backend
-      await _localStorage.setItem('fcm_token', token);
+      _localStorage.saveString('fcm_token', token);
       debugPrint('FCM token saved locally: $token');
     } catch (e) {
       debugPrint('Error saving FCM token: $e');
@@ -304,8 +317,8 @@ class NotificationService {
   /// Load unread count from storage
   Future<void> _loadUnreadCount() async {
     try {
-      final count = await _localStorage.getItem('unread_count') ?? 0;
-      _unreadCount = count is int ? count : 0;
+      final count = _localStorage.getString('unread_count');
+      _unreadCount = count != null ? int.tryParse(count) ?? 0 : 0;
       _unreadCountController.add(_unreadCount);
     } catch (e) {
       debugPrint('Error loading unread count: $e');
@@ -316,7 +329,7 @@ class NotificationService {
   void _incrementUnreadCount() {
     _unreadCount++;
     _unreadCountController.add(_unreadCount);
-    _localStorage.setItem('unread_count', _unreadCount);
+    _localStorage.saveString('unread_count', _unreadCount.toString());
   }
 
   /// Decrement unread count
@@ -324,7 +337,7 @@ class NotificationService {
     if (_unreadCount > 0) {
       _unreadCount--;
       _unreadCountController.add(_unreadCount);
-      _localStorage.setItem('unread_count', _unreadCount);
+      _localStorage.saveString('unread_count', _unreadCount.toString());
     }
   }
 
@@ -338,7 +351,7 @@ class NotificationService {
   Future<void> markAllAsRead() async {
     _unreadCount = 0;
     _unreadCountController.add(_unreadCount);
-    _localStorage.setItem('unread_count', _unreadCount);
+    _localStorage.saveString('unread_count', _unreadCount.toString());
     // TODO: Implement API call to mark all notifications as read on server
   }
 

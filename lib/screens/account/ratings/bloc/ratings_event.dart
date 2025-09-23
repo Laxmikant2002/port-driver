@@ -96,3 +96,29 @@ final class RatingsRefreshed extends RatingsEvent {
   @override
   String toString() => 'RatingsRefreshed()';
 }
+
+/// Event triggered when rating value is changed
+final class RatingValueChanged extends RatingsEvent {
+  const RatingValueChanged(this.ratingValue);
+
+  final int ratingValue;
+
+  @override
+  List<Object> get props => [ratingValue];
+
+  @override
+  String toString() => 'RatingValueChanged(ratingValue: $ratingValue)';
+}
+
+/// Event triggered when comment is changed
+final class CommentChanged extends RatingsEvent {
+  const CommentChanged(this.comment);
+
+  final String comment;
+
+  @override
+  List<Object> get props => [comment];
+
+  @override
+  String toString() => 'CommentChanged(comment: $comment)';
+}

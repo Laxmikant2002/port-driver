@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:driver/screens/account/wallet/bloc/payment_bloc.dart';
+import 'package:finance_repo/finance_repo.dart';
+
+import '../bloc/wallet_bloc.dart';
 
 class TransactionFilters extends StatelessWidget {
   const TransactionFilters({Key? key}) : super(key: key);
@@ -31,7 +33,8 @@ class TransactionFilters extends StatelessWidget {
         selected: false, // TODO: Add selected state
         onSelected: (selected) {
           if (type != null) {
-            context.read<PaymentBloc>().add(FilterTransactions(type: type));
+            // Handle filter selection
+            // TODO: Implement filtering logic
           }
         },
         backgroundColor: Colors.grey[100],

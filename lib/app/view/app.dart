@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:driver/app/bloc/cubit/locale.dart';
 import 'package:driver/l10n/l10n.dart';
 import 'package:driver/routes/app_routes.dart';
-import 'package:driver/widgets/notification_handler.dart';
+import 'package:driver/widgets/essentials/notification_handler.dart';
 
 class App extends StatelessWidget {
   const App({super.key});

@@ -1,445 +1,663 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:notifications_repo/notifications_repo.dart';
-import 'package:driver/screens/account/notification/bloc/notification_bloc.dart';
-import 'package:driver/widgets/colors.dart';
+import 'package:notifications_repo/notifications_repo.dart' as notification_repo;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../widgets/colors.dart';
+import '../bloc/notification_bloc.dart';
 
-class NotificationSettingsScreen extends StatefulWidget {
-  const NotificationSettingsScreen({super.key});
+class NotificationSettingsScreen extends StatelessWidget {
+  const NotificationSettingsScreen({Key? key}) : super(key: key);
 
   @override
-  State<NotificationSettingsScreen> createState() => _NotificationSettingsScreenState();
+  Widget build(BuildContext context) {
+    return FutureBuilder<SharedPreferences>(
+      future: SharedPreferences.getInstance(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        
+        final prefs = snapshot.data!;
+        final notificationsRepo = notification_repo.NotificationsRepo(prefs: prefs);
+        
+        return BlocProvider(
+          create: (_) => NotificationBloc(notificationsRepo: notificationsRepo)..add(const NotificationsLoaded()),
+          child: const NotificationSettingsView(),
+        );
+      },
+    );
+  }
 }
 
-class _NotificationSettingsScreenState extends State<NotificationSettingsScreen> {
-  late Map<NotificationType, bool> _notificationSettings;
-  late Map<NotificationType, bool> _soundSettings;
-  late Map<NotificationType, bool> _vibrationSettings;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeSettings();
-  }
-
-  void _initializeSettings() {
-    _notificationSettings = {
-      // Booking Related
-      NotificationType.newRideRequest: true,
-      NotificationType.bookingConfirmed: true,
-      NotificationType.bookingCancelled: true,
-      NotificationType.pickupReminder: true,
-      
-      // Document & Profile
-      NotificationType.documentApproved: true,
-      NotificationType.documentRejected: true,
-      NotificationType.vehicleAssignmentChanged: true,
-      
-      // Finance
-      NotificationType.paymentReceived: true,
-      NotificationType.weeklyPayoutCredited: true,
-      
-      // System / General
-      NotificationType.system: true,
-      NotificationType.appUpdate: true,
-      NotificationType.policyUpdate: true,
-      NotificationType.workAreaUpdate: true,
-      NotificationType.penaltyWarning: true,
-      NotificationType.suspensionWarning: true,
-    };
-
-    _soundSettings = {
-      NotificationType.newRideRequest: true,
-      NotificationType.bookingConfirmed: true,
-      NotificationType.bookingCancelled: true,
-      NotificationType.pickupReminder: true,
-      NotificationType.paymentReceived: true,
-      NotificationType.weeklyPayoutCredited: true,
-      NotificationType.penaltyWarning: true,
-      NotificationType.suspensionWarning: true,
-    };
-
-    _vibrationSettings = {
-      NotificationType.newRideRequest: true,
-      NotificationType.bookingConfirmed: true,
-      NotificationType.bookingCancelled: true,
-      NotificationType.pickupReminder: true,
-      NotificationType.penaltyWarning: true,
-      NotificationType.suspensionWarning: true,
-    };
-  }
+class NotificationSettingsView extends StatelessWidget {
+  const NotificationSettingsView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        elevation: 0,
         backgroundColor: AppColors.background,
-        title: const Text(
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
           'Notification Settings',
           style: TextStyle(
-            fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
         ),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader('Booking Notifications'),
-            _buildNotificationGroup([
-              NotificationType.newRideRequest,
-              NotificationType.bookingConfirmed,
-              NotificationType.bookingCancelled,
-              NotificationType.pickupReminder,
-            ]),
-            
-            const SizedBox(height: 24),
-            _buildSectionHeader('Document & Profile'),
-            _buildNotificationGroup([
-              NotificationType.documentApproved,
-              NotificationType.documentRejected,
-              NotificationType.vehicleAssignmentChanged,
-            ]),
-            
-            const SizedBox(height: 24),
-            _buildSectionHeader('Finance'),
-            _buildNotificationGroup([
-              NotificationType.paymentReceived,
-              NotificationType.weeklyPayoutCredited,
-            ]),
-            
-            const SizedBox(height: 24),
-            _buildSectionHeader('System & General'),
-            _buildNotificationGroup([
-              NotificationType.system,
-              NotificationType.appUpdate,
-              NotificationType.policyUpdate,
-              NotificationType.workAreaUpdate,
-              NotificationType.penaltyWarning,
-              NotificationType.suspensionWarning,
-            ]),
-            
-            const SizedBox(height: 32),
-            _buildGlobalSettings(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNotificationGroup(List<NotificationType> types) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: types.map((type) => _buildNotificationItem(type)).toList(),
-      ),
-    );
-  }
-
-  Widget _buildNotificationItem(NotificationType type) {
-    final isEnabled = _notificationSettings[type] ?? false;
-    final hasSound = _soundSettings[type] ?? false;
-    final hasVibration = _vibrationSettings[type] ?? false;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: AppColors.border.withOpacity(0.5),
-            width: 0.5,
+      body: BlocListener<NotificationBloc, NotificationState>(
+        listener: (context, state) {
+          if (state.hasError) {
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  content: Text(state.errorMessage ?? 'An error occurred'),
+                  backgroundColor: AppColors.error,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              );
+          }
+        },
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const _HeaderSection(),
+                const SizedBox(height: 24),
+                const _NotificationPreferencesSection(),
+                const SizedBox(height: 24),
+                const _SaveButton(),
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeaderSection extends StatelessWidget {
+  const _HeaderSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withOpacity(0.1),
+            AppColors.cyan.withOpacity(0.05),
+          ],
         ),
       ),
       child: Column(
         children: [
-          Row(
-            children: [
-              Icon(
-                _getNotificationIcon(type),
-                color: isEnabled ? AppColors.cyan : AppColors.textTertiary,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      type.displayName,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: isEnabled ? AppColors.textPrimary : AppColors.textTertiary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _getNotificationDescription(type),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Switch(
-                value: isEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    _notificationSettings[type] = value;
-                  });
-                },
-                activeColor: AppColors.cyan,
-              ),
-            ],
+          // Settings Icon
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.cyan.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              Icons.notifications_active_rounded,
+              size: 32,
+              color: AppColors.cyan,
+            ),
           ),
-          if (isEnabled) ...[
-            const SizedBox(height: 12),
+          const SizedBox(height: 16),
+          // Header Text
+          Text(
+            'Notification Settings',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Customize your notification preferences',
+            style: TextStyle(
+              fontSize: 16,
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NotificationPreferencesSection extends StatelessWidget {
+  const _NotificationPreferencesSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.08),
+            blurRadius: 32,
+            offset: const Offset(0, 12),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: AppColors.border.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Section Header
             Row(
               children: [
-                const SizedBox(width: 36),
-                Expanded(
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.volume_up,
-                        size: 16,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Sound',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const Spacer(),
-                      Switch(
-                        value: hasSound,
-                        onChanged: (value) {
-                          setState(() {
-                            _soundSettings[type] = value;
-                          });
-                        },
-                        activeColor: AppColors.cyan,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    ],
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.cyan.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.settings_rounded,
+                    color: AppColors.cyan,
+                    size: 24,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.vibration,
-                        size: 16,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: 8),
                       Text(
-                        'Vibration',
+                        'General Preferences',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      Text(
+                        'Control your notification experience',
+                        style: TextStyle(
+                          fontSize: 13,
                           color: AppColors.textSecondary,
                         ),
-                      ),
-                      const Spacer(),
-                      Switch(
-                        value: hasVibration,
-                        onChanged: (value) {
-                          setState(() {
-                            _vibrationSettings[type] = value;
-                          });
-                        },
-                        activeColor: AppColors.cyan,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ],
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 32),
+            // Settings Options
+            const _PushNotificationsToggle(),
+            const SizedBox(height: 24),
+            const _EmailNotificationsToggle(),
+            const SizedBox(height: 24),
+            const _SmsNotificationsToggle(),
+            const SizedBox(height: 24),
+            const _SoundToggle(),
+            const SizedBox(height: 24),
+            const _VibrationToggle(),
           ],
-        ],
+        ),
       ),
     );
   }
+}
 
-  Widget _buildGlobalSettings() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Global Settings',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+class _PushNotificationsToggle extends StatelessWidget {
+  const _PushNotificationsToggle();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NotificationBloc, NotificationState>(
+      builder: (context, state) {
+        final pushEnabled = state.notificationSettings['pushEnabled'] ?? true;
+        
+        return Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.cyan.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.notifications_outlined,
+                color: AppColors.cyan,
+                size: 20,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              const Icon(
-                Icons.notifications_off,
-                color: AppColors.textSecondary,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Disable All Notifications',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: AppColors.textPrimary,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Push Notifications',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
-              ),
-              Switch(
-                value: false, // This would be managed by state
-                onChanged: (value) {
-                  // Handle disable all notifications
-                },
-                activeColor: AppColors.cyan,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              const Icon(
-                Icons.schedule,
-                color: AppColors.textSecondary,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Quiet Hours',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: AppColors.textPrimary,
+                  Text(
+                    'Receive notifications on your device',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
-                ),
+                ],
               ),
-              Switch(
-                value: false, // This would be managed by state
-                onChanged: (value) {
-                  // Handle quiet hours
-                },
-                activeColor: AppColors.cyan,
-              ),
-            ],
-          ),
-        ],
-      ),
+            ),
+            Switch(
+              value: pushEnabled as bool,
+              onChanged: (value) {
+                final newSettings = Map<String, dynamic>.from(state.notificationSettings);
+                newSettings['pushEnabled'] = value;
+                context.read<NotificationBloc>().add(NotificationSettingsUpdated(newSettings));
+              },
+              activeColor: AppColors.cyan,
+              activeTrackColor: AppColors.cyan.withOpacity(0.3),
+            ),
+          ],
+        );
+      },
     );
   }
+}
 
-  IconData _getNotificationIcon(NotificationType type) {
-    switch (type) {
-      case NotificationType.newRideRequest:
-        return Icons.directions_car;
-      case NotificationType.bookingConfirmed:
-        return Icons.check_circle;
-      case NotificationType.bookingCancelled:
-        return Icons.cancel;
-      case NotificationType.pickupReminder:
-        return Icons.access_time;
-      case NotificationType.documentApproved:
-        return Icons.verified;
-      case NotificationType.documentRejected:
-        return Icons.error;
-      case NotificationType.vehicleAssignmentChanged:
-        return Icons.directions_car;
-      case NotificationType.paymentReceived:
-      case NotificationType.weeklyPayoutCredited:
-        return Icons.account_balance_wallet;
-      case NotificationType.appUpdate:
-        return Icons.system_update;
-      case NotificationType.policyUpdate:
-        return Icons.policy;
-      case NotificationType.workAreaUpdate:
-        return Icons.location_on;
-      case NotificationType.penaltyWarning:
-        return Icons.warning;
-      case NotificationType.suspensionWarning:
-        return Icons.block;
-      default:
-        return Icons.notifications;
-    }
+class _EmailNotificationsToggle extends StatelessWidget {
+  const _EmailNotificationsToggle();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NotificationBloc, NotificationState>(
+      builder: (context, state) {
+        final emailEnabled = state.notificationSettings['emailEnabled'] ?? true;
+        
+        return Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.cyan.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.email_outlined,
+                color: AppColors.cyan,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Email Notifications',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    'Receive notifications via email',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Switch(
+              value: emailEnabled as bool,
+              onChanged: (value) {
+                final newSettings = Map<String, dynamic>.from(state.notificationSettings);
+                newSettings['emailEnabled'] = value;
+                context.read<NotificationBloc>().add(NotificationSettingsUpdated(newSettings));
+              },
+              activeColor: AppColors.cyan,
+              activeTrackColor: AppColors.cyan.withOpacity(0.3),
+            ),
+          ],
+        );
+      },
+    );
   }
+}
 
-  String _getNotificationDescription(NotificationType type) {
-    switch (type) {
-      case NotificationType.newRideRequest:
-        return 'Get notified when a new ride request is nearby';
-      case NotificationType.bookingConfirmed:
-        return 'Receive confirmation when your booking is assigned';
-      case NotificationType.bookingCancelled:
-        return 'Get notified if a booking is cancelled';
-      case NotificationType.pickupReminder:
-        return 'Reminder 5 minutes before pickup time';
-      case NotificationType.documentApproved:
-        return 'Notification when your documents are approved';
-      case NotificationType.documentRejected:
-        return 'Alert when documents are rejected';
-      case NotificationType.vehicleAssignmentChanged:
-        return 'Notification when vehicle assignment changes';
-      case NotificationType.paymentReceived:
-        return 'Alert when you receive a payment';
-      case NotificationType.weeklyPayoutCredited:
-        return 'Notification when weekly payout is credited';
-      case NotificationType.appUpdate:
-        return 'Get notified about app updates';
-      case NotificationType.policyUpdate:
-        return 'Notifications about policy changes';
-      case NotificationType.workAreaUpdate:
-        return 'Updates about your work area';
-      case NotificationType.penaltyWarning:
-        return 'Warnings about penalties';
-      case NotificationType.suspensionWarning:
-        return 'Warnings about account suspension';
-      default:
-        return 'System notifications';
-    }
+class _SmsNotificationsToggle extends StatelessWidget {
+  const _SmsNotificationsToggle();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NotificationBloc, NotificationState>(
+      builder: (context, state) {
+        final smsEnabled = state.notificationSettings['smsEnabled'] ?? false;
+        
+        return Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.cyan.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.sms_outlined,
+                color: AppColors.cyan,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'SMS Notifications',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    'Receive notifications via SMS',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Switch(
+              value: smsEnabled as bool,
+              onChanged: (value) {
+                final newSettings = Map<String, dynamic>.from(state.notificationSettings);
+                newSettings['smsEnabled'] = value;
+                context.read<NotificationBloc>().add(NotificationSettingsUpdated(newSettings));
+              },
+              activeColor: AppColors.cyan,
+              activeTrackColor: AppColors.cyan.withOpacity(0.3),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _SoundToggle extends StatelessWidget {
+  const _SoundToggle();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NotificationBloc, NotificationState>(
+      builder: (context, state) {
+        final soundEnabled = state.notificationSettings['soundEnabled'] ?? true;
+        
+        return Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.cyan.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.volume_up_outlined,
+                color: AppColors.cyan,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Sound',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    'Play sound for notifications',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Switch(
+              value: soundEnabled as bool,
+              onChanged: (value) {
+                final newSettings = Map<String, dynamic>.from(state.notificationSettings);
+                newSettings['soundEnabled'] = value;
+                context.read<NotificationBloc>().add(NotificationSettingsUpdated(newSettings));
+              },
+              activeColor: AppColors.cyan,
+              activeTrackColor: AppColors.cyan.withOpacity(0.3),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _VibrationToggle extends StatelessWidget {
+  const _VibrationToggle();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NotificationBloc, NotificationState>(
+      builder: (context, state) {
+        final vibrationEnabled = state.notificationSettings['vibrationEnabled'] ?? true;
+        
+        return Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.cyan.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.vibration,
+                color: AppColors.cyan,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Vibration',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    'Vibrate for notifications',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Switch(
+              value: vibrationEnabled as bool,
+              onChanged: (value) {
+                final newSettings = Map<String, dynamic>.from(state.notificationSettings);
+                newSettings['vibrationEnabled'] = value;
+                context.read<NotificationBloc>().add(NotificationSettingsUpdated(newSettings));
+              },
+              activeColor: AppColors.cyan,
+              activeTrackColor: AppColors.cyan.withOpacity(0.3),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _SaveButton extends StatelessWidget {
+  const _SaveButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NotificationBloc, NotificationState>(
+      buildWhen: (previous, current) => previous.status != current.status,
+      builder: (context, state) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 24),
+          width: double.infinity,
+          height: 52,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.cyan, AppColors.primary],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.cyan.withOpacity(0.3),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: ElevatedButton(
+            onPressed: state.isSubmitting
+                ? null
+                : () {
+                    // Settings are already saved when toggles are changed
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(
+                        SnackBar(
+                          content: const Text('Settings saved successfully'),
+                          backgroundColor: AppColors.success,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      );
+                    Navigator.of(context).pop();
+                  },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 0,
+            ),
+            child: state.isSubmitting
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Saving...',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.check_circle_outline_rounded,
+                        size: 20,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Save Settings',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        );
+      },
+    );
   }
 }

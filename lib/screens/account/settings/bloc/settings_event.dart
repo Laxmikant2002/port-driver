@@ -16,7 +16,7 @@ final class SettingsLoaded extends SettingsEvent {
   String toString() => 'SettingsLoaded()';
 }
 
-/// Event triggered when language is changed
+/// Event triggered when language preference is changed
 final class LanguageChanged extends SettingsEvent {
   const LanguageChanged(this.language);
 
@@ -29,96 +29,55 @@ final class LanguageChanged extends SettingsEvent {
   String toString() => 'LanguageChanged(language: $language)';
 }
 
-/// Event triggered when notification setting is changed
-final class NotificationSettingChanged extends SettingsEvent {
-  const NotificationSettingChanged({
-    required this.settingType,
-    required this.value,
-  });
 
-  final NotificationSettingType settingType;
-  final bool value;
+/// Event triggered when notification settings are changed
+final class NotificationSettingsChanged extends SettingsEvent {
+  const NotificationSettingsChanged(this.enabled);
+
+  final bool enabled;
 
   @override
-  List<Object> get props => [settingType, value];
+  List<Object> get props => [enabled];
 
   @override
-  String toString() => 'NotificationSettingChanged(type: $settingType, value: $value)';
+  String toString() => 'NotificationSettingsChanged(enabled: $enabled)';
 }
 
-/// Event triggered when privacy setting is changed
-final class PrivacySettingChanged extends SettingsEvent {
-  const PrivacySettingChanged({
-    required this.settingType,
-    required this.value,
-  });
+/// Event triggered when location services are toggled
+final class LocationServicesToggled extends SettingsEvent {
+  const LocationServicesToggled(this.enabled);
 
-  final PrivacySettingType settingType;
-  final bool value;
+  final bool enabled;
 
   @override
-  List<Object> get props => [settingType, value];
+  List<Object> get props => [enabled];
 
   @override
-  String toString() => 'PrivacySettingChanged(type: $settingType, value: $value)';
+  String toString() => 'LocationServicesToggled(enabled: $enabled)';
 }
 
-/// Event triggered when appearance setting is changed
-final class AppearanceSettingChanged extends SettingsEvent {
-  const AppearanceSettingChanged({
-    required this.settingType,
-    required this.value,
-  });
 
-  final AppearanceSettingType settingType;
-  final String value;
+/// Event triggered when settings are saved
+final class SettingsSaved extends SettingsEvent {
+  const SettingsSaved();
 
   @override
-  List<Object> get props => [settingType, value];
+  String toString() => 'SettingsSaved()';
+}
+
+/// Event triggered when settings are reset to default
+final class SettingsReset extends SettingsEvent {
+  const SettingsReset();
 
   @override
-  String toString() => 'AppearanceSettingChanged(type: $settingType, value: $value)';
+  String toString() => 'SettingsReset()';
 }
 
-/// Event triggered when settings form is submitted
-final class SettingsSubmitted extends SettingsEvent {
-  const SettingsSubmitted();
+
+/// Event triggered when account deletion is requested
+final class AccountDeletionRequested extends SettingsEvent {
+  const AccountDeletionRequested();
 
   @override
-  String toString() => 'SettingsSubmitted()';
-}
-
-/// Event triggered when account is deleted
-final class AccountDeleted extends SettingsEvent {
-  const AccountDeleted();
-
-  @override
-  String toString() => 'AccountDeleted()';
-}
-
-/// Notification setting types
-enum NotificationSettingType {
-  rideNotifications,
-  paymentNotifications,
-  systemNotifications,
-  promotionNotifications,
-  emergencyNotifications,
-  soundEnabled,
-  vibrationEnabled,
-}
-
-/// Privacy setting types
-enum PrivacySettingType {
-  shareLocation,
-  allowDataCollection,
-  analyticsEnabled,
-  crashReportingEnabled,
-  marketingEmails,
-}
-
-/// Appearance setting types
-enum AppearanceSettingType {
-  theme,
-  fontSize,
-  colorScheme,
+  String toString() => 'AccountDeletionRequested()';
 }

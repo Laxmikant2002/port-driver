@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:driver/screens/account_screen/bloc/account_bloc.dart';
+import 'package:driver/routes/docs_routes.dart';
+import 'package:driver/routes/finance_routes.dart';
+import 'package:driver/routes/history_routes.dart';
+import 'package:driver/routes/notifications_routes.dart';
+import 'package:driver/routes/profile_routes.dart';
 import 'package:driver/routes/settings_routes.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:driver/screens/account_screen/bloc/account_bloc.dart';
 import 'package:driver/widgets/colors.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
 
   static const List<Map<String, dynamic>> buttonsData = [
-    {'text': "Profile", 'icon': Icons.person_outline, 'route': '/profile'},
-    {'text': "Rides", 'icon': Icons.directions_car, 'route': '/rides-history'},
-    {'text': 'Ratings', 'icon': Icons.star_outline, 'route': '/ratings'},
-    {'text': 'Wallet', 'icon': Icons.wallet, 'route': '/payment-overview'},
-    {'text': 'Documents', 'icon': Icons.file_present, 'route': '/document-screen'},
-    {'text': 'Add Vehicle', 'icon': Icons.add_circle_outline, 'route': '/add-vehicle'},
+    {'text': "Profile", 'icon': Icons.person_outline, 'route': ProfileRoutes.profile},
+    {'text': "Rides", 'icon': Icons.directions_car, 'route': HistoryRoutes.ridesHistory},
+    {'text': 'Ratings', 'icon': Icons.star_outline, 'route': HistoryRoutes.ratings},
+    {'text': 'Wallet', 'icon': Icons.wallet, 'route': FinanceRoutes.wallet},
+    {'text': 'Documents', 'icon': Icons.file_present, 'route': DocsRoutes.docsVerification},
     {'text': "Settings", 'icon': Icons.settings, 'route': SettingsRoutes.settings},
   ];
 
@@ -39,7 +43,7 @@ class AccountScreen extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.notifications_none, color: AppColors.textPrimary),
               onPressed: () {
-                Navigator.pushNamed(context, '/inbox');
+                Navigator.pushNamed(context, NotificationsRoutes.notificationSettings);
               },
             ),
           ],

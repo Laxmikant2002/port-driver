@@ -38,44 +38,6 @@ class NotificationView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'Notifications',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          BlocBuilder<NotificationBloc, NotificationState>(
-            builder: (context, state) {
-              if (state.hasUnreadNotifications) {
-                return TextButton(
-                  onPressed: () {
-                    context.read<NotificationBloc>().add(const AllNotificationsMarkedAsRead());
-                  },
-                  child: Text(
-                    'Mark All Read',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                );
-              }
-              return const SizedBox();
-            },
-          ),
-        ],
-      ),
       body: BlocListener<NotificationBloc, NotificationState>(
         listener: (context, state) {
           if (state.hasError) {
@@ -93,23 +55,125 @@ class NotificationView extends StatelessWidget {
               );
           }
         },
-        child: BlocBuilder<NotificationBloc, NotificationState>(
-          builder: (context, state) {
-            if (state.isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state.isSuccess) {
-              if (state.allNotifications.isEmpty) {
-                return _buildEmptyState();
-              }
-              return _buildNotificationList(context, state);
-            } else if (state.isFailure) {
-              return _buildErrorState(context, state);
-            } else {
-              return const SizedBox();
-            }
-          },
+        child: SafeArea(
+          child: Column(
+            children: [
+              const _HeaderSection(),
+              const SizedBox(height: 24),
+              const Expanded(child: _NotificationListSection()),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+}
+
+class _HeaderSection extends StatelessWidget {
+  const _HeaderSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withOpacity(0.1),
+            AppColors.cyan.withOpacity(0.05),
+          ],
+        ),
+      ),
+      child: Column(
+        children: [
+          // Notification Icon
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.cyan.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              Icons.notifications_rounded,
+              size: 32,
+              color: AppColors.cyan,
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Header Text
+          Text(
+            'Notifications',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Stay updated with your latest notifications',
+            style: TextStyle(
+              fontSize: 16,
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          // Mark All Read Button
+          BlocBuilder<NotificationBloc, NotificationState>(
+            builder: (context, state) {
+              if (state.hasUnreadNotifications) {
+                return ElevatedButton.icon(
+                  onPressed: () {
+                    context.read<NotificationBloc>().add(const AllNotificationsMarkedAsRead());
+                  },
+                  icon: const Icon(Icons.mark_email_read, size: 18),
+                  label: const Text('Mark All Read'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.cyan.withOpacity(0.1),
+                    foregroundColor: AppColors.cyan,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NotificationListSection extends StatelessWidget {
+  const _NotificationListSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NotificationBloc, NotificationState>(
+      builder: (context, state) {
+        if (state.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state.isSuccess) {
+          if (state.allNotifications.isEmpty) {
+            return _buildEmptyState();
+          }
+          return _buildNotificationList(context, state);
+        } else if (state.isFailure) {
+          return _buildErrorState(context, state);
+        } else {
+          return const SizedBox();
+        }
+      },
     );
   }
 

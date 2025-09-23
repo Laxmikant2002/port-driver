@@ -1,5 +1,33 @@
 part of 'ride_history_bloc.dart';
 
+enum DateRangeValidationError { invalid }
+
+class DateRange extends FormzInput<DateTime?, DateRangeValidationError> {
+  const DateRange.pure() : super.pure(null);
+  const DateRange.dirty([super.value]) : super.dirty();
+
+  @override
+  DateRangeValidationError? validator(DateTime? value) {
+    if (value != null && value.isAfter(DateTime.now())) {
+      return DateRangeValidationError.invalid;
+    }
+    return null;
+  }
+}
+
+enum StatusFilterValidationError { empty }
+
+class StatusFilter extends FormzInput<RideStatus?, StatusFilterValidationError> {
+  const StatusFilter.pure() : super.pure(null);
+  const StatusFilter.dirty([super.value]) : super.dirty();
+
+  @override
+  StatusFilterValidationError? validator(RideStatus? value) {
+    // Status filter is optional, so no validation needed
+    return null;
+  }
+}
+
 /// Ride history state containing ride data and submission status
 final class RideHistoryState extends Equatable {
   const RideHistoryState({
@@ -10,6 +38,9 @@ final class RideHistoryState extends Equatable {
     this.selectedStatus,
     this.selectedStartDate,
     this.selectedEndDate,
+    this.startDate = const DateRange.pure(),
+    this.endDate = const DateRange.pure(),
+    this.statusFilter = const StatusFilter.pure(),
     this.status = FormzSubmissionStatus.initial,
     this.errorMessage,
   });
@@ -21,8 +52,14 @@ final class RideHistoryState extends Equatable {
   final RideStatus? selectedStatus;
   final DateTime? selectedStartDate;
   final DateTime? selectedEndDate;
+  final DateRange startDate;
+  final DateRange endDate;
+  final StatusFilter statusFilter;
   final FormzSubmissionStatus status;
   final String? errorMessage;
+
+  /// Returns true if the form is valid and ready for submission
+  bool get isValid => Formz.validate([startDate, endDate, statusFilter]);
 
   /// Returns true if the form is currently being submitted
   bool get isSubmitting => status == FormzSubmissionStatus.inProgress;
@@ -41,6 +78,9 @@ final class RideHistoryState extends Equatable {
 
   /// Returns true if ride history is currently being loaded
   bool get isLoading => status == FormzSubmissionStatus.inProgress;
+
+  /// Returns the current rides being displayed (filtered or all)
+  List<Ride> get currentRides => filteredRides.isNotEmpty ? filteredRides : allRides;
 
   /// Returns total rides count
   int get totalRides => allRides.length;
@@ -83,6 +123,9 @@ final class RideHistoryState extends Equatable {
     RideStatus? selectedStatus,
     DateTime? selectedStartDate,
     DateTime? selectedEndDate,
+    DateRange? startDate,
+    DateRange? endDate,
+    StatusFilter? statusFilter,
     FormzSubmissionStatus? status,
     String? errorMessage,
     bool clearError = false,
@@ -95,6 +138,9 @@ final class RideHistoryState extends Equatable {
       selectedStatus: selectedStatus ?? this.selectedStatus,
       selectedStartDate: selectedStartDate ?? this.selectedStartDate,
       selectedEndDate: selectedEndDate ?? this.selectedEndDate,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      statusFilter: statusFilter ?? this.statusFilter,
       status: status ?? this.status,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
@@ -109,6 +155,9 @@ final class RideHistoryState extends Equatable {
         selectedStatus,
         selectedStartDate,
         selectedEndDate,
+        startDate,
+        endDate,
+        statusFilter,
         status,
         errorMessage,
       ];
@@ -123,6 +172,9 @@ final class RideHistoryState extends Equatable {
         'selectedStatus: $selectedStatus, '
         'selectedStartDate: $selectedStartDate, '
         'selectedEndDate: $selectedEndDate, '
+        'startDate: $startDate, '
+        'endDate: $endDate, '
+        'statusFilter: $statusFilter, '
         'status: $status, '
         'errorMessage: $errorMessage'
         ')';

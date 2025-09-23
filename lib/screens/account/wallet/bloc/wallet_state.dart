@@ -1,22 +1,38 @@
 part of 'wallet_bloc.dart';
 
-// Validation error enums
-enum WithdrawalAmountValidationError { empty, invalid, insufficient }
+enum BalanceValidationError { empty, invalid }
 
-enum BankAccountValidationError { empty }
-
-// Formz input classes
-class WithdrawalAmount extends FormzInput<double, WithdrawalAmountValidationError> {
-  const WithdrawalAmount.pure() : super.pure(0.0);
-  const WithdrawalAmount.dirty([super.value = 0.0]) : super.dirty();
+class Balance extends FormzInput<double, BalanceValidationError> {
+  const Balance.pure() : super.pure(0.0);
+  const Balance.dirty([super.value = 0.0]) : super.dirty();
 
   @override
-  WithdrawalAmountValidationError? validator(double value) {
-    if (value == 0.0) return WithdrawalAmountValidationError.empty;
-    if (value < 10.0) return WithdrawalAmountValidationError.invalid;
+  BalanceValidationError? validator(double value) {
+    if (value < 0) return BalanceValidationError.invalid;
     return null;
   }
 }
+
+enum WithdrawalAmountValidationError { empty, invalid, insufficient }
+
+class WithdrawalAmount extends FormzInput<String, WithdrawalAmountValidationError> {
+  const WithdrawalAmount.pure() : super.pure('');
+  const WithdrawalAmount.dirty([super.value = '']) : super.dirty();
+
+  @override
+  WithdrawalAmountValidationError? validator(String value) {
+    if (value.isEmpty) return WithdrawalAmountValidationError.empty;
+    
+    final amount = double.tryParse(value);
+    if (amount == null || amount <= 0) {
+      return WithdrawalAmountValidationError.invalid;
+    }
+    
+    return null;
+  }
+}
+
+enum BankAccountValidationError { empty }
 
 class BankAccount extends FormzInput<String, BankAccountValidationError> {
   const BankAccount.pure() : super.pure('');
@@ -29,34 +45,28 @@ class BankAccount extends FormzInput<String, BankAccountValidationError> {
   }
 }
 
-/// Wallet state containing wallet data and submission status
+/// Wallet state containing form data and submission status
 final class WalletState extends Equatable {
   const WalletState({
-    this.balance,
-    this.allTransactions = const [],
-    this.filteredTransactions = const [],
+    this.status = FormzSubmissionStatus.initial,
+    this.balance = const Balance.pure(),
     this.withdrawalAmount = const WithdrawalAmount.pure(),
     this.bankAccount = const BankAccount.pure(),
-    this.withdrawalNotes = '',
-    this.selectedTransactionType,
-    this.selectedTransactionStatus,
-    this.startDate,
-    this.endDate,
-    this.status = FormzSubmissionStatus.initial,
+    this.transactions = const [],
+    this.totalEarnings = 0.0,
+    this.totalWithdrawals = 0.0,
+    this.availableBalance = 0.0,
     this.errorMessage,
   });
 
-  final WalletBalance? balance;
-  final List<Transaction> allTransactions;
-  final List<Transaction> filteredTransactions;
+  final FormzSubmissionStatus status;
+  final Balance balance;
   final WithdrawalAmount withdrawalAmount;
   final BankAccount bankAccount;
-  final String withdrawalNotes;
-  final TransactionType? selectedTransactionType;
-  final TransactionStatus? selectedTransactionStatus;
-  final DateTime? startDate;
-  final DateTime? endDate;
-  final FormzSubmissionStatus status;
+  final List<Transaction> transactions;
+  final double totalEarnings;
+  final double totalWithdrawals;
+  final double availableBalance;
   final String? errorMessage;
 
   /// Returns true if the form is valid and ready for submission
@@ -74,81 +84,124 @@ final class WalletState extends Equatable {
   /// Returns true if there's an error
   bool get hasError => isFailure && errorMessage != null;
 
-  /// Returns the current error message if any
-  String? get error => errorMessage;
-
   /// Returns true if wallet data is currently being loaded
   bool get isLoading => status == FormzSubmissionStatus.inProgress;
 
-  /// Returns the available balance
-  double get availableBalance => balance?.availableBalance ?? 0.0;
+  /// Returns total number of transactions
+  int get totalTransactions => transactions.length;
 
-  /// Returns the pending balance
-  double get pendingBalance => balance?.pendingBalance ?? 0.0;
+  /// Returns recent transactions (last 10)
+  List<Transaction> get recentTransactions {
+    final sorted = List<Transaction>.from(transactions);
+    sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return sorted.take(10).toList();
+  }
 
-  /// Returns total earnings
-  double get totalEarnings => balance?.totalEarnings ?? 0.0;
+  /// Returns earnings transactions
+  List<Transaction> get earningsTransactions {
+    return transactions.where((t) => t.type == TransactionType.earning).toList();
+  }
 
-  /// Returns total withdrawals
-  double get totalWithdrawals => balance?.totalWithdrawals ?? 0.0;
+  /// Returns withdrawal transactions
+  List<Transaction> get withdrawalTransactions {
+    return transactions.where((t) => t.type == TransactionType.withdrawal).toList();
+  }
+
+  /// Returns payment transactions
+  List<Transaction> get paymentTransactions {
+    return transactions.where((t) => t.type == TransactionType.adjustment).toList();
+  }
+
+  /// Returns transactions grouped by date
+  Map<String, List<Transaction>> get transactionsByDate {
+    final Map<String, List<Transaction>> grouped = {};
+    
+    for (final transaction in transactions) {
+      final date = transaction.createdAt.toLocal().toString().split(' ')[0];
+      if (!grouped.containsKey(date)) {
+        grouped[date] = [];
+      }
+      grouped[date]!.add(transaction);
+    }
+    
+    // Sort transactions within each date by creation time (newest first)
+    for (final transactions in grouped.values) {
+      transactions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    }
+    
+    return grouped;
+  }
+
+  /// Returns transaction type distribution
+  Map<TransactionType, int> get typeDistribution {
+    final distribution = <TransactionType, int>{};
+    
+    for (final type in TransactionType.values) {
+      distribution[type] = transactions.where((t) => t.type == type).length;
+    }
+    
+    return distribution;
+  }
+
+  /// Returns true if there are any transactions
+  bool get hasTransactions => transactions.isNotEmpty;
+
+  /// Returns true if withdrawal amount is valid
+  bool get canWithdraw {
+    if (!isValid) return false;
+    final amount = double.tryParse(withdrawalAmount.value);
+    return amount != null && amount <= availableBalance;
+  }
 
   WalletState copyWith({
-    WalletBalance? balance,
-    List<Transaction>? allTransactions,
-    List<Transaction>? filteredTransactions,
+    FormzSubmissionStatus? status,
+    Balance? balance,
     WithdrawalAmount? withdrawalAmount,
     BankAccount? bankAccount,
-    String? withdrawalNotes,
-    TransactionType? selectedTransactionType,
-    TransactionStatus? selectedTransactionStatus,
-    DateTime? startDate,
-    DateTime? endDate,
-    FormzSubmissionStatus? status,
+    List<Transaction>? transactions,
+    double? totalEarnings,
+    double? totalWithdrawals,
+    double? availableBalance,
     String? errorMessage,
     bool clearError = false,
   }) {
     return WalletState(
+      status: status ?? this.status,
       balance: balance ?? this.balance,
-      allTransactions: allTransactions ?? this.allTransactions,
-      filteredTransactions: filteredTransactions ?? this.filteredTransactions,
       withdrawalAmount: withdrawalAmount ?? this.withdrawalAmount,
       bankAccount: bankAccount ?? this.bankAccount,
-      withdrawalNotes: withdrawalNotes ?? this.withdrawalNotes,
-      selectedTransactionType: selectedTransactionType ?? this.selectedTransactionType,
-      selectedTransactionStatus: selectedTransactionStatus ?? this.selectedTransactionStatus,
-      startDate: startDate ?? this.startDate,
-      endDate: endDate ?? this.endDate,
-      status: status ?? this.status,
+      transactions: transactions ?? this.transactions,
+      totalEarnings: totalEarnings ?? this.totalEarnings,
+      totalWithdrawals: totalWithdrawals ?? this.totalWithdrawals,
+      availableBalance: availableBalance ?? this.availableBalance,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }
 
   @override
   List<Object?> get props => [
+        status,
         balance,
-        allTransactions,
-        filteredTransactions,
         withdrawalAmount,
         bankAccount,
-        withdrawalNotes,
-        selectedTransactionType,
-        selectedTransactionStatus,
-        startDate,
-        endDate,
-        status,
+        transactions,
+        totalEarnings,
+        totalWithdrawals,
+        availableBalance,
         errorMessage,
       ];
 
   @override
   String toString() {
     return 'WalletState('
+        'status: $status, '
         'balance: $balance, '
-        'allTransactions: ${allTransactions.length}, '
-        'filteredTransactions: ${filteredTransactions.length}, '
         'withdrawalAmount: $withdrawalAmount, '
         'bankAccount: $bankAccount, '
-        'withdrawalNotes: $withdrawalNotes, '
-        'status: $status, '
+        'transactions: ${transactions.length}, '
+        'totalEarnings: $totalEarnings, '
+        'totalWithdrawals: $totalWithdrawals, '
+        'availableBalance: $availableBalance, '
         'errorMessage: $errorMessage'
         ')';
   }

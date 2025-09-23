@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:driver/screens/account/wallet/bloc/payment_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../bloc/wallet_bloc.dart';
+
 class BalanceSection extends StatelessWidget {
-  final PaymentState state;
+  final WalletState state;
 
   const BalanceSection({Key? key, required this.state}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(symbol: '\$');
+    final currencyFormat = NumberFormat.currency(symbol: '₹');
 
     return SliverToBoxAdapter(
       child: Container(

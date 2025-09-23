@@ -16,8 +16,7 @@ class DocumentScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => DocumentBloc(documentsRepo: documentsRepo)
-        ..add(const DocumentsLoaded()),
+      create: (_) => DocumentBloc(documentsRepo: documentsRepo),
       child: const DocumentView(),
     );
   }
@@ -33,13 +32,13 @@ class DocumentView extends StatelessWidget {
       body: BlocListener<DocumentBloc, DocumentState>(
         listener: (context, state) {
           if (state.isSuccess) {
-            // Handle success if needed
+            Navigator.of(context).pushReplacementNamed('/dashboard');
           } else if (state.hasError) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
-                  content: Text(state.errorMessage ?? 'An error occurred'),
+                  content: Text(state.errorMessage ?? 'Failed to upload documents'),
                   backgroundColor: AppColors.error,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
@@ -50,37 +49,19 @@ class DocumentView extends StatelessWidget {
           }
         },
         child: SafeArea(
-          child: Column(
-            children: [
-              const _HeaderSection(),
-              const SizedBox(height: 24),
-              Expanded(
-                child: BlocBuilder<DocumentBloc, DocumentState>(
-                  builder: (context, state) {
-                    if (state.isLoading) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.cyan),
-                        ),
-                      );
-                    }
-
-                    return SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          const _ProgressSection(),
-                          const SizedBox(height: 24),
-                          const _DriverDocumentsSection(),
-                          const SizedBox(height: 24),
-                          const _VehicleDocumentsSection(),
-                          const SizedBox(height: 32),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const _HeaderSection(),
+                const SizedBox(height: 24),
+                const _DocumentForm(),
+                const SizedBox(height: 32),
+                const _SubmitButton(),
+                const SizedBox(height: 24),
+                const _AdminContactSection(),
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
       ),
@@ -123,7 +104,7 @@ class _HeaderSection extends StatelessWidget {
           const SizedBox(height: 16),
           // Header Text
           Text(
-            'Document Verification',
+            'Upload Documents',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -134,7 +115,7 @@ class _HeaderSection extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Upload and verify your documents to complete registration',
+            'Please upload your required documents to complete verification',
             style: TextStyle(
               fontSize: 16,
               color: AppColors.textSecondary,
@@ -148,503 +129,915 @@ class _HeaderSection extends StatelessWidget {
   }
 }
 
-class _ProgressSection extends StatelessWidget {
-  const _ProgressSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<DocumentBloc, DocumentState>(
-      builder: (context, state) {
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 24),
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withOpacity(0.08),
-                blurRadius: 32,
-                offset: const Offset(0, 12),
-                spreadRadius: 0,
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.cyan.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.trending_up,
-                      color: AppColors.cyan,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Verification Progress',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        Text(
-                          '${state.verifiedDocuments}/${state.totalDocuments} documents verified',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              // Progress Bar
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${(state.verificationProgress * 100).toInt()}% Complete',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      if (state.allDocumentsVerified)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.success.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            'All Verified',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.success,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: LinearProgressIndicator(
-                      value: state.verificationProgress,
-                      backgroundColor: AppColors.backgroundSecondary,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        state.allDocumentsVerified ? AppColors.success : AppColors.cyan,
-                      ),
-                      minHeight: 8,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _DriverDocumentsSection extends StatelessWidget {
-  const _DriverDocumentsSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<DocumentBloc, DocumentState>(
-      builder: (context, state) {
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 24),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withOpacity(0.08),
-                blurRadius: 32,
-                offset: const Offset(0, 12),
-                spreadRadius: 0,
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Section Header
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.cyan.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.person_rounded,
-                        color: AppColors.cyan,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Driver Documents',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          Text(
-                            'Personal identification documents',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                // Document Items
-                ...state.driverDocuments.map((document) => _DocumentItem(document: document)).toList(),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _VehicleDocumentsSection extends StatelessWidget {
-  const _VehicleDocumentsSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<DocumentBloc, DocumentState>(
-      builder: (context, state) {
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 24),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withOpacity(0.08),
-                blurRadius: 32,
-                offset: const Offset(0, 12),
-                spreadRadius: 0,
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Section Header
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.cyan.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.directions_car_rounded,
-                        color: AppColors.cyan,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Vehicle Documents',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          Text(
-                            'Vehicle registration and insurance',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                // Document Items
-                ...state.vehicleDocuments.map((document) => _DocumentItem(document: document)).toList(),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _DocumentItem extends StatelessWidget {
-  final Document document;
-
-  const _DocumentItem({required this.document});
+class _DocumentForm extends StatelessWidget {
+  const _DocumentForm();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: _getBackgroundColor(document.status),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: _getBorderColor(document.status),
-          width: 1,
-        ),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.08),
+            blurRadius: 32,
+            offset: const Offset(0, 12),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: AppColors.border.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+            spreadRadius: 0,
+          ),
+        ],
       ),
-      child: InkWell(
-        onTap: () => _handleDocumentTap(context),
-        borderRadius: BorderRadius.circular(16),
-        child: Row(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Document Icon
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: _getIconBackgroundColor(document.status),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                _getDocumentIcon(document.type),
-                color: _getIconColor(document.status),
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            // Document Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    document.type.displayName,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
+            // Form Header
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.cyan.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _getStatusText(document.status),
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: _getStatusTextColor(document.status),
-                      fontWeight: FontWeight.w500,
-                    ),
+                  child: const Icon(
+                    Icons.description_rounded,
+                    color: AppColors.cyan,
+                    size: 24,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Document Information',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      Text(
+                        'Upload your required documents below',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            // Status Icon
-            _buildStatusIcon(document.status),
+            const SizedBox(height: 32),
+            // Form Fields
+            const _DrivingLicenseField(),
+            const SizedBox(height: 24),
+            const _AadhaarField(),
+            const SizedBox(height: 24),
+            const _PanField(),
+            const SizedBox(height: 24),
+            const _AddressProofField(),
+            const SizedBox(height: 24),
+            const _RcBookField(),
+            const SizedBox(height: 24),
+            const _InsuranceField(),
           ],
         ),
       ),
     );
   }
+}
 
-  void _handleDocumentTap(BuildContext context) {
-    context.read<DocumentBloc>().add(DocumentSelected(document));
-    // Navigate to document detail/upload screen
-    // Navigator.push(context, MaterialPageRoute(...));
+class _DrivingLicenseField extends StatelessWidget {
+  const _DrivingLicenseField();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<DocumentBloc, DocumentState>(
+      buildWhen: (previous, current) => previous.drivingLicense != current.drivingLicense,
+      builder: (context, state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Driving License',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              onChanged: (drivingLicense) => context
+                  .read<DocumentBloc>()
+                  .add(DocumentDrivingLicenseChanged(drivingLicense)),
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Upload driving license',
+                hintStyle: TextStyle(
+                  color: AppColors.textTertiary,
+                  fontSize: 16,
+                ),
+                prefixIcon: Container(
+                  margin: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.cyan.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.credit_card,
+                    color: AppColors.cyan,
+                    size: 20,
+                  ),
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    Icons.upload_file,
+                    color: AppColors.cyan,
+                    size: 20,
+                  ),
+                  onPressed: () {
+                    // Handle file upload
+                  },
+                ),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.border,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.cyan,
+                    width: 2,
+                  ),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 1,
+                  ),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 2,
+                  ),
+                ),
+                errorText: state.drivingLicense.displayError != null
+                    ? 'Driving license is required'
+                    : null,
+                errorStyle: TextStyle(
+                  color: AppColors.error,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
+}
 
-  Color _getBackgroundColor(DocumentStatus status) {
-    switch (status) {
-      case DocumentStatus.verified:
-        return AppColors.success.withOpacity(0.1);
-      case DocumentStatus.pending:
-        return AppColors.warning.withOpacity(0.1);
-      case DocumentStatus.rejected:
-        return AppColors.error.withOpacity(0.1);
-      case DocumentStatus.expired:
-        return AppColors.error.withOpacity(0.1);
-      default:
-        return AppColors.background;
-    }
+class _AadhaarField extends StatelessWidget {
+  const _AadhaarField();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<DocumentBloc, DocumentState>(
+      buildWhen: (previous, current) => previous.aadhaar != current.aadhaar,
+      builder: (context, state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Aadhaar Card',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              onChanged: (aadhaar) => context
+                  .read<DocumentBloc>()
+                  .add(DocumentAadhaarChanged(aadhaar)),
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Upload Aadhaar card',
+                hintStyle: TextStyle(
+                  color: AppColors.textTertiary,
+                  fontSize: 16,
+                ),
+                prefixIcon: Container(
+                  margin: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.cyan.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.badge,
+                    color: AppColors.cyan,
+                    size: 20,
+                  ),
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    Icons.upload_file,
+                    color: AppColors.cyan,
+                    size: 20,
+                  ),
+                  onPressed: () {
+                    // Handle file upload
+                  },
+                ),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.border,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.cyan,
+                    width: 2,
+                  ),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 1,
+                  ),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 2,
+                  ),
+                ),
+                errorText: state.aadhaar.displayError != null
+                    ? 'Aadhaar card is required'
+                    : null,
+                errorStyle: TextStyle(
+                  color: AppColors.error,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
+}
 
-  Color _getBorderColor(DocumentStatus status) {
-    switch (status) {
-      case DocumentStatus.verified:
-        return AppColors.success.withOpacity(0.3);
-      case DocumentStatus.pending:
-        return AppColors.warning.withOpacity(0.3);
-      case DocumentStatus.rejected:
-        return AppColors.error.withOpacity(0.3);
-      case DocumentStatus.expired:
-        return AppColors.error.withOpacity(0.3);
-      default:
-        return AppColors.border;
-    }
+class _PanField extends StatelessWidget {
+  const _PanField();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<DocumentBloc, DocumentState>(
+      buildWhen: (previous, current) => previous.pan != current.pan,
+      builder: (context, state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'PAN Card',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              onChanged: (pan) => context
+                  .read<DocumentBloc>()
+                  .add(DocumentPanChanged(pan)),
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Upload PAN card',
+                hintStyle: TextStyle(
+                  color: AppColors.textTertiary,
+                  fontSize: 16,
+                ),
+                prefixIcon: Container(
+                  margin: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.cyan.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.account_balance,
+                    color: AppColors.cyan,
+                    size: 20,
+                  ),
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    Icons.upload_file,
+                    color: AppColors.cyan,
+                    size: 20,
+                  ),
+                  onPressed: () {
+                    // Handle file upload
+                  },
+                ),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.border,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.cyan,
+                    width: 2,
+                  ),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 1,
+                  ),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 2,
+                  ),
+                ),
+                errorText: state.pan.displayError != null
+                    ? 'PAN card is required'
+                    : null,
+                errorStyle: TextStyle(
+                  color: AppColors.error,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
+}
 
-  Color _getIconBackgroundColor(DocumentStatus status) {
-    switch (status) {
-      case DocumentStatus.verified:
-        return AppColors.success.withOpacity(0.2);
-      case DocumentStatus.pending:
-        return AppColors.warning.withOpacity(0.2);
-      case DocumentStatus.rejected:
-        return AppColors.error.withOpacity(0.2);
-      case DocumentStatus.expired:
-        return AppColors.error.withOpacity(0.2);
-      default:
-        return AppColors.cyan.withOpacity(0.1);
-    }
+class _AddressProofField extends StatelessWidget {
+  const _AddressProofField();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<DocumentBloc, DocumentState>(
+      buildWhen: (previous, current) => previous.addressProof != current.addressProof,
+      builder: (context, state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Address Proof',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              onChanged: (addressProof) => context
+                  .read<DocumentBloc>()
+                  .add(DocumentAddressProofChanged(addressProof)),
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Upload address proof',
+                hintStyle: TextStyle(
+                  color: AppColors.textTertiary,
+                  fontSize: 16,
+                ),
+                prefixIcon: Container(
+                  margin: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.cyan.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.location_on,
+                    color: AppColors.cyan,
+                    size: 20,
+                  ),
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    Icons.upload_file,
+                    color: AppColors.cyan,
+                    size: 20,
+                  ),
+                  onPressed: () {
+                    // Handle file upload
+                  },
+                ),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.border,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.cyan,
+                    width: 2,
+                  ),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 1,
+                  ),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 2,
+                  ),
+                ),
+                errorText: state.addressProof.displayError != null
+                    ? 'Address proof is required'
+                    : null,
+                errorStyle: TextStyle(
+                  color: AppColors.error,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
+}
 
-  Color _getIconColor(DocumentStatus status) {
-    switch (status) {
-      case DocumentStatus.verified:
-        return AppColors.success;
-      case DocumentStatus.pending:
-        return AppColors.warning;
-      case DocumentStatus.rejected:
-        return AppColors.error;
-      case DocumentStatus.expired:
-        return AppColors.error;
-      default:
-        return AppColors.cyan;
-    }
+class _RcBookField extends StatelessWidget {
+  const _RcBookField();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<DocumentBloc, DocumentState>(
+      buildWhen: (previous, current) => previous.rcBook != current.rcBook,
+      builder: (context, state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'RC Book',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              onChanged: (rcBook) => context
+                  .read<DocumentBloc>()
+                  .add(DocumentRcBookChanged(rcBook)),
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Upload RC book',
+                hintStyle: TextStyle(
+                  color: AppColors.textTertiary,
+                  fontSize: 16,
+                ),
+                prefixIcon: Container(
+                  margin: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.cyan.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.directions_car,
+                    color: AppColors.cyan,
+                    size: 20,
+                  ),
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    Icons.upload_file,
+                    color: AppColors.cyan,
+                    size: 20,
+                  ),
+                  onPressed: () {
+                    // Handle file upload
+                  },
+                ),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.border,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.cyan,
+                    width: 2,
+                  ),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 1,
+                  ),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 2,
+                  ),
+                ),
+                errorText: state.rcBook.displayError != null
+                    ? 'RC book is required'
+                    : null,
+                errorStyle: TextStyle(
+                  color: AppColors.error,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
+}
 
-  IconData _getDocumentIcon(DocumentType type) {
-    switch (type) {
-      case DocumentType.drivingLicense:
-        return Icons.credit_card;
-      case DocumentType.rcBook:
-        return Icons.directions_car;
-      case DocumentType.insurance:
-        return Icons.security;
-      case DocumentType.aadhaar:
-        return Icons.badge;
-      case DocumentType.pan:
-        return Icons.account_balance;
-      case DocumentType.addressProof:
-        return Icons.location_on;
-    }
+class _InsuranceField extends StatelessWidget {
+  const _InsuranceField();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<DocumentBloc, DocumentState>(
+      buildWhen: (previous, current) => previous.insurance != current.insurance,
+      builder: (context, state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Insurance',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              onChanged: (insurance) => context
+                  .read<DocumentBloc>()
+                  .add(DocumentInsuranceChanged(insurance)),
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Upload insurance document',
+                hintStyle: TextStyle(
+                  color: AppColors.textTertiary,
+                  fontSize: 16,
+                ),
+                prefixIcon: Container(
+                  margin: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.cyan.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.security,
+                    color: AppColors.cyan,
+                    size: 20,
+                  ),
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    Icons.upload_file,
+                    color: AppColors.cyan,
+                    size: 20,
+                  ),
+                  onPressed: () {
+                    // Handle file upload
+                  },
+                ),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.border,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.cyan,
+                    width: 2,
+                  ),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 1,
+                  ),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: AppColors.error,
+                    width: 2,
+                  ),
+                ),
+                errorText: state.insurance.displayError != null
+                    ? 'Insurance document is required'
+                    : null,
+                errorStyle: TextStyle(
+                  color: AppColors.error,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
+}
 
-  String _getStatusText(DocumentStatus status) {
-    switch (status) {
-      case DocumentStatus.verified:
-        return 'Verified';
-      case DocumentStatus.pending:
-        return 'Under Review';
-      case DocumentStatus.rejected:
-        return 'Rejected';
-      case DocumentStatus.expired:
-        return 'Expired';
-    }
-  }
+class _SubmitButton extends StatelessWidget {
+  const _SubmitButton();
 
-  Color _getStatusTextColor(DocumentStatus status) {
-    switch (status) {
-      case DocumentStatus.verified:
-        return AppColors.success;
-      case DocumentStatus.pending:
-        return AppColors.warning;
-      case DocumentStatus.rejected:
-        return AppColors.error;
-      case DocumentStatus.expired:
-        return AppColors.error;
-    }
-  }
-
-  Widget _buildStatusIcon(DocumentStatus status) {
-    switch (status) {
-      case DocumentStatus.verified:
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<DocumentBloc, DocumentState>(
+      buildWhen: (previous, current) =>
+          previous.status != current.status ||
+          previous.isValid != current.isValid,
+      builder: (context, state) {
         return Container(
-          padding: const EdgeInsets.all(6),
+          margin: const EdgeInsets.symmetric(horizontal: 24),
+          width: double.infinity,
+          height: 52,
           decoration: BoxDecoration(
-            color: AppColors.success,
-            borderRadius: BorderRadius.circular(12),
+            gradient: state.isValid
+                ? LinearGradient(
+                    colors: [AppColors.cyan, AppColors.primary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: state.isValid
+                ? [
+                    BoxShadow(
+                      color: AppColors.cyan.withOpacity(0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ]
+                : null,
           ),
-          child: const Icon(
-            Icons.check,
-            color: Colors.white,
-            size: 16,
+          child: ElevatedButton(
+            onPressed: state.isValid
+                ? () => context.read<DocumentBloc>().add(const DocumentSubmitted())
+                : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: state.isValid ? Colors.transparent : AppColors.border,
+              foregroundColor: Colors.white,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 0,
+            ),
+            child: state.isSubmitting
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Uploading Documents...',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.upload_rounded,
+                        size: 20,
+                        color: state.isValid ? Colors.white : AppColors.textTertiary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Upload Documents',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: state.isValid ? Colors.white : AppColors.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         );
-      case DocumentStatus.pending:
-        return Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: AppColors.warning,
-            borderRadius: BorderRadius.circular(12),
+      },
+    );
+  }
+}
+
+class _AdminContactSection extends StatelessWidget {
+  const _AdminContactSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.warning.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.warning.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.info_outline,
+              color: AppColors.warning,
+              size: 24,
+            ),
           ),
-          child: const Icon(
-            Icons.schedule,
-            color: Colors.white,
-            size: 16,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Need to Add Your Own Vehicle?',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Contact admin to add your own vehicle. Drivers cannot add vehicles directly.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Admin Contact: +91 9876543210',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.warning,
+                  ),
+                ),
+              ],
+            ),
           ),
-        );
-      case DocumentStatus.rejected:
-      case DocumentStatus.expired:
-        return Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: AppColors.error,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Icon(
-            Icons.close,
-            color: Colors.white,
-            size: 16,
-          ),
-        );
-    }
+        ],
+      ),
+    );
   }
 }

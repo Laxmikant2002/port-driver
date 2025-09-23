@@ -1,38 +1,128 @@
 part of 'document_bloc.dart';
 
-/// Document state containing document data and submission status
+enum DrivingLicenseValidationError { empty }
+
+class DrivingLicense extends FormzInput<String, DrivingLicenseValidationError> {
+  const DrivingLicense.pure() : super.pure('');
+  const DrivingLicense.dirty([super.value = '']) : super.dirty();
+
+  @override
+  DrivingLicenseValidationError? validator(String value) {
+    if (value.isEmpty) return DrivingLicenseValidationError.empty;
+    return null;
+  }
+}
+
+enum AadhaarValidationError { empty }
+
+class Aadhaar extends FormzInput<String, AadhaarValidationError> {
+  const Aadhaar.pure() : super.pure('');
+  const Aadhaar.dirty([super.value = '']) : super.dirty();
+
+  @override
+  AadhaarValidationError? validator(String value) {
+    if (value.isEmpty) return AadhaarValidationError.empty;
+    return null;
+  }
+}
+
+enum PanValidationError { empty }
+
+class Pan extends FormzInput<String, PanValidationError> {
+  const Pan.pure() : super.pure('');
+  const Pan.dirty([super.value = '']) : super.dirty();
+
+  @override
+  PanValidationError? validator(String value) {
+    if (value.isEmpty) return PanValidationError.empty;
+    return null;
+  }
+}
+
+enum AddressProofValidationError { empty }
+
+class AddressProof extends FormzInput<String, AddressProofValidationError> {
+  const AddressProof.pure() : super.pure('');
+  const AddressProof.dirty([super.value = '']) : super.dirty();
+
+  @override
+  AddressProofValidationError? validator(String value) {
+    if (value.isEmpty) return AddressProofValidationError.empty;
+    return null;
+  }
+}
+
+enum RcBookValidationError { empty }
+
+class RcBook extends FormzInput<String, RcBookValidationError> {
+  const RcBook.pure() : super.pure('');
+  const RcBook.dirty([super.value = '']) : super.dirty();
+
+  @override
+  RcBookValidationError? validator(String value) {
+    if (value.isEmpty) return RcBookValidationError.empty;
+    return null;
+  }
+}
+
+enum InsuranceValidationError { empty }
+
+class Insurance extends FormzInput<String, InsuranceValidationError> {
+  const Insurance.pure() : super.pure('');
+  const Insurance.dirty([super.value = '']) : super.dirty();
+
+  @override
+  InsuranceValidationError? validator(String value) {
+    if (value.isEmpty) return InsuranceValidationError.empty;
+    return null;
+  }
+}
+
+/// Document state containing form data and submission status
 final class DocumentState extends Equatable {
   const DocumentState({
+    this.status = FormzSubmissionStatus.initial,
+    this.drivingLicense = const DrivingLicense.pure(),
+    this.aadhaar = const Aadhaar.pure(),
+    this.pan = const Pan.pure(),
+    this.addressProof = const AddressProof.pure(),
+    this.rcBook = const RcBook.pure(),
+    this.insurance = const Insurance.pure(),
     this.driverDocuments = const [],
     this.vehicleDocuments = const [],
     this.selectedDocument,
-    this.status = FormzSubmissionStatus.initial,
     this.errorMessage,
   });
 
+  final FormzSubmissionStatus status;
+  final DrivingLicense drivingLicense;
+  final Aadhaar aadhaar;
+  final Pan pan;
+  final AddressProof addressProof;
+  final RcBook rcBook;
+  final Insurance insurance;
   final List<Document> driverDocuments;
   final List<Document> vehicleDocuments;
   final Document? selectedDocument;
-  final FormzSubmissionStatus status;
   final String? errorMessage;
 
-  /// Returns true if documents are currently being loaded
-  bool get isLoading => status == FormzSubmissionStatus.inProgress;
-
-  /// Returns true if documents were loaded successfully
-  bool get isSuccess => status == FormzSubmissionStatus.success;
-
-  /// Returns true if document operation failed
-  bool get isFailure => status == FormzSubmissionStatus.failure;
-
-  /// Returns true if there's an error message
-  bool get hasError => isFailure && errorMessage != null;
-
-  /// Returns the current error message if any
-  String? get error => errorMessage;
+  /// Returns true if the form is valid and ready for submission
+  bool get isValid => Formz.validate([drivingLicense, aadhaar, pan, addressProof, rcBook, insurance]);
 
   /// Returns true if the form is currently being submitted
   bool get isSubmitting => status == FormzSubmissionStatus.inProgress;
+
+  /// Returns true if the submission was successful
+  bool get isSuccess => status == FormzSubmissionStatus.success;
+
+  /// Returns true if the submission failed
+  bool get isFailure => status == FormzSubmissionStatus.failure;
+
+  /// Returns true if there's an error
+  bool get hasError => isFailure && errorMessage != null;
+
+  /// Returns true if documents are currently being loaded
+  bool get isLoading => status == FormzSubmissionStatus.inProgress;
 
   /// Returns total number of documents
   int get totalDocuments => driverDocuments.length + vehicleDocuments.length;
@@ -80,18 +170,30 @@ final class DocumentState extends Equatable {
   List<Document> get allDocuments => [...driverDocuments, ...vehicleDocuments];
 
   DocumentState copyWith({
+    FormzSubmissionStatus? status,
+    DrivingLicense? drivingLicense,
+    Aadhaar? aadhaar,
+    Pan? pan,
+    AddressProof? addressProof,
+    RcBook? rcBook,
+    Insurance? insurance,
     List<Document>? driverDocuments,
     List<Document>? vehicleDocuments,
     Document? selectedDocument,
-    FormzSubmissionStatus? status,
     String? errorMessage,
     bool clearError = false,
   }) {
     return DocumentState(
+      status: status ?? this.status,
+      drivingLicense: drivingLicense ?? this.drivingLicense,
+      aadhaar: aadhaar ?? this.aadhaar,
+      pan: pan ?? this.pan,
+      addressProof: addressProof ?? this.addressProof,
+      rcBook: rcBook ?? this.rcBook,
+      insurance: insurance ?? this.insurance,
       driverDocuments: driverDocuments ?? this.driverDocuments,
       vehicleDocuments: vehicleDocuments ?? this.vehicleDocuments,
       selectedDocument: selectedDocument ?? this.selectedDocument,
-      status: status ?? this.status,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }
@@ -109,20 +211,32 @@ final class DocumentState extends Equatable {
 
   @override
   List<Object?> get props => [
+        status,
+        drivingLicense,
+        aadhaar,
+        pan,
+        addressProof,
+        rcBook,
+        insurance,
         driverDocuments,
         vehicleDocuments,
         selectedDocument,
-        status,
         errorMessage,
       ];
 
   @override
   String toString() {
     return 'DocumentState('
+        'status: $status, '
+        'drivingLicense: $drivingLicense, '
+        'aadhaar: $aadhaar, '
+        'pan: $pan, '
+        'addressProof: $addressProof, '
+        'rcBook: $rcBook, '
+        'insurance: $insurance, '
         'driverDocuments: ${driverDocuments.length}, '
         'vehicleDocuments: ${vehicleDocuments.length}, '
         'selectedDocument: $selectedDocument, '
-        'status: $status, '
         'errorMessage: $errorMessage'
         ')';
   }

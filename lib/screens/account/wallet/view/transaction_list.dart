@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:driver/screens/account/wallet/bloc/payment_bloc.dart';
+import 'package:finance_repo/finance_repo.dart';
+
+import '../bloc/wallet_bloc.dart';
 
 class TransactionList extends StatelessWidget {
-  final PaymentState state;
+  final WalletState state;
 
   const TransactionList({Key? key, required this.state}) : super(key: key);
 
@@ -21,23 +23,23 @@ class TransactionList extends StatelessWidget {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                 leading: _TransactionIcon(type: transaction.type),
                 title: Text(
-                  transaction.note,
+                  transaction.description ?? 'Transaction',
                   style: const TextStyle(
                     fontWeight: FontWeight.w500,
                     color: Colors.black,
                   ),
                 ),
                 subtitle: Text(
-                  dateFormat.format(transaction.date),
+                  dateFormat.format(transaction.createdAt),
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 13,
                   ),
                 ),
                 trailing: Text(
-                  NumberFormat.currency(symbol: '\$').format(transaction.amount),
+                  NumberFormat.currency(symbol: '₹').format(transaction.amount),
                   style: TextStyle(
-                    color: transaction.type == 'earnings' ? Colors.green : Colors.black,
+                    color: transaction.type == TransactionType.earning ? Colors.green : Colors.black,
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
@@ -54,7 +56,7 @@ class TransactionList extends StatelessWidget {
 }
 
 class _TransactionIcon extends StatelessWidget {
-  final String type;
+  final TransactionType type;
 
   const _TransactionIcon({required this.type});
 
@@ -65,12 +67,12 @@ class _TransactionIcon extends StatelessWidget {
     Color backgroundColor;
 
     switch (type) {
-      case 'earnings':
+      case TransactionType.earning:
         icon = Icons.arrow_upward;
         color = Colors.green;
         backgroundColor = Colors.green.withOpacity(0.1);
         break;
-      case 'withdrawals':
+      case TransactionType.withdrawal:
         icon = Icons.arrow_downward;
         color = Colors.orange;
         backgroundColor = Colors.orange.withOpacity(0.1);

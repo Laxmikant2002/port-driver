@@ -14,6 +14,8 @@ class RatingsBloc extends Bloc<RatingsEvent, RatingsState> {
     on<RatingDeleted>(_onRatingDeleted);
     on<RatingsFiltered>(_onRatingsFiltered);
     on<RatingsRefreshed>(_onRatingsRefreshed);
+    on<RatingValueChanged>(_onRatingValueChanged);
+    on<CommentChanged>(_onCommentChanged);
   }
 
   final SharedRepo sharedRepo;
@@ -167,6 +169,32 @@ class RatingsBloc extends Bloc<RatingsEvent, RatingsState> {
         errorMessage: 'Refresh error: ${error.toString()}',
       ));
     }
+  }
+
+  void _onRatingValueChanged(
+    RatingValueChanged event,
+    Emitter<RatingsState> emit,
+  ) {
+    final ratingValue = RatingValue.dirty(event.ratingValue);
+    emit(
+      state.copyWith(
+        ratingValue: ratingValue,
+        status: FormzSubmissionStatus.initial,
+      ),
+    );
+  }
+
+  void _onCommentChanged(
+    CommentChanged event,
+    Emitter<RatingsState> emit,
+  ) {
+    final comment = Comment.dirty(event.comment);
+    emit(
+      state.copyWith(
+        comment: comment,
+        status: FormzSubmissionStatus.initial,
+      ),
+    );
   }
 
   Map<int, int> _calculateRatingDistribution(List<Rating> ratings) {
