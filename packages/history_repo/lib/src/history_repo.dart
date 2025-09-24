@@ -16,8 +16,9 @@ class HistoryRepo {
   final ApiClient apiClient;
   final Localstorage localStorage;
 
-  /// Get ride history
+  /// Get ride history for a specific driver
   Future<RideResponse> getRideHistory({
+    required String driverId,
     int? limit,
     int? offset,
     RideStatus? status,
@@ -25,7 +26,9 @@ class HistoryRepo {
     DateTime? endDate,
   }) async {
     try {
-      final queryParams = <String, dynamic>{};
+      final queryParams = <String, dynamic>{
+        'driverId': driverId,
+      };
       if (limit != null) queryParams['limit'] = limit;
       if (offset != null) queryParams['offset'] = offset;
       if (status != null) queryParams['status'] = status.value;
@@ -33,7 +36,7 @@ class HistoryRepo {
       if (endDate != null) queryParams['endDate'] = endDate.toIso8601String();
 
       final response = await apiClient.get<Map<String, dynamic>>(
-        '/history/rides',
+        '/driver/trips/history',
         queryParameters: queryParams,
       );
 
@@ -53,20 +56,23 @@ class HistoryRepo {
     }
   }
 
-  /// Get ride statistics
+  /// Get ride statistics for a specific driver
   Future<RideResponse> getRideStatistics({
+    required String driverId,
     DateTime? startDate,
     DateTime? endDate,
     String? period,
   }) async {
     try {
-      final queryParams = <String, dynamic>{};
+      final queryParams = <String, dynamic>{
+        'driverId': driverId,
+      };
       if (startDate != null) queryParams['startDate'] = startDate.toIso8601String();
       if (endDate != null) queryParams['endDate'] = endDate.toIso8601String();
       if (period != null) queryParams['period'] = period;
 
       final response = await apiClient.get<Map<String, dynamic>>(
-        '/history/statistics',
+        '/driver/trips/statistics',
         queryParameters: queryParams,
       );
 
@@ -86,11 +92,15 @@ class HistoryRepo {
     }
   }
 
-  /// Get a specific ride by ID
-  Future<RideResponse> getRide(String rideId) async {
+  /// Get a specific ride by ID for a driver
+  Future<RideResponse> getRide({
+    required String driverId,
+    required String rideId,
+  }) async {
     try {
       final response = await apiClient.get<Map<String, dynamic>>(
-        '/history/rides/$rideId',
+        '/driver/trips/$rideId',
+        queryParameters: {'driverId': driverId},
       );
 
       if (response is DataSuccess) {
@@ -109,12 +119,18 @@ class HistoryRepo {
     }
   }
 
-  /// Get recent rides
-  Future<RideResponse> getRecentRides({int limit = 10}) async {
+  /// Get recent rides for a specific driver
+  Future<RideResponse> getRecentRides({
+    required String driverId,
+    int limit = 10,
+  }) async {
     try {
       final response = await apiClient.get<Map<String, dynamic>>(
-        '/history/rides/recent',
-        queryParameters: {'limit': limit},
+        '/driver/trips/recent',
+        queryParameters: {
+          'driverId': driverId,
+          'limit': limit,
+        },
       );
 
       if (response is DataSuccess) {

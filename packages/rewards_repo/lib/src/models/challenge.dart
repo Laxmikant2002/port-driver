@@ -89,10 +89,10 @@ class Challenge extends Equatable {
   }
 
   /// Progress text for display
-  String get progressText => '$currentProgress of $target ${_getProgressUnit()}';
+  String get progressText => '$currentProgress of $target ${getProgressUnit()}';
 
   /// Progress unit based on challenge type
-  String _getProgressUnit() {
+  String getProgressUnit() {
     switch (type) {
       case ChallengeType.trips:
         return 'trips';

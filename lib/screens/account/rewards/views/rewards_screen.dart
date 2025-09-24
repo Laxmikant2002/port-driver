@@ -565,7 +565,7 @@ class _RewardsViewState extends State<RewardsView> with TickerProviderStateMixin
               ),
               const SizedBox(width: 4),
               Text(
-                '${challenge.remainingProgress} ${challenge._getProgressUnit()} to ${isDaily ? 'bonus' : 'mega bonus'}',
+                '${challenge.remainingProgress} ${challenge.getProgressUnit()} to ${isDaily ? 'bonus' : 'mega bonus'}',
                 style: TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondary,
@@ -579,7 +579,7 @@ class _RewardsViewState extends State<RewardsView> with TickerProviderStateMixin
               ),
               const SizedBox(width: 4),
               Text(
-                '~${(challenge.remainingProgress / 6).ceil()} ${challenge._getProgressUnit()}/day needed',
+                '~${(challenge.remainingProgress / 6).ceil()} ${challenge.getProgressUnit()}/day needed',
                 style: TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondary,

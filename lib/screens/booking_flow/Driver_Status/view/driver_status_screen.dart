@@ -6,6 +6,7 @@ import 'package:driver_status/driver_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../../routes/main_routes.dart';
 
 class RideScreen extends StatelessWidget {
   const RideScreen({super.key});
@@ -281,7 +282,7 @@ class _HomeScreenState extends State<_HomeScreen> with SingleTickerProviderState
                         backgroundColor: AppColors.surface,
                         elevation: 6,
                         onPressed: () {
-                          Navigator.pushNamed(context, '/work-area-selection');
+                          Navigator.pushNamed(context, MainRoutes.workAreaSelection);
                         },
                         child: Icon(
                           Icons.location_searching, 

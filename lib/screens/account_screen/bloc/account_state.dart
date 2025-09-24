@@ -63,6 +63,10 @@ final class AccountState extends Equatable {
   /// Returns true if account is loading
   bool get isLoading => status == FormzSubmissionStatus.inProgress;
 
+  /// Returns true if documents are verified
+  /// This is a placeholder implementation - in a real app, this would check actual document verification status
+  bool get isDocumentVerified => true;
+
   AccountState copyWith({
     FormzSubmissionStatus? status,
     Name? name,

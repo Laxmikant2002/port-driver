@@ -4,9 +4,8 @@ import 'package:auth_repo/auth_repo.dart';
 import 'package:formz/formz.dart';
 import 'package:driver/locator.dart';
 import '../../../../widgets/colors.dart';
-import 'package:driver/routes/profile_routes.dart';
-import 'package:driver/routes/document_upload_routes.dart';
-import 'package:driver/routes/driver_status_routes.dart';
+import 'package:driver/routes/account_routes.dart';
+import 'package:driver/routes/main_routes.dart';
 
 import '../bloc/otp_bloc.dart';
 import 'otp_field.dart';
@@ -41,11 +40,11 @@ class _OtpScreen extends StatelessWidget {
           if (state.isSuccess && state.user != null) {
             // Navigate based on user status
             if (state.user!.isNewUser || !state.user!.profileComplete) {
-              Navigator.pushReplacementNamed(context, ProfileRoutes.profileCreation, arguments: state.user!.phone);
+              Navigator.pushReplacementNamed(context, AccountRoutes.profileCreation, arguments: state.user!.phone);
             } else if (!state.user!.documentVerified) {
-              Navigator.pushReplacementNamed(context, DocumentUploadRoutes.documentIntro);
+              Navigator.pushReplacementNamed(context, AccountRoutes.documentIntro);
             } else {
-              Navigator.pushReplacementNamed(context, DriverStatusRoutes.dashboard);
+              Navigator.pushReplacementNamed(context, MainRoutes.dashboard);
             }
           } else if (state.hasError) {
             ScaffoldMessenger.of(context)

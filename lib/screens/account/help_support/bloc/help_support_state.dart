@@ -5,14 +5,12 @@ final class HelpSupportState extends Equatable {
   const HelpSupportState({
     this.supportContacts = const [],
     this.emergencyContact,
-    this.selectedContact,
     this.status = FormzSubmissionStatus.initial,
     this.errorMessage,
   });
 
   final List<SupportContact> supportContacts;
   final SupportContact? emergencyContact;
-  final SupportContact? selectedContact;
   final FormzSubmissionStatus status;
   final String? errorMessage;
 
@@ -34,22 +32,10 @@ final class HelpSupportState extends Equatable {
   /// Returns true if help support is currently being loaded
   bool get isLoading => status == FormzSubmissionStatus.inProgress;
 
-  /// Returns call support contacts
-  List<SupportContact> get callContacts => 
-      supportContacts.where((c) => c.type == SupportContactType.call).toList();
-
-  /// Returns email support contacts
-  List<SupportContact> get emailContacts => 
-      supportContacts.where((c) => c.type == SupportContactType.email).toList();
-
-  /// Returns available support contacts
-  List<SupportContact> get availableContacts => 
-      supportContacts.where((c) => c.isAvailable).toList();
 
   HelpSupportState copyWith({
     List<SupportContact>? supportContacts,
     SupportContact? emergencyContact,
-    SupportContact? selectedContact,
     FormzSubmissionStatus? status,
     String? errorMessage,
     bool clearError = false,
@@ -57,7 +43,6 @@ final class HelpSupportState extends Equatable {
     return HelpSupportState(
       supportContacts: supportContacts ?? this.supportContacts,
       emergencyContact: emergencyContact ?? this.emergencyContact,
-      selectedContact: selectedContact ?? this.selectedContact,
       status: status ?? this.status,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
@@ -67,7 +52,6 @@ final class HelpSupportState extends Equatable {
   List<Object?> get props => [
         supportContacts,
         emergencyContact,
-        selectedContact,
         status,
         errorMessage,
       ];
@@ -77,7 +61,6 @@ final class HelpSupportState extends Equatable {
     return 'HelpSupportState('
         'supportContacts: ${supportContacts.length}, '
         'emergencyContact: $emergencyContact, '
-        'selectedContact: $selectedContact, '
         'status: $status, '
         'errorMessage: $errorMessage'
         ')';

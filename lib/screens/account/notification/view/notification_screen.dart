@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:notifications_repo/notifications_repo.dart' as notification_repo;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../widgets/colors.dart';
-import '../../setting_section/notification_settings/bloc/notification_settings_bloc.dart';
+import '../bloc/notification_bloc.dart';
 
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({Key? key}) : super(key: key);
@@ -23,7 +23,8 @@ class NotificationScreen extends StatelessWidget {
         final notificationsRepo = notification_repo.NotificationsRepo(prefs: prefs);
         
         return BlocProvider(
-          create: (_) => NotificationBloc(notificationsRepo: notificationsRepo)..add(const NotificationsLoaded()),
+          create: (_) => NotificationBloc(notificationsRepo: notificationsRepo)
+            ..add(const NotificationsLoaded()),
           child: const NotificationView(),
         );
       },
@@ -131,7 +132,9 @@ class _HeaderSection extends StatelessWidget {
               if (state.hasUnreadNotifications) {
                 return ElevatedButton.icon(
                   onPressed: () {
-                    context.read<NotificationBloc>().add(const AllNotificationsMarkedAsRead());
+                    context.read<NotificationBloc>().add(
+                      const AllNotificationsMarkedAsRead(),
+                    );
                   },
                   icon: const Icon(Icons.mark_email_read, size: 18),
                   label: const Text('Mark All Read'),
@@ -250,7 +253,9 @@ class _NotificationListSection extends StatelessWidget {
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () {
-              context.read<NotificationBloc>().add(const NotificationsRefreshed());
+              context.read<NotificationBloc>().add(
+                const NotificationsRefreshed(),
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -273,7 +278,9 @@ class _NotificationListSection extends StatelessWidget {
     
     return RefreshIndicator(
       onRefresh: () async {
-        context.read<NotificationBloc>().add(const NotificationsRefreshed());
+        context.read<NotificationBloc>().add(
+          const NotificationsRefreshed(),
+        );
       },
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -288,7 +295,9 @@ class _NotificationListSection extends StatelessWidget {
             children: [
               _buildDateHeader(date),
               const SizedBox(height: 12),
-              ...notifications.map<Widget>((notification) => _buildNotificationCard(context, notification)),
+              ...notifications.map<Widget>(
+                (notification) => _buildNotificationCard(context, notification),
+              ),
               const SizedBox(height: 24),
             ],
           );
@@ -326,13 +335,17 @@ class _NotificationListSection extends StatelessWidget {
     );
   }
 
-  Widget _buildNotificationCard(BuildContext context, notification_repo.Notification notification) {
+  Widget _buildNotificationCard(
+    BuildContext context, 
+    notification_repo.Notification notification,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: notification.priority == notification_repo.NotificationPriority.urgent
+        border: notification.priority == 
+                notification_repo.NotificationPriority.urgent
             ? Border.all(color: AppColors.error, width: 2)
             : null,
         boxShadow: [
@@ -348,7 +361,9 @@ class _NotificationListSection extends StatelessWidget {
         onTap: () {
           // Handle notification tap
           if (!notification.isRead) {
-            context.read<NotificationBloc>().add(NotificationMarkedAsRead(notification.id));
+            context.read<NotificationBloc>().add(
+              NotificationMarkedAsRead(notification.id),
+            );
           }
         },
         child: Padding(
@@ -369,7 +384,9 @@ class _NotificationListSection extends StatelessWidget {
                             notification.title,
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: notification.isRead ? FontWeight.w500 : FontWeight.bold,
+                              fontWeight: notification.isRead 
+                                  ? FontWeight.w500 
+                                  : FontWeight.bold,
                               color: AppColors.textPrimary,
                             ),
                           ),
@@ -420,11 +437,15 @@ class _NotificationListSection extends StatelessWidget {
                 onSelected: (value) {
                   switch (value) {
                     case 'delete':
-                      context.read<NotificationBloc>().add(NotificationDeleted(notification.id));
+                      context.read<NotificationBloc>().add(
+                        NotificationDeleted(notification.id),
+                      );
                       break;
                     case 'mark_read':
                       if (!notification.isRead) {
-                        context.read<NotificationBloc>().add(NotificationMarkedAsRead(notification.id));
+                        context.read<NotificationBloc>().add(
+                          NotificationMarkedAsRead(notification.id),
+                        );
                       }
                       break;
                   }
@@ -464,7 +485,9 @@ class _NotificationListSection extends StatelessWidget {
     );
   }
 
-  Widget _buildNotificationIcon(notification_repo.Notification notification) {
+  Widget _buildNotificationIcon(
+    notification_repo.Notification notification,
+  ) {
     IconData iconData = Icons.notifications_none;
     Color iconColor = AppColors.textSecondary;
     
@@ -571,7 +594,9 @@ class _NotificationListSection extends StatelessWidget {
     );
   }
 
-  Widget _buildPriorityBadge(notification_repo.NotificationPriority priority) {
+  Widget _buildPriorityBadge(
+    notification_repo.NotificationPriority priority,
+  ) {
     Color color;
     switch (priority) {
       case notification_repo.NotificationPriority.low:

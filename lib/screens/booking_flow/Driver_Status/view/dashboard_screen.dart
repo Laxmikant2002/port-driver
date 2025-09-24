@@ -4,6 +4,7 @@ import 'package:driver/widgets/colors.dart';
 import 'package:driver_status/driver_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../routes/main_routes.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -419,7 +420,7 @@ class _WorkAreaCard extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/work-area-selection');
+                  Navigator.pushNamed(context, MainRoutes.workAreaSelection);
                 },
                 child: Text(
                   state.hasWorkArea ? 'Change' : 'Set',

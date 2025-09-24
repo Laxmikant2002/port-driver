@@ -8,7 +8,10 @@ part 'trip_history_event.dart';
 part 'trip_history_state.dart';
 
 class TripHistoryBloc extends Bloc<TripHistoryEvent, TripHistoryState> {
-  TripHistoryBloc({required this.historyRepo}) : super(const TripHistoryState()) {
+  TripHistoryBloc({
+    required this.historyRepo,
+    required this.driverId,
+  }) : super(const TripHistoryState()) {
     on<TripHistoryLoaded>(_onTripHistoryLoaded);
     on<TripHistoryRefreshed>(_onTripHistoryRefreshed);
     on<RidesFiltered>(_onRidesFiltered);
@@ -20,6 +23,7 @@ class TripHistoryBloc extends Bloc<TripHistoryEvent, TripHistoryState> {
   }
 
   final HistoryRepo historyRepo;
+  final String driverId;
 
   Future<void> _onTripHistoryLoaded(
     TripHistoryLoaded event,
@@ -29,6 +33,7 @@ class TripHistoryBloc extends Bloc<TripHistoryEvent, TripHistoryState> {
     
     try {
       final response = await historyRepo.getRideHistory(
+        driverId: driverId,
         limit: event.limit,
         offset: event.offset,
         status: event.status,
@@ -122,7 +127,10 @@ class TripHistoryBloc extends Bloc<TripHistoryEvent, TripHistoryState> {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     
     try {
-      final response = await historyRepo.getRide(event.rideId);
+      final response = await historyRepo.getRide(
+        driverId: driverId,
+        rideId: event.rideId,
+      );
       
       if (response.success && response.singleRide != null) {
         emit(state.copyWith(
@@ -175,6 +183,7 @@ class TripHistoryBloc extends Bloc<TripHistoryEvent, TripHistoryState> {
     
     try {
       final response = await historyRepo.getRideStatistics(
+        driverId: driverId,
         startDate: event.startDate,
         endDate: event.endDate,
         period: event.period,
@@ -214,7 +223,7 @@ class TripHistoryBloc extends Bloc<TripHistoryEvent, TripHistoryState> {
     TripHistoryLoadedWithSampleData event,
     Emitter<TripHistoryState> emit,
   ) {
-    final sampleTrips = SampleTripData.getSampleTrips();
+    final sampleTrips = SampleTripData.getSampleTrips(driverId: driverId);
     final sampleStatistics = SampleTripData.getSampleStatistics();
     
     emit(state.copyWith(

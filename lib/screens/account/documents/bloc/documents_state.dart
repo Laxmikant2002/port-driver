@@ -58,7 +58,7 @@ final class DocumentsState extends Equatable {
 
   /// Returns documents that are approved.
   List<DocumentUpload> get approvedDocuments {
-    return documents.where((doc) => doc.status == DocumentStatus.verified).toList();
+    return documents.where((doc) => doc.status == local_models.DocumentStatus.verified).toList();
   }
 
   /// Returns documents that are expired.
@@ -68,7 +68,7 @@ final class DocumentsState extends Equatable {
 
   /// Returns documents that are rejected.
   List<DocumentUpload> get rejectedDocuments {
-    return documents.where((doc) => doc.status == DocumentStatus.rejected).toList();
+    return documents.where((doc) => doc.status == local_models.DocumentStatus.rejected).toList();
   }
 
   /// Returns documents that are expiring soon (within 30 days).
@@ -77,8 +77,8 @@ final class DocumentsState extends Equatable {
   }
 
   /// Returns documents grouped by status.
-  Map<DocumentStatus, List<DocumentUpload>> get documentsByStatus {
-    final Map<DocumentStatus, List<DocumentUpload>> grouped = {};
+  Map<local_models.DocumentStatus, List<DocumentUpload>> get documentsByStatus {
+    final Map<local_models.DocumentStatus, List<DocumentUpload>> grouped = {};
     
     for (final doc in documents) {
       grouped.putIfAbsent(doc.status, () => []).add(doc);

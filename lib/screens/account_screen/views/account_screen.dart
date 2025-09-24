@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:driver/routes/document_upload_routes.dart';
 import 'package:driver/routes/account_routes.dart';
-import 'package:driver/routes/finance_routes.dart';
-import 'package:driver/routes/history_routes.dart';
-import 'package:driver/routes/notifications_routes.dart';
-import 'package:driver/routes/profile_routes.dart';
-import 'package:driver/routes/settings_routes.dart';
 import 'package:driver/screens/account_screen/bloc/account_bloc.dart';
 import 'package:driver/widgets/colors.dart';
 import 'package:image_picker/image_picker.dart';
@@ -16,16 +10,17 @@ class AccountScreen extends StatelessWidget {
 
   static List<Map<String, dynamic>> getButtonsData(bool isDocumentVerified) {
     return [
-      {'text': "Profile", 'icon': Icons.person_outline, 'route': ProfileRoutes.profile},
-      {'text': "Rides", 'icon': Icons.directions_car, 'route': HistoryRoutes.ridesHistory},
-      {'text': 'Ratings', 'icon': Icons.star_outline, 'route': HistoryRoutes.ratings},
-      {'text': 'Wallet', 'icon': Icons.wallet, 'route': FinanceRoutes.wallet},
+      {'text': "Profile", 'icon': Icons.person_outline, 'route': AccountRoutes.profile},
+      {'text': "Activity", 'icon': Icons.history_rounded, 'route': AccountRoutes.tripHistory},
+      {'text': 'Ratings', 'icon': Icons.star_outline, 'route': AccountRoutes.ratings},
       {
         'text': 'Documents', 
         'icon': Icons.file_present, 
-        'route': isDocumentVerified ? AccountRoutes.documents : DocumentUploadRoutes.documentIntro
+        'route': isDocumentVerified ? AccountRoutes.accountDocuments : AccountRoutes.documentIntro
       },
-      {'text': "Settings", 'icon': Icons.settings, 'route': SettingsRoutes.settings},
+      {'text': "Settings", 'icon': Icons.settings, 'route': AccountRoutes.settings},
+      {'text': "Help", 'icon': Icons.help_outline, 'route': AccountRoutes.helpSupport},
+      
     ];
   }
 
@@ -50,7 +45,7 @@ class AccountScreen extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.notifications_none, color: AppColors.textPrimary),
               onPressed: () {
-                Navigator.pushNamed(context, NotificationsRoutes.notificationSettings);
+                Navigator.pushNamed(context, AccountRoutes.notificationSettings);
               },
             ),
           ],

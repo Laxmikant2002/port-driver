@@ -48,7 +48,7 @@ final class DocumentUploadState extends Equatable {
   int get verifiedDocuments => documents.where((doc) => doc.isVerified).length;
 
   /// Returns the number of pending documents.
-  int get pendingDocuments => documents.where((doc) => doc.status == DocumentStatus.pending).length;
+  int get pendingDocuments => documents.where((doc) => doc.status == local_models.DocumentStatus.pending).length;
 
   /// Returns the number of rejected documents.
   int get rejectedDocuments => documents.where((doc) => doc.needsAttention).length;
@@ -85,7 +85,7 @@ final class DocumentUploadState extends Equatable {
 
   /// Returns the recommended next document to upload.
   DocumentUpload? get recommendedNextDocument {
-    final pendingDocs = documents.where((doc) => doc.status == DocumentStatus.pending).toList();
+    final pendingDocs = documents.where((doc) => doc.status == local_models.DocumentStatus.pending).toList();
     if (pendingDocs.isEmpty) return null;
 
     // Prioritize required documents
@@ -108,8 +108,8 @@ final class DocumentUploadState extends Equatable {
   }
 
   /// Returns documents grouped by status.
-  Map<DocumentStatus, List<DocumentUpload>> get documentsByStatus {
-    final Map<DocumentStatus, List<DocumentUpload>> grouped = {};
+  Map<local_models.DocumentStatus, List<DocumentUpload>> get documentsByStatus {
+    final Map<local_models.DocumentStatus, List<DocumentUpload>> grouped = {};
     
     for (final doc in documents) {
       grouped.putIfAbsent(doc.status, () => []).add(doc);
@@ -119,8 +119,8 @@ final class DocumentUploadState extends Equatable {
   }
 
   /// Returns documents grouped by type.
-  Map<DocumentType, DocumentUpload> get documentsByType {
-    final Map<DocumentType, DocumentUpload> grouped = {};
+  Map<local_models.DocumentType, DocumentUpload> get documentsByType {
+    final Map<local_models.DocumentType, DocumentUpload> grouped = {};
     
     for (final doc in documents) {
       grouped[doc.type] = doc;

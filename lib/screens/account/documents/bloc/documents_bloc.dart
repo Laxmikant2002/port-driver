@@ -1,7 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:documents_repo/documents_repo.dart';
-import '../../../models/document_upload.dart';
+import 'package:documents_repo/src/models/document.dart' as documents_repo;
+import 'package:driver/models/document_upload.dart' hide DocumentStatus, DocumentType;
+import 'package:driver/models/document_upload.dart' as local_models show DocumentStatus, DocumentType;
 
 part 'documents_event.dart';
 part 'documents_state.dart';
@@ -92,7 +94,7 @@ class DocumentsBloc extends Bloc<DocumentsEvent, DocumentsState> {
         final updatedDocuments = state.documents.map((doc) {
           if (doc.id == event.documentId) {
             return doc.copyWith(
-              status: DocumentStatus.pending,
+              status: local_models.DocumentStatus.pending,
               frontImagePath: null,
               backImagePath: null,
               fileName: null,
@@ -168,43 +170,84 @@ class DocumentsBloc extends Bloc<DocumentsEvent, DocumentsState> {
     emit(state.copyWith(documents: updatedDocuments));
   }
 
-  DocumentUpload _convertToDocumentUpload(doc) {
+  DocumentUpload _convertToDocumentUpload(documents_repo.Document doc) {
     return DocumentUpload(
       id: doc.id,
-      type: DocumentType.fromString(doc.type.value),
-      title: doc.type.displayName,
-      description: doc.type.description,
-      isRequired: doc.type.isRequired,
-      status: DocumentStatus.fromString(doc.status.value),
+      type: _convertDocumentType(doc.type),
+      title: _convertDocumentType(doc.type).displayName,
+      description: _convertDocumentType(doc.type).description,
+      isRequired: _convertDocumentType(doc.type).isRequired,
+      status: _convertDocumentStatus(doc.status),
       frontImagePath: doc.fileUrl,
+      backImagePath: null, // documents_repo model doesn't have back image
       fileName: doc.fileName,
       uploadedAt: doc.uploadedAt,
       verifiedAt: doc.verifiedAt,
       rejectionReason: doc.rejectedReason,
-      expiryDate: _calculateExpiryDate(doc.type),
+      expiryDate: _calculateExpiryDate(_convertDocumentType(doc.type)),
       expiryNotificationEnabled: true,
     );
   }
 
-  DateTime? _calculateExpiryDate(DocumentType type) {
+  DateTime? _calculateExpiryDate(local_models.DocumentType type) {
     // This would typically come from the API
     // For now, we'll simulate expiry dates based on document type
     final now = DateTime.now();
     switch (type) {
-      case DocumentType.drivingLicense:
+      case local_models.DocumentType.drivingLicense:
         return now.add(const Duration(days: 365 * 5)); // 5 years
-      case DocumentType.registrationCertificate:
+      case local_models.DocumentType.registrationCertificate:
         return now.add(const Duration(days: 365 * 15)); // 15 years
-      case DocumentType.vehicleInsurance:
+      case local_models.DocumentType.vehicleInsurance:
         return now.add(const Duration(days: 365)); // 1 year
-      case DocumentType.aadhaarCard:
+      case local_models.DocumentType.aadhaarCard:
         return null; // No expiry
-      case DocumentType.panCard:
+      case local_models.DocumentType.panCard:
         return null; // No expiry
-      case DocumentType.profilePicture:
+      case local_models.DocumentType.profilePicture:
         return null; // No expiry
-      case DocumentType.addressProof:
+      case local_models.DocumentType.addressProof:
         return null; // No expiry
+    }
+  }
+
+  /// Convert documents_repo DocumentType to local DocumentType
+  local_models.DocumentType _convertDocumentType(documents_repo.DocumentType repoType) {
+    switch (repoType) {
+      case documents_repo.DocumentType.drivingLicense:
+        return local_models.DocumentType.drivingLicense;
+      case documents_repo.DocumentType.rcBook:
+        return local_models.DocumentType.registrationCertificate;
+      case documents_repo.DocumentType.insurance:
+        return local_models.DocumentType.vehicleInsurance;
+      case documents_repo.DocumentType.profilePicture:
+        return local_models.DocumentType.profilePicture;
+      case documents_repo.DocumentType.aadhaar:
+        return local_models.DocumentType.aadhaarCard;
+      case documents_repo.DocumentType.pan:
+        return local_models.DocumentType.panCard;
+      case documents_repo.DocumentType.addressProof:
+        return local_models.DocumentType.addressProof;
+    }
+  }
+
+  /// Convert documents_repo DocumentStatus to local DocumentStatus
+  local_models.DocumentStatus _convertDocumentStatus(documents_repo.DocumentStatus repoStatus) {
+    switch (repoStatus) {
+      case documents_repo.DocumentStatus.pending:
+        return local_models.DocumentStatus.pending;
+      case documents_repo.DocumentStatus.uploading:
+        return local_models.DocumentStatus.uploading;
+      case documents_repo.DocumentStatus.uploaded:
+        return local_models.DocumentStatus.uploaded;
+      case documents_repo.DocumentStatus.verifying:
+        return local_models.DocumentStatus.verifying;
+      case documents_repo.DocumentStatus.verified:
+        return local_models.DocumentStatus.verified;
+      case documents_repo.DocumentStatus.rejected:
+        return local_models.DocumentStatus.rejected;
+      case documents_repo.DocumentStatus.expired:
+        return local_models.DocumentStatus.rejected; // Map expired to rejected for now
     }
   }
 }

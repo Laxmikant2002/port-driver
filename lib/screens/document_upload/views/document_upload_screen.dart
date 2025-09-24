@@ -4,7 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../widgets/colors.dart';
 import '../bloc/document_upload_bloc.dart';
-import '../../../models/document_upload.dart';
+import '../../../models/document_upload.dart' hide DocumentStatus, DocumentType;
+import '../../../models/document_upload.dart' as local_models show DocumentStatus, DocumentType;
 
 /// {@template document_upload_screen}
 /// Screen for uploading individual documents with camera/file picker.
@@ -16,7 +17,7 @@ class DocumentUploadScreen extends StatelessWidget {
     required this.documentType,
   });
 
-  final DocumentType documentType;
+  final local_models.DocumentType documentType;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +34,7 @@ class DocumentUploadView extends StatefulWidget {
     required this.documentType,
   });
 
-  final DocumentType documentType;
+  final local_models.DocumentType documentType;
 
   @override
   State<DocumentUploadView> createState() => _DocumentUploadViewState();
@@ -128,7 +129,7 @@ class _DocumentUploadViewState extends State<DocumentUploadView> {
 class _DocumentInfoSection extends StatelessWidget {
   const _DocumentInfoSection({required this.documentType});
 
-  final DocumentType documentType;
+  final local_models.DocumentType documentType;
 
   @override
   Widget build(BuildContext context) {
@@ -218,21 +219,21 @@ class _DocumentInfoSection extends StatelessWidget {
     );
   }
 
-  IconData _getDocumentIcon(DocumentType type) {
+  IconData _getDocumentIcon(local_models.DocumentType type) {
     switch (type) {
-      case DocumentType.drivingLicense:
+      case local_models.DocumentType.drivingLicense:
         return Icons.credit_card;
-      case DocumentType.registrationCertificate:
+      case local_models.DocumentType.registrationCertificate:
         return Icons.directions_car;
-      case DocumentType.vehicleInsurance:
+      case local_models.DocumentType.vehicleInsurance:
         return Icons.security;
-      case DocumentType.profilePicture:
+      case local_models.DocumentType.profilePicture:
         return Icons.person;
-      case DocumentType.aadhaarCard:
+      case local_models.DocumentType.aadhaarCard:
         return Icons.badge;
-      case DocumentType.panCard:
+      case local_models.DocumentType.panCard:
         return Icons.account_balance;
-      case DocumentType.addressProof:
+      case local_models.DocumentType.addressProof:
         return Icons.location_on;
     }
   }
@@ -247,7 +248,7 @@ class _UploadSection extends StatelessWidget {
     required this.onBackImageSelected,
   });
 
-  final DocumentType documentType;
+  final local_models.DocumentType documentType;
   final XFile? frontImage;
   final XFile? backImage;
   final Function(XFile) onFrontImageSelected;
@@ -523,7 +524,7 @@ class _DocumentUploadButton extends StatelessWidget {
     required this.backImage,
   });
 
-  final DocumentType documentType;
+  final local_models.DocumentType documentType;
   final XFile? frontImage;
   final XFile? backImage;
 

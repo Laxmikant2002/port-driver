@@ -7,17 +7,21 @@ import '../data/sample_trip_data.dart';
 
 class TripHistoryScreen extends StatelessWidget {
   final HistoryRepo historyRepo;
+  final String driverId;
   
   const TripHistoryScreen({
     Key? key,
     required this.historyRepo,
+    required this.driverId,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => TripHistoryBloc(historyRepo: historyRepo)
-        ..add(const TripHistoryLoadedWithSampleData()),
+      create: (_) => TripHistoryBloc(
+        historyRepo: historyRepo,
+        driverId: driverId,
+      )..add(const TripHistoryLoaded()),
       child: const TripHistoryView(),
     );
   }

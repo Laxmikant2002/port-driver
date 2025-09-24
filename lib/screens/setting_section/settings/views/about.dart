@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../routes/account_routes.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -132,12 +133,12 @@ class AboutScreen extends StatelessWidget {
                     _buildLegalItem(
                       context,
                       'Terms of Service',
-                      () => Navigator.pushNamed(context, '/terms-of-service'),
+                      () => Navigator.pushNamed(context, AccountRoutes.termsOfService),
                     ),
                     _buildLegalItem(
                       context,
                       'Privacy Policy',
-                      () => Navigator.pushNamed(context, '/privacy-policy'),
+                      () => Navigator.pushNamed(context, AccountRoutes.privacyPolicy),
                     ),
                   ],
                 ),

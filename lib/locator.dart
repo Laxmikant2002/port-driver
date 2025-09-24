@@ -3,6 +3,7 @@ import 'package:auth_repo/auth_repo.dart';
 import 'package:booking_repo/booking_repo.dart';
 import 'package:documents_repo/documents_repo.dart';
 import 'package:driver_status/driver_status.dart';
+import 'package:history_repo/history_repo.dart';
 import 'package:trip_repo/trip_repo.dart';
 import 'package:driver/services/socket_service.dart';
 import 'package:get_it/get_it.dart';
@@ -28,6 +29,11 @@ Future<void> initializeDependencies() async {
       localStorage: lc<Localstorage>(),
     ))
     ..registerLazySingleton(() => TripRepo(
+      apiClient: lc<ApiClient>(),
+      localStorage: lc<Localstorage>(),
+    ))
+    ..registerLazySingleton(() => HistoryRepo(
+      baseUrl: 'https://api.example.com',
       apiClient: lc<ApiClient>(),
       localStorage: lc<Localstorage>(),
     ));

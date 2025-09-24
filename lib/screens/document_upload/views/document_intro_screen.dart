@@ -3,7 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:documents_repo/documents_repo.dart';
 import '../../../widgets/colors.dart';
 import '../bloc/document_upload_bloc.dart';
-import '../../../models/document_upload.dart';
+import '../../../models/document_upload.dart' hide DocumentStatus, DocumentType;
+import '../../../models/document_upload.dart' as local_models show DocumentStatus, DocumentType;
 
 /// {@template document_intro_screen}
 /// Screen that introduces the document upload process and shows required documents.
@@ -12,18 +13,11 @@ class DocumentIntroScreen extends StatelessWidget {
   /// {@macro document_intro_screen}
   const DocumentIntroScreen({
     super.key,
-    required this.documentsRepo,
   });
-
-  final DocumentsRepo documentsRepo;
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => DocumentUploadBloc(documentsRepo: documentsRepo)
-        ..add(const DocumentUploadInitialized()),
-      child: const DocumentIntroView(),
-    );
+    return const DocumentIntroView();
   }
 }
 
@@ -214,12 +208,12 @@ class _DocumentChecklist extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             // Document List
-            ...DocumentType.values.where((type) => type.isRequired).map(
+            ...local_models.DocumentType.values.where((type) => type.isRequired).map(
               (type) => _DocumentChecklistItem(type: type),
             ),
             const SizedBox(height: 16),
             // Optional Documents Section
-            if (DocumentType.values.any((type) => !type.isRequired)) ...[
+            if (local_models.DocumentType.values.any((type) => !type.isRequired)) ...[
               const Divider(color: AppColors.border),
               const SizedBox(height: 16),
               Text(
@@ -231,7 +225,7 @@ class _DocumentChecklist extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              ...DocumentType.values.where((type) => !type.isRequired).map(
+              ...local_models.DocumentType.values.where((type) => !type.isRequired).map(
                 (type) => _DocumentChecklistItem(type: type),
               ),
             ],
@@ -245,7 +239,7 @@ class _DocumentChecklist extends StatelessWidget {
 class _DocumentChecklistItem extends StatelessWidget {
   const _DocumentChecklistItem({required this.type});
 
-  final DocumentType type;
+  final local_models.DocumentType type;
 
   @override
   Widget build(BuildContext context) {
@@ -342,21 +336,21 @@ class _DocumentChecklistItem extends StatelessWidget {
     );
   }
 
-  IconData _getDocumentIcon(DocumentType type) {
+  IconData _getDocumentIcon(local_models.DocumentType type) {
     switch (type) {
-      case DocumentType.drivingLicense:
+      case local_models.DocumentType.drivingLicense:
         return Icons.credit_card;
-      case DocumentType.registrationCertificate:
+      case local_models.DocumentType.registrationCertificate:
         return Icons.directions_car;
-      case DocumentType.vehicleInsurance:
+      case local_models.DocumentType.vehicleInsurance:
         return Icons.security;
-      case DocumentType.profilePicture:
+      case local_models.DocumentType.profilePicture:
         return Icons.person;
-      case DocumentType.aadhaarCard:
+      case local_models.DocumentType.aadhaarCard:
         return Icons.badge;
-      case DocumentType.panCard:
+      case local_models.DocumentType.panCard:
         return Icons.account_balance;
-      case DocumentType.addressProof:
+      case local_models.DocumentType.addressProof:
         return Icons.location_on;
     }
   }

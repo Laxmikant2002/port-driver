@@ -8,7 +8,7 @@ sealed class DocumentUploadEvent extends Equatable {
   const DocumentUploadEvent();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 /// {@template document_upload_initialized}
@@ -35,7 +35,7 @@ final class DocumentUploadStarted extends DocumentUploadEvent {
   });
 
   /// The type of document being uploaded.
-  final DocumentType type;
+  final local_models.DocumentType type;
 
   /// Path to the file being uploaded.
   final String filePath;
@@ -64,7 +64,7 @@ final class DocumentUploadProgressUpdated extends DocumentUploadEvent {
   });
 
   /// The type of document being uploaded.
-  final DocumentType type;
+  final local_models.DocumentType type;
 
   /// Upload progress (0.0 to 1.0).
   final double progress;
@@ -90,7 +90,7 @@ final class DocumentUploadCompleted extends DocumentUploadEvent {
   });
 
   /// The type of document that was uploaded.
-  final DocumentType type;
+  final local_models.DocumentType type;
 
   /// Path to the front image.
   final String frontImagePath;
@@ -122,7 +122,7 @@ final class DocumentUploadFailed extends DocumentUploadEvent {
   });
 
   /// The type of document that failed to upload.
-  final DocumentType type;
+  final local_models.DocumentType type;
 
   /// Error message describing the failure.
   final String error;
@@ -147,7 +147,7 @@ final class DocumentUploadRetried extends DocumentUploadEvent {
   });
 
   /// The type of document being retried.
-  final DocumentType type;
+  final local_models.DocumentType type;
 
   /// Path to the file being uploaded.
   final String filePath;
@@ -175,7 +175,7 @@ final class DocumentUploadDeleted extends DocumentUploadEvent {
   });
 
   /// The type of document being deleted.
-  final DocumentType type;
+  final local_models.DocumentType type;
 
   @override
   List<Object> get props => [type];
@@ -217,7 +217,7 @@ final class DocumentUploadRecommendedNextChanged extends DocumentUploadEvent {
   });
 
   /// The type of document.
-  final DocumentType type;
+  final local_models.DocumentType type;
 
   /// Whether this document is recommended next.
   final bool isRecommended;

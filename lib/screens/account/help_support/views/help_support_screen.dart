@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../widgets/colors.dart';
 import '../bloc/help_support_bloc.dart';
+import '../models/support_contact.dart';
 
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({Key? key}) : super(key: key);
@@ -301,8 +302,6 @@ class HelpSupportView extends StatelessWidget {
   }
 
   Future<void> _handleContactTap(BuildContext context, SupportContact contact) async {
-    context.read<HelpSupportBloc>().add(SupportContactTapped(contact));
-    
     switch (contact.type) {
       case SupportContactType.call:
         await _makePhoneCall(contact.value);

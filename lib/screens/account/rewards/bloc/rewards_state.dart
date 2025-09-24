@@ -4,7 +4,7 @@ enum TabValidationError { invalid }
 
 class TabIndex extends FormzInput<int, TabValidationError> {
   const TabIndex.pure() : super.pure(0);
-  const TabIndex.dirty([super.value]) : super.dirty();
+  const TabIndex.dirty(int value) : super.dirty(value);
 
   @override
   TabValidationError? validator(int value) {

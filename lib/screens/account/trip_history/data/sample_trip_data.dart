@@ -1,11 +1,12 @@
 import 'package:history_repo/history_repo.dart';
 
 class SampleTripData {
-  static List<Ride> getSampleTrips() {
+  static List<Ride> getSampleTrips({String? driverId}) {
+    final currentDriverId = driverId ?? 'driver_1';
     return [
       Ride(
         id: '1',
-        driverId: 'driver_1',
+        driverId: currentDriverId,
         passengerId: 'passenger_1',
         status: RideStatus.completed,
         startLocation: const RideLocation(
@@ -34,7 +35,7 @@ class SampleTripData {
       ),
       Ride(
         id: '2',
-        driverId: 'driver_1',
+        driverId: currentDriverId,
         passengerId: 'passenger_2',
         status: RideStatus.completed,
         startLocation: const RideLocation(
@@ -63,7 +64,7 @@ class SampleTripData {
       ),
       Ride(
         id: '3',
-        driverId: 'driver_1',
+        driverId: currentDriverId,
         passengerId: 'passenger_3',
         status: RideStatus.completed,
         startLocation: const RideLocation(
@@ -92,7 +93,7 @@ class SampleTripData {
       ),
       Ride(
         id: '4',
-        driverId: 'driver_1',
+        driverId: currentDriverId,
         passengerId: 'passenger_4',
         status: RideStatus.cancelled,
         startLocation: const RideLocation(
@@ -119,7 +120,7 @@ class SampleTripData {
       ),
       Ride(
         id: '5',
-        driverId: 'driver_1',
+        driverId: currentDriverId,
         passengerId: 'passenger_5',
         status: RideStatus.completed,
         startLocation: const RideLocation(

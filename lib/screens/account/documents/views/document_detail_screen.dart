@@ -3,9 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:documents_repo/documents_repo.dart';
-import '../../../widgets/colors.dart';
+import 'package:driver/widgets/colors.dart';
 import '../bloc/documents_bloc.dart';
-import '../../../models/document_upload.dart';
+import 'package:driver/models/document_upload.dart' hide DocumentStatus, DocumentType;
+import 'package:driver/models/document_upload.dart' as local_models show DocumentStatus, DocumentType;
 
 /// {@template document_detail_screen}
 /// Screen for viewing document details and re-uploading if needed.
@@ -14,20 +15,14 @@ class DocumentDetailScreen extends StatelessWidget {
   /// {@macro document_detail_screen}
   const DocumentDetailScreen({
     super.key,
-    required this.documentsRepo,
     required this.documentId,
   });
 
-  final DocumentsRepo documentsRepo;
   final String documentId;
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => DocumentsBloc(documentsRepo: documentsRepo)
-        ..add(const DocumentsLoaded()),
-      child: DocumentDetailView(documentId: documentId),
-    );
+    return DocumentDetailView(documentId: documentId);
   }
 }
 
@@ -458,7 +453,7 @@ class _DocumentDetailViewState extends State<DocumentDetailView> {
   }
 
   Widget _buildReuploadSection(DocumentUpload document) {
-    if (document.status == DocumentStatus.verified && !document.isExpired) {
+    if (document.status == local_models.DocumentStatus.verified && !document.isExpired) {
       return const SizedBox.shrink();
     }
 
@@ -788,16 +783,16 @@ class _DocumentDetailViewState extends State<DocumentDetailView> {
 
   Color _getStatusColor(DocumentUpload document) {
     switch (document.status) {
-      case DocumentStatus.pending:
+      case local_models.DocumentStatus.pending:
         return AppColors.textSecondary;
-      case DocumentStatus.uploading:
-      case DocumentStatus.verifying:
+      case local_models.DocumentStatus.uploading:
+      case local_models.DocumentStatus.verifying:
         return AppColors.warning;
-      case DocumentStatus.uploaded:
+      case local_models.DocumentStatus.uploaded:
         return AppColors.cyan;
-      case DocumentStatus.verified:
+      case local_models.DocumentStatus.verified:
         return AppColors.success;
-      case DocumentStatus.rejected:
+      case local_models.DocumentStatus.rejected:
         return AppColors.error;
     }
   }
@@ -808,21 +803,21 @@ class _DocumentDetailViewState extends State<DocumentDetailView> {
     return AppColors.success;
   }
 
-  IconData _getDocumentIcon(DocumentType type) {
+  IconData _getDocumentIcon(local_models.DocumentType type) {
     switch (type) {
-      case DocumentType.drivingLicense:
+      case local_models.DocumentType.drivingLicense:
         return Icons.credit_card;
-      case DocumentType.registrationCertificate:
+      case local_models.DocumentType.registrationCertificate:
         return Icons.directions_car;
-      case DocumentType.vehicleInsurance:
+      case local_models.DocumentType.vehicleInsurance:
         return Icons.security;
-      case DocumentType.profilePicture:
+      case local_models.DocumentType.profilePicture:
         return Icons.person;
-      case DocumentType.aadhaarCard:
+      case local_models.DocumentType.aadhaarCard:
         return Icons.badge;
-      case DocumentType.panCard:
+      case local_models.DocumentType.panCard:
         return Icons.account_balance;
-      case DocumentType.addressProof:
+      case local_models.DocumentType.addressProof:
         return Icons.location_on;
     }
   }

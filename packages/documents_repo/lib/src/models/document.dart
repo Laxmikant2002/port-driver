@@ -113,6 +113,7 @@ enum DocumentType {
   drivingLicense('driving_license', 'Driving License'),
   rcBook('rc_book', 'RC Book'),
   insurance('insurance', 'Insurance'),
+  profilePicture('profile_picture', 'Profile Picture'),
   aadhaar('aadhaar', 'Aadhaar'),
   pan('pan', 'PAN Card'),
   addressProof('address_proof', 'Address Proof');
@@ -133,6 +134,9 @@ enum DocumentType {
 /// Document verification status
 enum DocumentStatus {
   pending('pending', 'Pending'),
+  uploading('uploading', 'Uploading'),
+  uploaded('uploaded', 'Uploaded'),
+  verifying('verifying', 'Verifying'),
   verified('verified', 'Verified'),
   rejected('rejected', 'Rejected'),
   expired('expired', 'Expired');
@@ -147,5 +151,20 @@ enum DocumentStatus {
       (status) => status.value == value,
       orElse: () => throw ArgumentError('Unknown document status: $value'),
     );
+  }
+
+  /// Returns whether this status indicates the document is in progress
+  bool get isInProgress {
+    return this == DocumentStatus.uploading || this == DocumentStatus.verifying;
+  }
+
+  /// Returns whether this status indicates the document is completed
+  bool get isCompleted {
+    return this == DocumentStatus.verified;
+  }
+
+  /// Returns whether this status indicates the document needs attention
+  bool get needsAttention {
+    return this == DocumentStatus.rejected;
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:auth_repo/auth_repo.dart';
 import '../../../../widgets/colors.dart';
+import '../../../../routes/account_routes.dart';
 
 import '../bloc/profile_bloc.dart';
 
@@ -31,7 +32,7 @@ class ProfileView extends StatelessWidget {
       body: BlocListener<ProfileBloc, ProfileState>(
           listener: (context, state) {
             if (state.isSuccess) {
-              Navigator.of(context).pushReplacementNamed('/language');
+              Navigator.of(context).pushReplacementNamed(AccountRoutes.languageSelection);
             } else if (state.hasError) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()

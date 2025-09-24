@@ -1,15 +1,15 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
-import 'package:equatable/equatable.dart';
 import 'package:documents_repo/documents_repo.dart';
-import '../../../models/document_upload.dart';
+import 'package:documents_repo/src/models/document.dart' as documents_repo;
+import 'package:documents_repo/src/models/document_upload_request.dart' as documents_repo;
+import 'package:driver/models/document_upload.dart' hide DocumentStatus, DocumentType;
+import 'package:driver/models/document_upload.dart' as local_models show DocumentStatus, DocumentType;
 
 part 'document_upload_event.dart';
 part 'document_upload_state.dart';
 
-/// {@template document_upload_bloc}
-/// A BLoC that manages the document upload flow for driver registration.
-/// {@endtemplate}
 class DocumentUploadBloc extends Bloc<DocumentUploadEvent, DocumentUploadState> {
   /// {@macro document_upload_bloc}
   DocumentUploadBloc({
@@ -46,7 +46,7 @@ class DocumentUploadBloc extends Bloc<DocumentUploadEvent, DocumentUploadState> 
     final updatedDocuments = state.documents.map((doc) {
       if (doc.type == event.type) {
         return doc.copyWith(
-          status: DocumentStatus.uploading,
+          status: local_models.DocumentStatus.uploading,
           uploadProgress: 0.0,
         );
       }
@@ -82,7 +82,7 @@ class DocumentUploadBloc extends Bloc<DocumentUploadEvent, DocumentUploadState> 
     final updatedDocuments = state.documents.map((doc) {
       if (doc.type == event.type) {
         return doc.copyWith(
-          status: DocumentStatus.uploaded,
+          status: local_models.DocumentStatus.uploaded,
           frontImagePath: event.frontImagePath,
           backImagePath: event.backImagePath,
           fileName: event.fileName,
@@ -107,7 +107,7 @@ class DocumentUploadBloc extends Bloc<DocumentUploadEvent, DocumentUploadState> 
     final updatedDocuments = state.documents.map((doc) {
       if (doc.type == event.type) {
         return doc.copyWith(
-          status: DocumentStatus.pending,
+          status: local_models.DocumentStatus.pending,
           uploadProgress: 0.0,
           rejectionReason: event.error,
         );
@@ -129,7 +129,7 @@ class DocumentUploadBloc extends Bloc<DocumentUploadEvent, DocumentUploadState> 
     final updatedDocuments = state.documents.map((doc) {
       if (doc.type == event.type) {
         return doc.copyWith(
-          status: DocumentStatus.uploading,
+          status: local_models.DocumentStatus.uploading,
           uploadProgress: 0.0,
           rejectionReason: null,
         );
@@ -151,7 +151,7 @@ class DocumentUploadBloc extends Bloc<DocumentUploadEvent, DocumentUploadState> 
     final updatedDocuments = state.documents.map((doc) {
       if (doc.type == event.type) {
         return doc.copyWith(
-          status: DocumentStatus.pending,
+          status: local_models.DocumentStatus.pending,
           frontImagePath: null,
           backImagePath: null,
           fileName: null,
@@ -182,11 +182,11 @@ class DocumentUploadBloc extends Bloc<DocumentUploadEvent, DocumentUploadState> 
       
       for (final doc in uploadedDocs) {
         if (doc.frontImagePath != null) {
-          final request = DocumentUploadRequest(
-            type: doc.type,
+          final request = documents_repo.DocumentUploadRequest(
+            type: _convertToRepoDocumentType(doc.type),
             filePath: doc.frontImagePath!,
             fileName: doc.fileName,
-            fileSize: doc.fileSize,
+            metadata: {'fileSize': doc.fileSize},
           );
 
           final response = await documentsRepo.uploadDocument(request);
@@ -200,11 +200,11 @@ class DocumentUploadBloc extends Bloc<DocumentUploadEvent, DocumentUploadState> 
         }
 
         if (doc.backImagePath != null && doc.type.requiresBothSides) {
-          final request = DocumentUploadRequest(
-            type: doc.type,
+          final request = documents_repo.DocumentUploadRequest(
+            type: _convertToRepoDocumentType(doc.type),
             filePath: doc.backImagePath!,
             fileName: doc.fileName,
-            fileSize: doc.fileSize,
+            metadata: {'fileSize': doc.fileSize},
           );
 
           final response = await documentsRepo.uploadDocument(request);
@@ -236,19 +236,18 @@ class DocumentUploadBloc extends Bloc<DocumentUploadEvent, DocumentUploadState> 
       if (response.success && response.documents != null) {
         // Update document statuses based on server response
         final updatedDocuments = state.documents.map((localDoc) {
-          final serverDoc = response.documents!.firstWhere(
-            (doc) => doc.type.value == localDoc.type.value,
-            orElse: () => null,
-          );
-
-          if (serverDoc != null) {
+          try {
+            final serverDoc = response.documents!.firstWhere(
+              (doc) => doc.type.value == localDoc.type.value,
+            );
             return localDoc.copyWith(
-              status: DocumentStatus.fromString(serverDoc.status.value),
+              status: _convertDocumentStatus(serverDoc.status),
               rejectionReason: serverDoc.rejectedReason,
               verifiedAt: serverDoc.verifiedAt,
             );
+          } catch (e) {
+            return localDoc;
           }
-          return localDoc;
         }).toList();
 
         emit(state.copyWith(documents: updatedDocuments));
@@ -276,7 +275,7 @@ class DocumentUploadBloc extends Bloc<DocumentUploadEvent, DocumentUploadState> 
   }
 
   List<DocumentUpload> _createDefaultDocuments() {
-    return DocumentType.values.map((type) {
+    return local_models.DocumentType.values.map((type) {
       return DocumentUpload(
         type: type,
         title: type.displayName,
@@ -284,5 +283,45 @@ class DocumentUploadBloc extends Bloc<DocumentUploadEvent, DocumentUploadState> 
         isRequired: type.isRequired,
       );
     }).toList();
+  }
+
+  /// Convert local DocumentType to documents_repo DocumentType
+  documents_repo.DocumentType _convertToRepoDocumentType(local_models.DocumentType localType) {
+    switch (localType) {
+      case local_models.DocumentType.drivingLicense:
+        return documents_repo.DocumentType.drivingLicense;
+      case local_models.DocumentType.registrationCertificate:
+        return documents_repo.DocumentType.rcBook;
+      case local_models.DocumentType.vehicleInsurance:
+        return documents_repo.DocumentType.insurance;
+      case local_models.DocumentType.profilePicture:
+        return documents_repo.DocumentType.profilePicture;
+      case local_models.DocumentType.aadhaarCard:
+        return documents_repo.DocumentType.aadhaar;
+      case local_models.DocumentType.panCard:
+        return documents_repo.DocumentType.pan;
+      case local_models.DocumentType.addressProof:
+        return documents_repo.DocumentType.addressProof;
+    }
+  }
+
+  /// Convert documents_repo DocumentStatus to local DocumentStatus
+  local_models.DocumentStatus _convertDocumentStatus(documents_repo.DocumentStatus repoStatus) {
+    switch (repoStatus) {
+      case documents_repo.DocumentStatus.pending:
+        return local_models.DocumentStatus.pending;
+      case documents_repo.DocumentStatus.uploading:
+        return local_models.DocumentStatus.uploading;
+      case documents_repo.DocumentStatus.uploaded:
+        return local_models.DocumentStatus.uploaded;
+      case documents_repo.DocumentStatus.verifying:
+        return local_models.DocumentStatus.verifying;
+      case documents_repo.DocumentStatus.verified:
+        return local_models.DocumentStatus.verified;
+      case documents_repo.DocumentStatus.rejected:
+        return local_models.DocumentStatus.rejected;
+      case documents_repo.DocumentStatus.expired:
+        return local_models.DocumentStatus.rejected; // Map expired to rejected for now
+    }
   }
 }

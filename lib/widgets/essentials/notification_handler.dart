@@ -2,11 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:notifications_repo/notifications_repo.dart' as notification_repo;
 import 'package:driver/services/notification_service.dart';
-import 'package:driver/routes/driver_status_routes.dart';
-import 'package:driver/routes/document_upload_routes.dart';
-import 'package:driver/routes/finance_routes.dart';
-import 'package:driver/routes/profile_routes.dart';
-import 'package:driver/routes/notifications_routes.dart';
+import 'package:driver/routes/main_routes.dart';
+import 'package:driver/routes/account_routes.dart';
 
 /// Widget that handles displaying in-app notifications
 class NotificationHandler extends StatefulWidget {
@@ -85,25 +82,25 @@ class _NotificationHandlerState extends State<NotificationHandler> {
       case notification_repo.NotificationType.bookingConfirmed:
       case notification_repo.NotificationType.bookingCancelled:
         // Navigate to rides screen
-        Navigator.pushNamed(context, DriverStatusRoutes.dashboard);
+        Navigator.pushNamed(context, MainRoutes.dashboard);
         break;
       case notification_repo.NotificationType.documentApproved:
       case notification_repo.NotificationType.documentRejected:
         // Navigate to documents screen
-        Navigator.pushNamed(context, DocumentUploadRoutes.documentIntro);
+        Navigator.pushNamed(context, AccountRoutes.documentIntro);
         break;
       case notification_repo.NotificationType.paymentReceived:
       case notification_repo.NotificationType.weeklyPayoutCredited:
         // Navigate to wallet screen
-        Navigator.pushNamed(context, FinanceRoutes.paymentOverview);
+        Navigator.pushNamed(context, AccountRoutes.wallet);
         break;
       case notification_repo.NotificationType.vehicleAssignmentChanged:
         // Navigate to profile screen
-        Navigator.pushNamed(context, ProfileRoutes.profile);
+        Navigator.pushNamed(context, AccountRoutes.profile);
         break;
       default:
         // Navigate to notification settings screen
-        Navigator.pushNamed(context, NotificationsRoutes.notificationSettings);
+        Navigator.pushNamed(context, AccountRoutes.notificationSettings);
         break;
     }
   }

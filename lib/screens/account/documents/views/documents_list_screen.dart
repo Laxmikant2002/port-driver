@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:documents_repo/documents_repo.dart';
-import '../../../widgets/colors.dart';
+import 'package:driver/widgets/colors.dart';
 import '../bloc/documents_bloc.dart';
-import '../../../models/document_upload.dart';
+import 'package:driver/models/document_upload.dart' hide DocumentStatus, DocumentType;
+import 'package:driver/models/document_upload.dart' as local_models show DocumentStatus, DocumentType;
 
 /// {@template documents_list_screen}
 /// Screen for active drivers to view and manage their uploaded documents.
@@ -12,18 +13,11 @@ class DocumentsListScreen extends StatelessWidget {
   /// {@macro documents_list_screen}
   const DocumentsListScreen({
     super.key,
-    required this.documentsRepo,
   });
-
-  final DocumentsRepo documentsRepo;
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => DocumentsBloc(documentsRepo: documentsRepo)
-        ..add(const DocumentsLoaded()),
-      child: const DocumentsListView(),
-    );
+    return const DocumentsListView();
   }
 }
 
@@ -537,10 +531,10 @@ class _DocumentCard extends StatelessWidget {
     } else if (document.isExpiringSoon) {
       badgeColor = AppColors.warning;
       badgeText = 'Expiring Soon';
-    } else if (document.status == DocumentStatus.verified) {
+    } else if (document.status == local_models.DocumentStatus.verified) {
       badgeColor = AppColors.success;
       badgeText = 'Approved';
-    } else if (document.status == DocumentStatus.rejected) {
+    } else if (document.status == local_models.DocumentStatus.rejected) {
       badgeColor = AppColors.error;
       badgeText = 'Rejected';
     } else {
@@ -566,16 +560,16 @@ class _DocumentCard extends StatelessWidget {
 
   Color _getStatusColor() {
     switch (document.status) {
-      case DocumentStatus.pending:
+      case local_models.DocumentStatus.pending:
         return AppColors.textSecondary;
-      case DocumentStatus.uploading:
-      case DocumentStatus.verifying:
+      case local_models.DocumentStatus.uploading:
+      case local_models.DocumentStatus.verifying:
         return AppColors.warning;
-      case DocumentStatus.uploaded:
+      case local_models.DocumentStatus.uploaded:
         return AppColors.cyan;
-      case DocumentStatus.verified:
+      case local_models.DocumentStatus.verified:
         return AppColors.success;
-      case DocumentStatus.rejected:
+      case local_models.DocumentStatus.rejected:
         return AppColors.error;
     }
   }
@@ -588,19 +582,19 @@ class _DocumentCard extends StatelessWidget {
 
   IconData _getDocumentIcon() {
     switch (document.type) {
-      case DocumentType.drivingLicense:
+      case local_models.DocumentType.drivingLicense:
         return Icons.credit_card;
-      case DocumentType.registrationCertificate:
+      case local_models.DocumentType.registrationCertificate:
         return Icons.directions_car;
-      case DocumentType.vehicleInsurance:
+      case local_models.DocumentType.vehicleInsurance:
         return Icons.security;
-      case DocumentType.profilePicture:
+      case local_models.DocumentType.profilePicture:
         return Icons.person;
-      case DocumentType.aadhaarCard:
+      case local_models.DocumentType.aadhaarCard:
         return Icons.badge;
-      case DocumentType.panCard:
+      case local_models.DocumentType.panCard:
         return Icons.account_balance;
-      case DocumentType.addressProof:
+      case local_models.DocumentType.addressProof:
         return Icons.location_on;
     }
   }

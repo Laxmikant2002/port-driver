@@ -3,7 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:io';
 import '../../../widgets/colors.dart';
 import '../bloc/document_upload_bloc.dart';
-import '../../../models/document_upload.dart';
+import '../../../models/document_upload.dart' hide DocumentStatus, DocumentType;
+import '../../../models/document_upload.dart' as local_models show DocumentStatus, DocumentType;
 
 /// {@template document_review_screen}
 /// Screen for reviewing uploaded documents and submitting for verification.
@@ -12,18 +13,11 @@ class DocumentReviewScreen extends StatelessWidget {
   /// {@macro document_review_screen}
   const DocumentReviewScreen({
     super.key,
-    required this.documentsRepo,
   });
-
-  final DocumentsRepo documentsRepo;
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => DocumentUploadBloc(documentsRepo: documentsRepo)
-        ..add(const DocumentUploadInitialized()),
-      child: const DocumentReviewView(),
-    );
+    return const DocumentReviewView();
   }
 }
 
@@ -303,7 +297,7 @@ class _DocumentListSection extends StatelessWidget {
     );
   }
 
-  void _navigateToUpload(BuildContext context, DocumentType type) {
+  void _navigateToUpload(BuildContext context, local_models.DocumentType type) {
     Navigator.of(context).pushNamed(
       '/document-upload',
       arguments: type,
@@ -441,37 +435,37 @@ class _DocumentStatusCard extends StatelessWidget {
     );
   }
 
-  Color _getStatusColor(DocumentStatus status) {
+  Color _getStatusColor(local_models.DocumentStatus status) {
     switch (status) {
-      case DocumentStatus.pending:
+      case local_models.DocumentStatus.pending:
         return AppColors.textSecondary;
-      case DocumentStatus.uploading:
-      case DocumentStatus.verifying:
+      case local_models.DocumentStatus.uploading:
+      case local_models.DocumentStatus.verifying:
         return AppColors.warning;
-      case DocumentStatus.uploaded:
+      case local_models.DocumentStatus.uploaded:
         return AppColors.cyan;
-      case DocumentStatus.verified:
+      case local_models.DocumentStatus.verified:
         return AppColors.success;
-      case DocumentStatus.rejected:
+      case local_models.DocumentStatus.rejected:
         return AppColors.error;
     }
   }
 
-  IconData _getDocumentIcon(DocumentType type) {
+  IconData _getDocumentIcon(local_models.DocumentType type) {
     switch (type) {
-      case DocumentType.drivingLicense:
+      case local_models.DocumentType.drivingLicense:
         return Icons.credit_card;
-      case DocumentType.registrationCertificate:
+      case local_models.DocumentType.registrationCertificate:
         return Icons.directions_car;
-      case DocumentType.vehicleInsurance:
+      case local_models.DocumentType.vehicleInsurance:
         return Icons.security;
-      case DocumentType.profilePicture:
+      case local_models.DocumentType.profilePicture:
         return Icons.person;
-      case DocumentType.aadhaarCard:
+      case local_models.DocumentType.aadhaarCard:
         return Icons.badge;
-      case DocumentType.panCard:
+      case local_models.DocumentType.panCard:
         return Icons.account_balance;
-      case DocumentType.addressProof:
+      case local_models.DocumentType.addressProof:
         return Icons.location_on;
     }
   }

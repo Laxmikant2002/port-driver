@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../widgets/colors.dart';
+import '../../../../../routes/account_routes.dart';
 import '../bloc/settings_bloc.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -171,7 +172,7 @@ class _SettingsList extends StatelessWidget {
                 title: 'App Language',
                 subtitle: state.language,
                 onTap: () {
-                  Navigator.pushNamed(context, '/language');
+                  Navigator.pushNamed(context, AccountRoutes.languageSelection);
                 },
               ),
               const _Divider(),
@@ -180,7 +181,7 @@ class _SettingsList extends StatelessWidget {
                 title: 'Notifications',
                 subtitle: 'Manage notification preferences',
                 onTap: () {
-                  Navigator.pushNamed(context, '/notifications');
+                  Navigator.pushNamed(context, AccountRoutes.notificationSettings);
                 },
               ),
               const _Divider(),
@@ -189,7 +190,7 @@ class _SettingsList extends StatelessWidget {
                 title: 'Privacy',
                 subtitle: 'Control your privacy settings',
                 onTap: () {
-                  Navigator.pushNamed(context, '/privacy');
+                  Navigator.pushNamed(context, AccountRoutes.privacy);
                 },
               ),
               const _Divider(),
@@ -198,7 +199,7 @@ class _SettingsList extends StatelessWidget {
                 title: 'Support',
                 subtitle: 'Get help and contact support',
                 onTap: () {
-                  Navigator.pushNamed(context, '/support');
+                  Navigator.pushNamed(context, AccountRoutes.support);
                 },
               ),
               const _Divider(),
@@ -207,7 +208,7 @@ class _SettingsList extends StatelessWidget {
                 title: 'FAQ',
                 subtitle: 'Frequently asked questions',
                 onTap: () {
-                  Navigator.pushNamed(context, '/faq');
+                  Navigator.pushNamed(context, AccountRoutes.faq);
                 },
               ),
               const _Divider(),
@@ -216,7 +217,7 @@ class _SettingsList extends StatelessWidget {
                 title: 'About',
                 subtitle: 'App version and information',
                 onTap: () {
-                  Navigator.pushNamed(context, '/about');
+                  Navigator.pushNamed(context, AccountRoutes.about);
                 },
               ),
               const _Divider(),

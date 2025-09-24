@@ -16,23 +16,3 @@ final class HelpSupportLoaded extends HelpSupportEvent {
   String toString() => 'HelpSupportLoaded()';
 }
 
-/// Event triggered when support contact is tapped
-final class SupportContactTapped extends HelpSupportEvent {
-  const SupportContactTapped(this.contact);
-
-  final SupportContact contact;
-
-  @override
-  List<Object> get props => [contact];
-
-  @override
-  String toString() => 'SupportContactTapped(contact: $contact)';
-}
-
-/// Event triggered when emergency contact is tapped
-final class EmergencyContactTapped extends HelpSupportEvent {
-  const EmergencyContactTapped();
-
-  @override
-  String toString() => 'EmergencyContactTapped()';
-}
