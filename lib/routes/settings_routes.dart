@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:driver/screens/account/settings/view/settings_screen.dart';
-import 'package:driver/screens/account/settings/views/about.dart';
+import 'package:driver/screens/account/setting_section/settings/view/settings_screen.dart';
+import 'package:driver/screens/account/setting_section/settings/views/about.dart';
 
 class SettingsRoutes {
   static const String settings = '/settings';

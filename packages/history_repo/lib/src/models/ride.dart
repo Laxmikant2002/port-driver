@@ -21,6 +21,9 @@ class Ride extends Equatable {
     this.rating,
     this.completedAt,
     this.cancelledAt,
+    this.earnedAmount,
+    this.tripTime,
+    this.tripDate,
     this.metadata,
   });
 
@@ -38,10 +41,13 @@ class Ride extends Equatable {
   final String? passengerPhone;
   final String? passengerPhoto;
   final String? vehicleType;
-  final String? paymentMethod;
+  final PaymentMethod? paymentMethod;
   final double? rating;
   final DateTime? completedAt;
   final DateTime? cancelledAt;
+  final double? earnedAmount;
+  final String? tripTime;
+  final String? tripDate;
   final Map<String, dynamic>? metadata;
 
   factory Ride.fromJson(Map<String, dynamic> json) {
@@ -60,7 +66,9 @@ class Ride extends Equatable {
       passengerPhone: json['passengerPhone'] as String?,
       passengerPhoto: json['passengerPhoto'] as String?,
       vehicleType: json['vehicleType'] as String?,
-      paymentMethod: json['paymentMethod'] as String?,
+      paymentMethod: json['paymentMethod'] != null 
+          ? PaymentMethod.fromString(json['paymentMethod'] as String)
+          : null,
       rating: json['rating'] != null ? (json['rating'] as num).toDouble() : null,
       completedAt: json['completedAt'] != null 
           ? DateTime.parse(json['completedAt'] as String) 
@@ -68,6 +76,9 @@ class Ride extends Equatable {
       cancelledAt: json['cancelledAt'] != null 
           ? DateTime.parse(json['cancelledAt'] as String) 
           : null,
+      earnedAmount: json['earnedAmount'] != null ? (json['earnedAmount'] as num).toDouble() : null,
+      tripTime: json['tripTime'] as String?,
+      tripDate: json['tripDate'] as String?,
       metadata: json['metadata'] as Map<String, dynamic>?,
     );
   }
@@ -88,10 +99,13 @@ class Ride extends Equatable {
       'passengerPhone': passengerPhone,
       'passengerPhoto': passengerPhoto,
       'vehicleType': vehicleType,
-      'paymentMethod': paymentMethod,
+      'paymentMethod': paymentMethod?.value,
       'rating': rating,
       'completedAt': completedAt?.toIso8601String(),
       'cancelledAt': cancelledAt?.toIso8601String(),
+      'earnedAmount': earnedAmount,
+      'tripTime': tripTime,
+      'tripDate': tripDate,
       'metadata': metadata,
     };
   }
@@ -111,10 +125,13 @@ class Ride extends Equatable {
     String? passengerPhone,
     String? passengerPhoto,
     String? vehicleType,
-    String? paymentMethod,
+    PaymentMethod? paymentMethod,
     double? rating,
     DateTime? completedAt,
     DateTime? cancelledAt,
+    double? earnedAmount,
+    String? tripTime,
+    String? tripDate,
     Map<String, dynamic>? metadata,
   }) {
     return Ride(
@@ -136,6 +153,9 @@ class Ride extends Equatable {
       rating: rating ?? this.rating,
       completedAt: completedAt ?? this.completedAt,
       cancelledAt: cancelledAt ?? this.cancelledAt,
+      earnedAmount: earnedAmount ?? this.earnedAmount,
+      tripTime: tripTime ?? this.tripTime,
+      tripDate: tripDate ?? this.tripDate,
       metadata: metadata ?? this.metadata,
     );
   }
@@ -160,6 +180,9 @@ class Ride extends Equatable {
         rating,
         completedAt,
         cancelledAt,
+        earnedAmount,
+        tripTime,
+        tripDate,
         metadata,
       ];
 
@@ -242,6 +265,26 @@ enum RideStatus {
     return RideStatus.values.firstWhere(
       (status) => status.value == value,
       orElse: () => throw ArgumentError('Unknown ride status: $value'),
+    );
+  }
+}
+
+/// Payment method enum
+enum PaymentMethod {
+  cash('cash', 'Cash'),
+  online('online', 'Online'),
+  card('card', 'Card'),
+  wallet('wallet', 'Wallet');
+
+  const PaymentMethod(this.value, this.displayName);
+
+  final String value;
+  final String displayName;
+
+  static PaymentMethod fromString(String value) {
+    return PaymentMethod.values.firstWhere(
+      (method) => method.value == value,
+      orElse: () => throw ArgumentError('Unknown payment method: $value'),
     );
   }
 }

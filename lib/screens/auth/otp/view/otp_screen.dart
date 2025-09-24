@@ -5,7 +5,7 @@ import 'package:formz/formz.dart';
 import 'package:driver/locator.dart';
 import '../../../../widgets/colors.dart';
 import 'package:driver/routes/profile_routes.dart';
-import 'package:driver/routes/docs_routes.dart';
+import 'package:driver/routes/document_upload_routes.dart';
 import 'package:driver/routes/driver_status_routes.dart';
 
 import '../bloc/otp_bloc.dart';
@@ -43,7 +43,7 @@ class _OtpScreen extends StatelessWidget {
             if (state.user!.isNewUser || !state.user!.profileComplete) {
               Navigator.pushReplacementNamed(context, ProfileRoutes.profileCreation, arguments: state.user!.phone);
             } else if (!state.user!.documentVerified) {
-              Navigator.pushReplacementNamed(context, DocsRoutes.docsVerification);
+              Navigator.pushReplacementNamed(context, DocumentUploadRoutes.documentIntro);
             } else {
               Navigator.pushReplacementNamed(context, DriverStatusRoutes.dashboard);
             }

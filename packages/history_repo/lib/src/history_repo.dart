@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:api_client/api_client.dart';
 import 'package:localstorage/localstorage.dart';
 import 'models/ride.dart';
 import 'models/ride_response.dart';
@@ -8,12 +8,12 @@ import 'models/ride_response.dart';
 class HistoryRepo {
   const HistoryRepo({
     required this.baseUrl,
-    required this.client,
+    required this.apiClient,
     required this.localStorage,
   });
 
   final String baseUrl;
-  final http.Client client;
+  final ApiClient apiClient;
   final Localstorage localStorage;
 
   /// Get ride history
@@ -25,26 +25,20 @@ class HistoryRepo {
     DateTime? endDate,
   }) async {
     try {
-      final queryParams = <String, String>{};
-      if (limit != null) queryParams['limit'] = limit.toString();
-      if (offset != null) queryParams['offset'] = offset.toString();
+      final queryParams = <String, dynamic>{};
+      if (limit != null) queryParams['limit'] = limit;
+      if (offset != null) queryParams['offset'] = offset;
       if (status != null) queryParams['status'] = status.value;
       if (startDate != null) queryParams['startDate'] = startDate.toIso8601String();
       if (endDate != null) queryParams['endDate'] = endDate.toIso8601String();
 
-      final uri = Uri.parse('$baseUrl/history/rides').replace(queryParameters: queryParams);
-      
-      final response = await client.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
+      final response = await apiClient.get<Map<String, dynamic>>(
+        '/history/rides',
+        queryParameters: queryParams,
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return RideResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return RideResponse.fromJson(response.data!);
       } else {
         return RideResponse(
           success: false,
@@ -66,24 +60,18 @@ class HistoryRepo {
     String? period,
   }) async {
     try {
-      final queryParams = <String, String>{};
+      final queryParams = <String, dynamic>{};
       if (startDate != null) queryParams['startDate'] = startDate.toIso8601String();
       if (endDate != null) queryParams['endDate'] = endDate.toIso8601String();
       if (period != null) queryParams['period'] = period;
 
-      final uri = Uri.parse('$baseUrl/history/statistics').replace(queryParameters: queryParams);
-      
-      final response = await client.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
+      final response = await apiClient.get<Map<String, dynamic>>(
+        '/history/statistics',
+        queryParameters: queryParams,
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return RideResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return RideResponse.fromJson(response.data!);
       } else {
         return RideResponse(
           success: false,
@@ -101,17 +89,12 @@ class HistoryRepo {
   /// Get a specific ride by ID
   Future<RideResponse> getRide(String rideId) async {
     try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/history/rides/$rideId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
+      final response = await apiClient.get<Map<String, dynamic>>(
+        '/history/rides/$rideId',
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return RideResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return RideResponse.fromJson(response.data!);
       } else {
         return RideResponse(
           success: false,
@@ -129,17 +112,13 @@ class HistoryRepo {
   /// Get recent rides
   Future<RideResponse> getRecentRides({int limit = 10}) async {
     try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/history/rides/recent'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
+      final response = await apiClient.get<Map<String, dynamic>>(
+        '/history/rides/recent',
+        queryParameters: {'limit': limit},
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return RideResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return RideResponse.fromJson(response.data!);
       } else {
         return RideResponse(
           success: false,
@@ -201,12 +180,4 @@ class HistoryRepo {
     }
   }
 
-  Future<String> _getAuthToken() async {
-    try {
-      final token = await localStorage.getItem('auth_token');
-      return token ?? '';
-    } catch (e) {
-      return '';
-    }
-  }
 }

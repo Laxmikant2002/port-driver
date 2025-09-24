@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:driver/screens/account/profile/view/profile_screen.dart' as AccountProfile;
 import 'package:driver/screens/auth/profile/view/profile_screen.dart' as AuthProfile;
-import 'package:driver/screens/document_verification/language_choose/view/language_screen.dart';
-import 'package:driver/screens/document_verification/vehicle_selection/view/vehicle_screen.dart';
-import 'package:driver/screens/document_verification/work_location/view/work_screen.dart';
+import 'package:driver/screens/auth/language_choose/view/language_screen.dart';
+import 'package:driver/screens/auth/vehicle_selection/view/vehicle_screen.dart';
+import 'package:driver/screens/auth/work_location/view/work_screen.dart';
 
 class ProfileRoutes {
   // Driver profile creation (onboarding)

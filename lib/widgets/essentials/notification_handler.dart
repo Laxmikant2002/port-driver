@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:notifications_repo/notifications_repo.dart' as notification_repo;
 import 'package:driver/services/notification_service.dart';
 import 'package:driver/routes/driver_status_routes.dart';
-import 'package:driver/routes/docs_routes.dart';
+import 'package:driver/routes/document_upload_routes.dart';
 import 'package:driver/routes/finance_routes.dart';
 import 'package:driver/routes/profile_routes.dart';
 import 'package:driver/routes/notifications_routes.dart';
@@ -90,7 +90,7 @@ class _NotificationHandlerState extends State<NotificationHandler> {
       case notification_repo.NotificationType.documentApproved:
       case notification_repo.NotificationType.documentRejected:
         // Navigate to documents screen
-        Navigator.pushNamed(context, DocsRoutes.docsVerification);
+        Navigator.pushNamed(context, DocumentUploadRoutes.documentIntro);
         break;
       case notification_repo.NotificationType.paymentReceived:
       case notification_repo.NotificationType.weeklyPayoutCredited:

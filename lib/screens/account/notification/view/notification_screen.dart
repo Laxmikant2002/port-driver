@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:notifications_repo/notifications_repo.dart' as notification_repo;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../widgets/colors.dart';
-import '../bloc/notification_bloc.dart';
+import '../../setting_section/notification_settings/bloc/notification_settings_bloc.dart';
 
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({Key? key}) : super(key: key);

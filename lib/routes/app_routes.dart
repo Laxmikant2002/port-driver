@@ -6,9 +6,13 @@ import 'package:driver/routes/booking_routes.dart';
 import 'package:driver/routes/trip_routes.dart';
 import 'package:driver/routes/finance_routes.dart';
 import 'package:driver/routes/history_routes.dart';
+import 'package:driver/routes/rewards_routes.dart';
+import 'package:driver/routes/help_support_routes.dart';
 import 'package:driver/routes/notifications_routes.dart';
 import 'package:driver/routes/settings_routes.dart';
-import 'package:driver/routes/docs_routes.dart';
+import 'package:driver/routes/document_upload_routes.dart';
+import 'package:driver/routes/document_routes.dart';
+import 'package:driver/routes/account_routes.dart';
 
 class AppRoutes {
   static Map<String, WidgetBuilder> getAllRoutes() {
@@ -34,14 +38,26 @@ class AppRoutes {
       // History and ratings
       ...HistoryRoutes.getRoutes(),
       
+      // Rewards and achievements
+      ...RewardsRoutes.getRoutes(),
+      
+      // Help and support
+      ...HelpSupportRoutes.getRoutes(),
+      
       // Notifications
       ...NotificationsRoutes.getRoutes(),
       
       // Settings
       ...SettingsRoutes.getRoutes(),
       
-      // Document verification
-      ...DocsRoutes.getRoutes(),
+      // Modern document upload flow
+      ...DocumentUploadRoutes.getRoutes(),
+      
+      // Document management for active drivers
+      ...DocumentRoutes.getRoutes(),
+      
+      // Account management
+      ...AccountRoutes.getRoutes(),
     };
   }
 }

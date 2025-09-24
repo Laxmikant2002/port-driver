@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:driver/routes/docs_routes.dart';
+import 'package:driver/routes/document_upload_routes.dart';
+import 'package:driver/routes/account_routes.dart';
 import 'package:driver/routes/finance_routes.dart';
 import 'package:driver/routes/history_routes.dart';
 import 'package:driver/routes/notifications_routes.dart';
@@ -13,14 +14,20 @@ import 'package:image_picker/image_picker.dart';
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
 
-  static const List<Map<String, dynamic>> buttonsData = [
-    {'text': "Profile", 'icon': Icons.person_outline, 'route': ProfileRoutes.profile},
-    {'text': "Rides", 'icon': Icons.directions_car, 'route': HistoryRoutes.ridesHistory},
-    {'text': 'Ratings', 'icon': Icons.star_outline, 'route': HistoryRoutes.ratings},
-    {'text': 'Wallet', 'icon': Icons.wallet, 'route': FinanceRoutes.wallet},
-    {'text': 'Documents', 'icon': Icons.file_present, 'route': DocsRoutes.docsVerification},
-    {'text': "Settings", 'icon': Icons.settings, 'route': SettingsRoutes.settings},
-  ];
+  static List<Map<String, dynamic>> getButtonsData(bool isDocumentVerified) {
+    return [
+      {'text': "Profile", 'icon': Icons.person_outline, 'route': ProfileRoutes.profile},
+      {'text': "Rides", 'icon': Icons.directions_car, 'route': HistoryRoutes.ridesHistory},
+      {'text': 'Ratings', 'icon': Icons.star_outline, 'route': HistoryRoutes.ratings},
+      {'text': 'Wallet', 'icon': Icons.wallet, 'route': FinanceRoutes.wallet},
+      {
+        'text': 'Documents', 
+        'icon': Icons.file_present, 
+        'route': isDocumentVerified ? AccountRoutes.documents : DocumentUploadRoutes.documentIntro
+      },
+      {'text': "Settings", 'icon': Icons.settings, 'route': SettingsRoutes.settings},
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,6 +90,8 @@ class AccountScreen extends StatelessWidget {
   }
 
   Widget _buildAccountContent(BuildContext context, AccountState state) {
+    final buttonsData = getButtonsData(state.isDocumentVerified);
+    
     return SingleChildScrollView(
       child: Column(
         children: [

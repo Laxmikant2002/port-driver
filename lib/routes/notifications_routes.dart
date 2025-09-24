@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:driver/screens/account/notification/view/notification_settings_screen.dart';
+import 'package:driver/screens/account/setting_section/notification_settings/view/notification_settings_screen.dart';
 
 class NotificationsRoutes {
   // Driver notifications
