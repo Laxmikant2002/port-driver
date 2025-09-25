@@ -1,15 +1,19 @@
-import 'package:driver/locator.dart';
-import 'package:driver/screens/booking_flow/Driver_Status/bloc/driver_status_bloc.dart';
-import 'package:driver/screens/booking_flow/Ride_Matching/bloc/ride_matching_bloc.dart';
-import 'package:driver/screens/booking_flow/Ride_Matching/view/incoming_ride_request_sheet.dart';
-import 'package:driver/widgets/ui_components/ui_components.dart';
-import 'package:driver/widgets/colors.dart';
-import 'package:driver_status/driver_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../../../../routes/main_routes.dart';
 
+import 'package:booking_repo/booking_repo.dart';
+import 'package:driver/locator.dart';
+import 'package:driver/routes/main_routes.dart';
+import 'package:driver/widgets/colors.dart';
+import 'package:driver/widgets/ui_components/ui_components.dart';
+import 'package:driver_status/driver_status.dart';
+
+import '../bloc/driver_status_bloc.dart';
+import '../../Ride_Matching/bloc/ride_matching_bloc.dart';
+import '../../Ride_Matching/view/incoming_ride_request_sheet.dart';
+
+/// Main ride screen that displays the map and driver status controls.
 class RideScreen extends StatelessWidget {
   const RideScreen({super.key});
 
@@ -34,6 +38,7 @@ class RideScreen extends StatelessWidget {
   }
 }
 
+/// Internal home screen widget with state management for animations and map.
 class _HomeScreen extends StatefulWidget {
   const _HomeScreen();
 
@@ -92,47 +97,6 @@ class _HomeScreenState extends State<_HomeScreen> with SingleTickerProviderState
     }
   }
 
-  void _showRideDetailsBottomSheet(BuildContext context) async {
-    if (!mounted) return;
-    try {
-      await showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) => RideDetailsBottomSheet(
-          riderName: 'John Doe',
-          pickupLocation: '123 Main St, City',
-          dropoffLocation: '456 Elm St, City',
-          estimatedTime: '5 min',
-          estimatedDistance: '2.5 km',
-          onContactRider: () {
-            debugPrint('Contact rider tapped');
-          },
-          onCancelRide: () {
-            debugPrint('Cancel ride tapped');
-            Navigator.pop(context);
-          },
-          onArrived: () {
-            debugPrint('Arrived tapped');
-            Navigator.pop(context);
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Trip start confirmed!')),
-              );
-            }
-          },
-          arrivedEnabled: true,
-        ),
-      );
-    } catch (e, stack) {
-      debugPrint('Error showing RideDetailsBottomSheet: $e\n$stack');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -423,24 +387,7 @@ class _HomeScreenState extends State<_HomeScreen> with SingleTickerProviderState
                 child: AnimatedOpacity(
                   duration: const Duration(milliseconds: 500),
                   opacity: isOnline ? 0 : 1,
-                  child: DriverStatusBottomSheet(
-                    isOnline: false,
-                    requiredActions: [
-                      DriverActionItem(
-                        title: 'Turn on overlay permissions',
-                        subtitle: 'Go to device Settings',
-                        icon: Icons.settings,
-                        onTap: () {},
-                      ),
-                      DriverActionItem(
-                        title: 'Turn on push notifications',
-                        subtitle: 'Go to device Settings',
-                        icon: Icons.notifications,
-                        onTap: () {},
-                      ),
-                    ],
-                    onMenuTap: () {},
-                  ),
+                  child: const DriverStatusBottomSheet(),
                 ),
               ),
               // Test Ride Request Button (only when online)

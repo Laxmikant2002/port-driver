@@ -198,4 +198,76 @@ class BookingRepo {
       );
     }
   }
+
+  /// Mark cash trip as collected by driver
+  Future<BookingResponse> markCashCollected(String tripId, double amount) async {
+    try {
+      final response = await apiClient.post<Map<String, dynamic>>(
+        '/booking/cash-collected',
+        data: {
+          'tripId': tripId,
+          'amount': amount,
+          'collectedAt': DateTime.now().toIso8601String(),
+        },
+      );
+
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return BookingResponse.fromJson(data);
+      }
+
+      if (response is DataFailed) {
+        return BookingResponse(
+          success: false,
+          message: response.error?.getErrorMessage() ?? 'Failed to mark cash collected',
+        );
+      }
+
+      return BookingResponse(
+        success: false,
+        message: 'Unexpected error occurred',
+      );
+    } catch (e) {
+      return BookingResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Get driver's cash trips
+  Future<BookingResponse> getCashTrips({DateTime? date}) async {
+    try {
+      final queryParams = <String, String>{};
+      if (date != null) queryParams['date'] = date.toIso8601String();
+
+      final uri = queryParams.isNotEmpty 
+          ? '/booking/cash-trips?${Uri(queryParameters: queryParams).query}'
+          : '/booking/cash-trips';
+          
+      final response = await apiClient.get<Map<String, dynamic>>(uri);
+
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return BookingResponse.fromJson(data);
+      }
+
+      if (response is DataFailed) {
+        return BookingResponse(
+          success: false,
+          message: response.error?.getErrorMessage() ?? 'Failed to fetch cash trips',
+        );
+      }
+
+      return BookingResponse(
+        success: false,
+        message: 'Unexpected error occurred',
+      );
+    } catch (e) {
+      return BookingResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+      );
+    }
+  }
 }

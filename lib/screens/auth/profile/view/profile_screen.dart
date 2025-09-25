@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:auth_repo/auth_repo.dart';
-import 'package:profile_repo/profile_repo.dart';
-import 'package:driver/widgets/colors.dart';
-import 'package:driver/services/route_decision_service.dart';
 import 'package:driver/locator.dart';
+import 'package:driver/widgets/colors.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:profile_repo/profile_repo.dart';
+
 import '../bloc/profile_bloc.dart';
 
 class ProfileScreen extends StatelessWidget {

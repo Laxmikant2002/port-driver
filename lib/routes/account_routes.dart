@@ -62,6 +62,7 @@ class AccountRoutes {
   static const String about = RouteConstants.about;
   static const String termsOfService = RouteConstants.termsOfService;
   static const String privacyPolicy = RouteConstants.privacyPolicy;
+  static const String languageSelection = RouteConstants.languageSelection;
 
   // Notification routes
   static const String notificationSettings = RouteConstants.notificationSettings;

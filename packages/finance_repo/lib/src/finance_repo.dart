@@ -331,6 +331,75 @@ class FinanceRepo {
     }
   }
 
+  /// Request payout for driver earnings
+  Future<WalletResponse> requestPayout({required double amount}) async {
+    try {
+      final response = await client.post(
+        Uri.parse('$baseUrl/finance/payout/request'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${await _getAuthToken()}',
+        },
+        body: jsonEncode({
+          'amount': amount,
+          'requestedAt': DateTime.now().toIso8601String(),
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        return WalletResponse.fromJson(json);
+      } else {
+        return WalletResponse(
+          success: false,
+          message: 'Failed to request payout',
+        );
+      }
+    } catch (e) {
+      return WalletResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Get driver earnings
+  Future<WalletResponse> getDriverEarnings({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      final queryParams = <String, String>{};
+      if (startDate != null) queryParams['startDate'] = startDate.toIso8601String();
+      if (endDate != null) queryParams['endDate'] = endDate.toIso8601String();
+
+      final uri = Uri.parse('$baseUrl/finance/driver/earnings').replace(queryParameters: queryParams);
+      
+      final response = await client.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${await _getAuthToken()}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        return WalletResponse.fromJson(json);
+      } else {
+        return WalletResponse(
+          success: false,
+          message: 'Failed to fetch driver earnings',
+        );
+      }
+    } catch (e) {
+      return WalletResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+      );
+    }
+  }
+
   Future<String> _getAuthToken() async {
     try {
       final token = localStorage.getString('auth_token');

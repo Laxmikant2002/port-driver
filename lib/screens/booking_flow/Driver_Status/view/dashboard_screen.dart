@@ -1,12 +1,22 @@
-import 'package:driver/locator.dart';
-import 'package:driver/screens/booking_flow/Driver_Status/bloc/driver_status_bloc.dart';
-import 'package:driver/widgets/colors.dart';
-import 'package:driver_status/driver_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:driver/services/developer_mode_service.dart';
-import '../../../../routes/main_routes.dart';
 
+import 'package:driver/locator.dart';
+import 'package:driver/routes/main_routes.dart';
+import 'package:driver/services/developer_mode_service.dart';
+import 'package:driver/widgets/colors.dart';
+import 'package:driver_status/driver_status.dart';
+
+import '../bloc/driver_status_bloc.dart';
+import '../constants/dashboard_constants.dart';
+
+/// Main dashboard screen for driver status management.
+/// 
+/// This screen allows drivers to:
+/// - Toggle their online/offline status
+/// - View daily earnings and trip count
+/// - Manage their work area
+/// - Access developer mode (debug builds only)
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
@@ -22,6 +32,9 @@ class DashboardScreen extends StatelessWidget {
   }
 }
 
+/// Main view widget that builds the dashboard UI.
+/// 
+/// Handles error display via [BlocListener] and organizes the main UI layout.
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
 
@@ -29,6 +42,8 @@ class DashboardView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      floatingActionButton: DeveloperModeService.getDeveloperModeFAB(context),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: BlocListener<DriverStatusBloc, DriverStatusState>(
         listener: (context, state) {
           if (state.hasError) {
@@ -36,7 +51,7 @@ class DashboardView extends StatelessWidget {
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
-                  content: Text(state.errorMessage ?? 'An error occurred'),
+                  content: Text(state.errorMessage ?? DashboardConstants.defaultError),
                   backgroundColor: AppColors.error,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
@@ -50,7 +65,7 @@ class DashboardView extends StatelessWidget {
           onLongPress: () => DeveloperModeService.handleLongPress(context),
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.all(DashboardConstants.defaultPadding),
               child: Column(
                 children: [
                   const SizedBox(height: 32),
@@ -68,13 +83,12 @@ class DashboardView extends StatelessWidget {
             ),
           ),
         ),
-        floatingActionButton: DeveloperModeService.getDeveloperModeFAB(context),
-        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       ),
     );
   }
 }
 
+/// Header section displaying app logo and welcome message.
 class _HeaderSection extends StatelessWidget {
   const _HeaderSection();
 
@@ -84,21 +98,21 @@ class _HeaderSection extends StatelessWidget {
       children: [
         // App Logo/Icon
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(DashboardConstants.logoSize),
           decoration: BoxDecoration(
             color: AppColors.cyan.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(DashboardConstants.borderRadius),
           ),
           child: Icon(
             Icons.directions_car_rounded,
-            size: 48,
+            size: DashboardConstants.iconSize,
             color: AppColors.cyan,
           ),
         ),
         const SizedBox(height: 24),
         // Welcome Text
         Text(
-          'Driver Dashboard',
+          DashboardConstants.appTitle,
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -109,7 +123,7 @@ class _HeaderSection extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Manage your availability and track your earnings',
+          DashboardConstants.appSubtitle,
           style: TextStyle(
             fontSize: 16,
             color: AppColors.textSecondary,
@@ -122,6 +136,13 @@ class _HeaderSection extends StatelessWidget {
   }
 }
 
+/// Interactive card for toggling driver online/offline status.
+/// 
+/// Features:
+/// - Visual status indicator with colored dot
+/// - Large toggle switch for easy interaction
+/// - Confirmation dialog for going offline
+/// - Loading state during status changes
 class _StatusToggleCard extends StatelessWidget {
   const _StatusToggleCard();
 
@@ -219,12 +240,18 @@ class _StatusToggleCard extends StatelessWidget {
     );
   }
 
+  /// Toggles the driver's status between online and offline.
+  /// 
+  /// [value] - true for online, false for offline
   void _toggleStatus(BuildContext context, bool value) {
     final newStatus = value ? DriverStatus.online : DriverStatus.offline;
     context.read<DriverStatusBloc>().add(DriverStatusToggled(newStatus));
     context.read<DriverStatusBloc>().add(const DriverStatusSubmitted());
   }
 
+  /// Shows confirmation dialog before going offline.
+  /// 
+  /// Prevents accidental offline status changes that could impact earnings.
   void _showOfflineConfirmation(BuildContext context) {
     showDialog<void>(
       context: context,
@@ -234,14 +261,14 @@ class _StatusToggleCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
         ),
         title: Text(
-          'Go Offline?',
+          DashboardConstants.goOfflineTitle,
           style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
         content: Text(
-          'Are you sure you want to go offline? You won\'t receive new ride requests.',
+          DashboardConstants.goOfflineMessage,
           style: TextStyle(
             color: AppColors.textSecondary,
           ),
@@ -250,7 +277,7 @@ class _StatusToggleCard extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Cancel',
+              DashboardConstants.cancel,
               style: TextStyle(
                 color: AppColors.textTertiary,
               ),
@@ -265,10 +292,10 @@ class _StatusToggleCard extends StatelessWidget {
               backgroundColor: AppColors.error,
               foregroundColor: AppColors.surface,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(DashboardConstants.buttonBorderRadius),
               ),
             ),
-            child: const Text('Go Offline'),
+            child: const Text(DashboardConstants.goOffline),
           ),
         ],
       ),
@@ -276,6 +303,11 @@ class _StatusToggleCard extends StatelessWidget {
   }
 }
 
+/// Card displaying today's earnings and trip count.
+/// 
+/// Shows two metrics side by side:
+/// - Today's earnings in currency format
+/// - Number of trips completed today
 class _EarningsCard extends StatelessWidget {
   const _EarningsCard();
 
@@ -307,7 +339,7 @@ class _EarningsCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Today\'s Earnings',
+                      DashboardConstants.todaysEarnings,
                       style: TextStyle(
                         fontSize: 14,
                         color: AppColors.textSecondary,
@@ -337,7 +369,7 @@ class _EarningsCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Trips Today',
+                      DashboardConstants.tripsToday,
                       style: TextStyle(
                         fontSize: 14,
                         color: AppColors.textSecondary,
@@ -363,6 +395,10 @@ class _EarningsCard extends StatelessWidget {
   }
 }
 
+/// Card for managing the driver's work area.
+/// 
+/// Displays the current work area and provides a button to change it.
+/// Navigates to work area selection screen when tapped.
 class _WorkAreaCard extends StatelessWidget {
   const _WorkAreaCard();
 
@@ -406,7 +442,7 @@ class _WorkAreaCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Work Area',
+                      DashboardConstants.workArea,
                       style: TextStyle(
                         fontSize: 14,
                         color: AppColors.textSecondary,
@@ -414,7 +450,7 @@ class _WorkAreaCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      state.hasWorkArea ? state.workArea.value : 'Not set',
+                      state.hasWorkArea ? state.workArea.value : DashboardConstants.notSet,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -429,7 +465,7 @@ class _WorkAreaCard extends StatelessWidget {
                   Navigator.pushNamed(context, MainRoutes.workAreaSelection);
                 },
                 child: Text(
-                  state.hasWorkArea ? 'Change' : 'Set',
+                  state.hasWorkArea ? DashboardConstants.change : DashboardConstants.set,
                   style: TextStyle(
                     color: AppColors.cyan,
                     fontWeight: FontWeight.w600,
@@ -444,6 +480,11 @@ class _WorkAreaCard extends StatelessWidget {
   }
 }
 
+/// Footer section displaying app metadata.
+/// 
+/// Shows:
+/// - Last active timestamp
+/// - App version information
 class _FooterSection extends StatelessWidget {
   const _FooterSection();
 
@@ -452,7 +493,7 @@ class _FooterSection extends StatelessWidget {
     return Column(
       children: [
         Text(
-          'Last active: Just now',
+          DashboardConstants.lastActive,
           style: TextStyle(
             fontSize: 12,
             color: AppColors.textTertiary,
@@ -460,7 +501,7 @@ class _FooterSection extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'Version 1.0.0',
+          DashboardConstants.version,
           style: TextStyle(
             fontSize: 10,
             color: AppColors.textTertiary,

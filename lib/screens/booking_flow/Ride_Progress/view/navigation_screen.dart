@@ -1,10 +1,11 @@
-import 'package:driver/screens/booking_flow/Ride_Matching/bloc/ride_matching_bloc.dart';
-import 'package:driver/services/google_map_services.dart';
-import 'package:driver/widgets/ui_components/ui_components.dart';
-import 'package:driver/widgets/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import 'package:driver/screens/booking_flow/Ride_Matching/bloc/ride_matching_bloc.dart';
+import 'package:driver/services/google_map_services.dart';
+import 'package:driver/widgets/colors.dart';
+import 'package:driver/widgets/ui_components/ui_components.dart';
 
 class NavigationScreen extends StatefulWidget {
   const NavigationScreen({super.key});
@@ -261,35 +262,7 @@ class _NavigationScreenState extends State<NavigationScreen>
                 bottom: 0,
                 left: 0,
                 right: 0,
-                child: RideDetailsSheet(
-                  riderName: booking.passengerName ?? 'Unknown',
-                  pickupLocation: booking.pickupLocation.address,
-                  dropoffLocation: booking.dropoffLocation.address,
-                  estimatedTime: '${booking.estimatedDuration} min',
-                  estimatedDistance: '${booking.distance.toStringAsFixed(1)} km',
-                  onContactRider: () {
-                    _showContactOptions(context, booking);
-                  },
-                  onCancelRide: () {
-                    _showCancelConfirmation(context);
-                  },
-                  onArrived: () {
-                    if (isPickupPhase) {
-                      context.read<RideMatchingBloc>().add(
-                        const DriverArrivedAtPickup(),
-                      );
-                    } else {
-                      context.read<RideMatchingBloc>().add(
-                        const TripCompleted(),
-                      );
-                    }
-                  },
-                  arrivedEnabled: true,
-                  riderPhone: booking.passengerPhone,
-                  currentPhase: state.currentPhase,
-                  actualFare: booking.fare,
-                  tripStartedAt: state.tripStartedAt,
-                ),
+                child: const RideDetailsBottomSheet(),
               ),
 
               // Navigation instructions (if navigating)
@@ -361,7 +334,7 @@ class _NavigationScreenState extends State<NavigationScreen>
     );
   }
 
-  void _updateMapForBooking(booking) async {
+  void _updateMapForBooking(dynamic booking) async {
     if (_mapController == null) return;
 
     final markers = <Marker>{};
@@ -372,13 +345,13 @@ class _NavigationScreenState extends State<NavigationScreen>
       Marker(
         markerId: const MarkerId('pickup'),
         position: LatLng(
-          booking.pickupLocation.latitude,
-          booking.pickupLocation.longitude,
+          (booking.pickupLocation.latitude as num).toDouble(),
+          (booking.pickupLocation.longitude as num).toDouble(),
         ),
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
         infoWindow: InfoWindow(
           title: 'Pickup Location',
-          snippet: booking.pickupLocation.address,
+          snippet: booking.pickupLocation.address as String?,
         ),
       ),
     );
@@ -388,13 +361,13 @@ class _NavigationScreenState extends State<NavigationScreen>
       Marker(
         markerId: const MarkerId('dropoff'),
         position: LatLng(
-          booking.dropoffLocation.latitude,
-          booking.dropoffLocation.longitude,
+          (booking.dropoffLocation.latitude as num).toDouble(),
+          (booking.dropoffLocation.longitude as num).toDouble(),
         ),
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
         infoWindow: InfoWindow(
           title: 'Dropoff Location',
-          snippet: booking.dropoffLocation.address,
+          snippet: booking.dropoffLocation.address as String?,
         ),
       ),
     );
@@ -418,12 +391,12 @@ class _NavigationScreenState extends State<NavigationScreen>
     try {
       final routePoints = await _mapServices.getPolylineCoordinates(
         _currentLocation ?? LatLng(
-          booking.pickupLocation.latitude,
-          booking.pickupLocation.longitude,
+          (booking.pickupLocation.latitude as num).toDouble(),
+          (booking.pickupLocation.longitude as num).toDouble(),
         ),
         LatLng(
-          booking.dropoffLocation.latitude,
-          booking.dropoffLocation.longitude,
+          (booking.dropoffLocation.latitude as num).toDouble(),
+          (booking.dropoffLocation.longitude as num).toDouble(),
         ),
       );
 
@@ -479,141 +452,5 @@ class _NavigationScreenState extends State<NavigationScreen>
     );
   }
 
-  void _showContactOptions(BuildContext context, booking) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  Text(
-                    'Contact ${booking.passengerName ?? 'Passenger'}',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            // Implement call functionality
-                          },
-                          icon: const Icon(Icons.phone),
-                          label: const Text('Call'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.success,
-                            foregroundColor: AppColors.surface,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            // Implement SMS functionality
-                          },
-                          icon: const Icon(Icons.message),
-                          label: const Text('Message'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.info,
-                            foregroundColor: AppColors.surface,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
-          ],
-        ),
-      ),
-    );
-  }
 
-  void _showCancelConfirmation(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Text(
-          'Cancel Trip?',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Text(
-          'Are you sure you want to cancel this trip? This action cannot be undone.',
-          style: TextStyle(
-            color: AppColors.textSecondary,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Keep Trip',
-              style: TextStyle(
-                color: AppColors.textTertiary,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              context.read<RideMatchingBloc>().add(
-                const RideRequestRejected('Driver cancelled'),
-              );
-              Navigator.pop(context); // Go back to main screen
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: AppColors.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Cancel Trip'),
-          ),
-        ],
-      ),
-    );
-  }
 }

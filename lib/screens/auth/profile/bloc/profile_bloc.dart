@@ -1,11 +1,11 @@
 import 'dart:async';
 
+import 'package:auth_repo/auth_repo.dart';
+import 'package:driver/services/route_flow_service.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
-import 'package:equatable/equatable.dart';
-import 'package:auth_repo/auth_repo.dart';
 import 'package:profile_repo/profile_repo.dart';
-import 'package:driver/services/route_decision_service.dart';
 
 part 'profile_event.dart';
 part 'profile_state.dart';
@@ -137,10 +137,10 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
       if (response.success) {
         // Determine next step in onboarding
-        final nextStep = RouteDecisionService.getNextOnboardingStep(
+        final nextStep = RouteFlowService.getNextOnboardingStep(
           currentStep: '/profile-creation',
           completedSteps: ['profile'],
-          missingRequirements: [],
+          missingRequirements: <String>[],
         );
 
         emit(state.copyWith(

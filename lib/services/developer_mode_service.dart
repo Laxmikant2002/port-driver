@@ -29,7 +29,7 @@ class DeveloperModeService {
 
   /// Show developer mode toggle (long press gesture)
   static void showDeveloperModeToggle(BuildContext context) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
@@ -195,17 +195,8 @@ class DeveloperModeService {
 
   /// Add developer mode FAB to dashboard when enabled
   static Widget? getDeveloperModeFAB(BuildContext context) {
-    if (!isDeveloperMode || !isTestingMode) return null;
-
-    return FloatingActionButton(
-      onPressed: () {
-        Navigator.pushNamed(context, '/test-navigator');
-      },
-      backgroundColor: AppColors.cyan,
-      foregroundColor: AppColors.surface,
-      child: const Icon(Icons.science),
-      tooltip: 'Test Navigator',
-    );
+    // Test navigator removed for production - developer mode FAB disabled
+    return null;
   }
 
   /// Add developer mode indicator to app bar

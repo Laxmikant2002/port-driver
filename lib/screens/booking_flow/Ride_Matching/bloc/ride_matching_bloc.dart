@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:booking_repo/booking_repo.dart';
 import 'package:driver/widgets/colors.dart';
 import 'package:equatable/equatable.dart';
@@ -258,22 +260,39 @@ class RideMatchingBloc extends Bloc<RideMatchingEvent, RideMatchingState> {
     );
   }
 
-  /// Calculate distance between two points in meters
+  /// Calculate distance between two points in meters using Haversine formula.
+  /// 
+  /// This method calculates the great-circle distance between two points
+  /// on Earth given their latitude and longitude coordinates.
+  /// 
+  /// Parameters:
+  /// - [lat1]: Latitude of first point in degrees
+  /// - [lon1]: Longitude of first point in degrees
+  /// - [lat2]: Latitude of second point in degrees
+  /// - [lon2]: Longitude of second point in degrees
+  /// 
+  /// Returns: Distance in meters
   double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-    // Haversine formula
+    // Haversine formula for calculating distance between two points on Earth
     const double earthRadius = 6371000; // Earth's radius in meters
     
     final double dLat = _degreesToRadians(lat2 - lat1);
     final double dLon = _degreesToRadians(lon2 - lon1);
+    final double lat1Rad = _degreesToRadians(lat1);
+    final double lat2Rad = _degreesToRadians(lat2);
     
-    final double a = (dLat / 2).sin() * (dLat / 2).sin() +
-        lat1.cos() * lat2.cos() * (dLon / 2).sin() * (dLon / 2).sin();
-    final double c = 2 * (a.sqrt()).asin();
+    final double a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(lat1Rad) * math.cos(lat2Rad) * math.sin(dLon / 2) * math.sin(dLon / 2);
+    final double c = 2 * math.asin(math.sqrt(a));
     
     return earthRadius * c;
   }
 
+  /// Converts degrees to radians for trigonometric calculations.
+  /// 
+  /// [degrees]: Angle in degrees
+  /// Returns: Angle in radians
   double _degreesToRadians(double degrees) {
-    return degrees * (3.14159265359 / 180);
+    return degrees * (math.pi / 180);
   }
 }
