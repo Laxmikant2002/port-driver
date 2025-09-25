@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- TODO: Replace these values with your actual Firebase project configuration -->
+    <!-- Get these values from your Firebase project console: -->
+    <!-- https://console.firebase.google.com/ -> Project Settings -> General -> Your apps -> google-services.json -->
+    
+    <!-- Default Web Client ID - from google-services.json: client[0].oauth_client[0].client_id -->
+    <string name="default_web_client_id" translatable="false">123456789012-abcdefghijklmnop.apps.googleusercontent.com</string>
+    
+    <!-- Firebase Database URL - from google-services.json: project_info.firebase_url -->
+    <string name="firebase_database_url" translatable="false">https://your-project-default-rtdb.firebaseio.com/</string>
+    
+    <!-- GCM Sender ID - from google-services.json: project_info.project_number -->
+    <string name="gcm_defaultSenderId" translatable="false">123456789012</string>
+    
+    <!-- Google API Key - from google-services.json: client[0].api_key[0].current_key -->
+    <string name="google_api_key" translatable="false">AIzaSyAbCdEfGhIjKlMnOpQrStUvWxYz123456</string>
+    
+    <!-- Google App ID - from google-services.json: client[0].client_info.mobilesdk_app_id -->
+    <string name="google_app_id" translatable="false">1:123456789012:android:abcdef1234567890abcdef</string>
+    
+    <!-- Project ID - from google-services.json: project_info.project_id -->
+    <string name="project_id" translatable="false">your-project-id</string>
+    
+    <!-- Storage Bucket - from google-services.json: project_info.storage_bucket -->
+    <string name="google_storage_bucket" translatable="false">your-project-id.appspot.com</string>
+</resources>

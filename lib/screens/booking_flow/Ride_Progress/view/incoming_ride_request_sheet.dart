@@ -18,7 +18,7 @@ class IncomingRideRequestSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => BookingBloc(
-        bookingRepo: lc(),
+        bookingRepo: lc<BookingRepo>(),
       )..add(RideRequestReceived(booking)),
       child: const IncomingRideRequestView(),
     );

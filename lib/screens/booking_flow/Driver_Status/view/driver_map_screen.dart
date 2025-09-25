@@ -5,10 +5,12 @@ import 'package:driver/locator.dart';
 import 'package:driver/screens/booking_flow/Driver_Status/bloc/driver_status_bloc.dart';
 import 'package:driver/services/location_service.dart';
 import 'package:driver/services/google_map_services.dart';
+import 'package:driver/services/socket_service.dart';
 import 'package:driver/widgets/colors.dart';
 import 'package:driver/widgets/ui_components/bottom_sheets/ride_request_bottom_sheet.dart';
 import 'package:driver/widgets/ui_components/bottom_sheets/ride_details_bottom_sheet.dart';
 import 'package:driver/widgets/ui_components/bottom_sheets/driver_status_bottom_sheet.dart';
+import 'package:driver_status/driver_status.dart';
 
 class DriverMapScreen extends StatefulWidget {
   const DriverMapScreen({super.key});
@@ -112,8 +114,8 @@ class _DriverMapScreenState extends State<DriverMapScreen> {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => DriverStatusBloc(
-        driverStatusRepo: lc(),
-        socketService: lc(),
+        driverStatusRepo: lc<DriverStatusRepo>(),
+        socketService: lc<SocketService>(),
       )..add(const DriverStatusInitialized()),
       child: Scaffold(
         body: Stack(

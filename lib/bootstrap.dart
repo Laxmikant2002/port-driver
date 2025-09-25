@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/widgets.dart';
 import 'package:driver/locator.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class AppBlocObserver extends BlocObserver {
   const AppBlocObserver();
@@ -38,6 +39,7 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
 
   // Add cross-flavor configuration here
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   await initializeDependencies();
 
   runApp(await builder());

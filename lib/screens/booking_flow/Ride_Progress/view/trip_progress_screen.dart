@@ -216,7 +216,7 @@ class _TripProgressScreenState extends State<TripProgressScreen> {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => BookingBloc(
-        bookingRepo: lc(),
+        bookingRepo: lc<BookingRepo>(),
       )..add(const BookingInitialized()),
       child: Scaffold(
         body: BlocListener<BookingBloc, BookingState>(

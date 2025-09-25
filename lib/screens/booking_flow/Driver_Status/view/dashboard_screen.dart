@@ -4,19 +4,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:driver/locator.dart';
 import 'package:driver/routes/main_routes.dart';
 import 'package:driver/services/developer_mode_service.dart';
+import 'package:driver/services/socket_service.dart';
 import 'package:driver/widgets/colors.dart';
 import 'package:driver_status/driver_status.dart';
 
 import '../bloc/driver_status_bloc.dart';
 import '../constants/dashboard_constants.dart';
 
-/// Main dashboard screen for driver status management.
-/// 
-/// This screen allows drivers to:
-/// - Toggle their online/offline status
-/// - View daily earnings and trip count
-/// - Manage their work area
-/// - Access developer mode (debug builds only)
+
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
@@ -24,8 +19,8 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => DriverStatusBloc(
-        driverStatusRepo: lc(),
-        socketService: lc(),
+        driverStatusRepo: lc<DriverStatusRepo>(),
+        socketService: lc<SocketService>(),
       )..add(const DriverStatusInitialized()),
       child: const DashboardView(),
     );

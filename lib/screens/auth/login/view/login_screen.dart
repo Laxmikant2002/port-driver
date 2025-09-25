@@ -6,6 +6,7 @@ import '../bloc/login_bloc.dart';
 import 'phone_field.dart';
 import '../../../../widgets/colors.dart';
 import '../../../../routes/auth_routes.dart';
+import '../../../../locator.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -14,7 +15,7 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => LoginBloc(
-        authRepo: context.read<AuthRepo>(),
+        authRepo: lc<AuthRepo>(),
       ),
       child: const _LoginView(),
     );

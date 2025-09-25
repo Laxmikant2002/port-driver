@@ -5,6 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:booking_repo/booking_repo.dart';
 import 'package:driver/locator.dart';
 import 'package:driver/routes/main_routes.dart';
+import 'package:driver/services/socket_service.dart';
 import 'package:driver/widgets/colors.dart';
 import 'package:driver/widgets/ui_components/ui_components.dart';
 import 'package:driver_status/driver_status.dart';
@@ -23,13 +24,13 @@ class RideScreen extends StatelessWidget {
       providers: [
         BlocProvider(
           create: (context) => DriverStatusBloc(
-            driverStatusRepo: lc(),
-            socketService: lc(),
+            driverStatusRepo: lc<DriverStatusRepo>(),
+            socketService: lc<SocketService>(),
           )..add(const DriverStatusInitialized()),
         ),
         BlocProvider(
           create: (context) => RideMatchingBloc(
-            bookingRepo: lc(),
+            bookingRepo: lc<BookingRepo>(),
           )..add(const RideMatchingInitialized()),
         ),
       ],
