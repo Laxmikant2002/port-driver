@@ -31,8 +31,8 @@ dependencies:
     path: ./packages/history_repo
   shared_repo:
     path: ./packages/shared_repo
-  ui_components:
-    path: ./packages/ui_components
+  # ui_components:
+  #   path: ./packages/ui_components
   rewards_repo:
     path: ./packages/rewards_repo
   

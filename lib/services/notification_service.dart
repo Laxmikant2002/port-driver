@@ -268,6 +268,7 @@ class NotificationService {
       body,
       tz.TZDateTime.from(scheduledDate, tz.local),
       platformDetails,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       payload: payload,
     );
   }

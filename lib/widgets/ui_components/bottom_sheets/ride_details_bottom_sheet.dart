@@ -165,7 +165,7 @@ class RideDetailsBottomSheet extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      state.maskedPhoneNumber,
+                      booking.passengerPhone ?? 'Phone not available',
                       style: TextStyle(
                         fontSize: 14,
                         color: AppColors.textSecondary,
@@ -204,7 +204,7 @@ class RideDetailsBottomSheet extends StatelessWidget {
         children: [
           // Pickup location
           _buildLocationRow(
-            icon: Icons.pickup,
+            icon: Icons.location_on,
             title: 'Pickup',
             address: booking.pickupLocation.address,
             landmark: booking.pickupLocation.landmark,
@@ -405,7 +405,7 @@ class RideDetailsBottomSheet extends StatelessWidget {
   }
 
   void _showCompleteDialog(BuildContext context) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,

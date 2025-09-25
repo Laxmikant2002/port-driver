@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:driver/widgets/colors.dart';
 import 'package:driver/screens/booking_flow/Ride_Progress/bloc/booking_bloc.dart';
-import 'package:booking_repo/booking_repo.dart';
 
 class RideRequestBottomSheet extends StatefulWidget {
   const RideRequestBottomSheet({super.key});
@@ -85,7 +84,7 @@ class _RideRequestBottomSheetState extends State<RideRequestBottomSheet>
   }
 
   void _showRejectDialog() {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
@@ -252,7 +251,7 @@ class _RideRequestBottomSheetState extends State<RideRequestBottomSheet>
                     children: [
                       // Pickup location
                       _buildLocationRow(
-                        icon: Icons.pickup,
+                        icon: Icons.location_on,
                         title: 'Pickup',
                         address: booking.pickupLocation.address,
                         landmark: booking.pickupLocation.landmark,

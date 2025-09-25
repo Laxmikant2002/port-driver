@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 /// Service for managing location tracking and GPS functionality
@@ -106,7 +107,7 @@ class LocationService {
           _locationController.add(_currentLocation!);
           debugPrint('Location updated: ${position.latitude}, ${position.longitude}');
         },
-        onError: (error) {
+        onError: (Object error) {
           debugPrint('Location tracking error: $error');
           _isTracking = false;
         },
@@ -162,7 +163,7 @@ class LocationService {
   /// Get formatted address from coordinates
   Future<String> getAddressFromCoordinates(LatLng location) async {
     try {
-      final placemarks = await Geolocator.placemarkFromCoordinates(
+      final placemarks = await placemarkFromCoordinates(
         location.latitude,
         location.longitude,
       );

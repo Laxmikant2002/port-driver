@@ -54,19 +54,25 @@ class SocketService {
     // Listen for ride requests
     _socket!.on('ride_request', (data) {
       debugPrint('Received ride request: $data');
-      _rideRequestController.add(Map<String, dynamic>.from(data));
+      if (data is Map) {
+        _rideRequestController.add(Map<String, dynamic>.from(data));
+      }
     });
 
     // Listen for ride updates
     _socket!.on('ride_update', (data) {
       debugPrint('Received ride update: $data');
-      _rideUpdateController.add(Map<String, dynamic>.from(data));
+      if (data is Map) {
+        _rideUpdateController.add(Map<String, dynamic>.from(data));
+      }
     });
 
     // Listen for location updates from other drivers
     _socket!.on('driver_location_update', (data) {
       debugPrint('Received location update: $data');
-      _locationUpdateController.add(Map<String, dynamic>.from(data));
+      if (data is Map) {
+        _locationUpdateController.add(Map<String, dynamic>.from(data));
+      }
     });
 
     // Listen for driver status updates

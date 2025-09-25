@@ -70,12 +70,12 @@ class GoogleMapServices {
   }) async {
     final placemarks =
         await placemarkFromCoordinates(position.latitude, position.longitude);
-    final placemark = placemarks.first;
+    final placemark = placemarks.isNotEmpty ? placemarks.first : null;
     final address = Address(
-      street: placemark.street,
-      city: placemark.locality,
-      state: placemark.administrativeArea,
-      country: placemark.country,
+      street: placemark?.street ?? '',
+      city: placemark?.locality ?? '',
+      state: placemark?.administrativeArea ?? '',
+      country: placemark?.country ?? '',
       latLng: position,
       polylines: polylines ?? [],
     );
@@ -142,14 +142,12 @@ class GoogleMapServices {
 
   Future<List<LatLng>> getPolylineCoordinates(LatLng? src, LatLng? dst) async {
     final polylineCoordinates = <LatLng>[];
-    final polylinePoints = PolylinePoints();
+    final polylinePoints = PolylinePoints(apiKey: GoogleMapKey.googleMapApiKey);
     final result = await polylinePoints.getRouteBetweenCoordinates(
-      googleApiKey: GoogleMapKey.googleMapApiKey,
       request: PolylineRequest(
         origin: PointLatLng(src!.latitude, src.longitude,),
         destination: PointLatLng(dst!.latitude, dst.longitude),
         mode: TravelMode.driving,
-        avoidFerries: true,
       ),
     );
 
@@ -266,21 +264,23 @@ class GoogleMapServices {
   /// Calculate route distance and duration
   Future<RouteInfo?> getRouteInfo(LatLng origin, LatLng destination) async {
     try {
-      final polylinePoints = PolylinePoints();
+      final polylinePoints = PolylinePoints(apiKey: GoogleMapKey.googleMapApiKey);
       final result = await polylinePoints.getRouteBetweenCoordinates(
-        googleApiKey: GoogleMapKey.googleMapApiKey,
         request: PolylineRequest(
           origin: PointLatLng(origin.latitude, origin.longitude),
           destination: PointLatLng(destination.latitude, destination.longitude),
           mode: TravelMode.driving,
-          avoidFerries: true,
         ),
       );
 
       if (result.status == 'OK' && result.points.isNotEmpty) {
         return RouteInfo(
-          distance: result.distanceValues.first,
-          duration: result.durationValues.first,
+          distance: result.distanceValues?.isNotEmpty == true 
+              ? (result.distanceValues!.first as num).toDouble()
+              : 0.0,
+          duration: result.durationValues?.isNotEmpty == true 
+              ? result.durationValues!.first
+              : 0,
           polylinePoints: result.points.map((point) => LatLng(point.latitude, point.longitude)).toList(),
         );
       }
