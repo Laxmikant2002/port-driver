@@ -70,3 +70,19 @@ final class MapControllerUpdated extends DriverStatusEvent {
   @override
   String toString() => 'MapControllerUpdated(controller: $controller)';
 }
+
+/// Event triggered when location tracking should start
+final class StartLocationTracking extends DriverStatusEvent {
+  const StartLocationTracking();
+
+  @override
+  String toString() => 'StartLocationTracking()';
+}
+
+/// Event triggered when location tracking should stop
+final class StopLocationTracking extends DriverStatusEvent {
+  const StopLocationTracking();
+
+  @override
+  String toString() => 'StopLocationTracking()';
+}

@@ -170,7 +170,7 @@ class DocumentsBloc extends Bloc<DocumentsEvent, DocumentsState> {
     emit(state.copyWith(documents: updatedDocuments));
   }
 
-  DocumentUpload _convertToDocumentUpload(documents_repo.Document doc) {
+  DocumentUpload _convertToDocumentUpload(documents_repo.DriverDocument doc) {
     return DocumentUpload(
       id: doc.id,
       type: _convertDocumentType(doc.type),

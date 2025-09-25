@@ -12,8 +12,8 @@ class DocumentResponse extends Equatable {
 
   final bool success;
   final String? message;
-  final List<Document>? documents;
-  final Document? document;
+  final List<DriverDocument>? documents;
+  final DriverDocument? document;
 
   factory DocumentResponse.fromJson(Map<String, dynamic> json) {
     return DocumentResponse(
@@ -21,11 +21,11 @@ class DocumentResponse extends Equatable {
       message: json['message'] as String?,
       documents: json['documents'] != null
           ? (json['documents'] as List<dynamic>)
-              .map((e) => Document.fromJson(e as Map<String, dynamic>))
+              .map((e) => DriverDocument.fromJson(e as Map<String, dynamic>))
               .toList()
           : null,
       document: json['document'] != null
-          ? Document.fromJson(json['document'] as Map<String, dynamic>)
+          ? DriverDocument.fromJson(json['document'] as Map<String, dynamic>)
           : null,
     );
   }
@@ -42,8 +42,8 @@ class DocumentResponse extends Equatable {
   DocumentResponse copyWith({
     bool? success,
     String? message,
-    List<Document>? documents,
-    Document? document,
+    List<DriverDocument>? documents,
+    DriverDocument? document,
   }) {
     return DocumentResponse(
       success: success ?? this.success,

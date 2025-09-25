@@ -1,99 +1,115 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:auth_repo/auth_repo.dart';
+import 'package:profile_repo/profile_repo.dart';
+import 'package:driver/services/route_decision_service.dart';
 
 part 'profile_event.dart';
 part 'profile_state.dart';
 
+/// BLoC responsible for managing profile creation/update state and business logic
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   ProfileBloc({
-    required String phone,
     required this.authRepo,
-  }) : super(ProfileState(phone: phone)) {
-    on<ProfileFirstNameChanged>(_onFirstNameChanged);
-    on<ProfileLastNameChanged>(_onLastNameChanged);
-    on<ProfileEmailChanged>(_onEmailChanged);
-    on<ProfileAlternativePhoneChanged>(_onAlternativePhoneChanged);
+    required this.profileRepo,
+    required this.user,
+    this.existingProfile,
+    this.isNewUser = true,
+  }) : super(const ProfileState()) {
+    on<ProfileInitialized>(_onInitialized);
+    on<ProfileNameChanged>(_onNameChanged);
+    on<ProfileDateOfBirthChanged>(_onDateOfBirthChanged);
+    on<ProfileGenderChanged>(_onGenderChanged);
+    on<ProfilePhotoChanged>(_onPhotoChanged);
     on<ProfileSubmitted>(_onSubmitted);
   }
 
   final AuthRepo authRepo;
+  final ProfileRepo profileRepo;
+  final AuthUser user;
+  final DriverProfile? existingProfile;
+  final bool isNewUser;
 
-  void _onFirstNameChanged(
-    ProfileFirstNameChanged event,
-    Emitter<ProfileState> emit,
-  ) {
-    final firstName = FirstName.dirty(event.firstName);
-    emit(
-      state.copyWith(
-        firstName: firstName,
+  /// Handles profile initialization
+  void _onInitialized(ProfileInitialized event, Emitter<ProfileState> emit) {
+    if (existingProfile != null) {
+      emit(state.copyWith(
+        nameInput: NameInput.dirty(existingProfile!.fullName),
+        dateOfBirth: existingProfile!.dateOfBirth,
+        gender: existingProfile!.gender,
+        profilePhoto: existingProfile!.profilePicture,
         status: FormzSubmissionStatus.initial,
-      ),
-    );
+      ));
+    }
   }
 
-  void _onLastNameChanged(
-    ProfileLastNameChanged event,
-    Emitter<ProfileState> emit,
-  ) {
-    final lastName = LastName.dirty(event.lastName);
-    emit(
-      state.copyWith(
-        lastName: lastName,
-        status: FormzSubmissionStatus.initial,
-      ),
-    );
-  }
-
-  void _onEmailChanged(
-    ProfileEmailChanged event,
-    Emitter<ProfileState> emit,
-  ) {
-    final email = Email.dirty(event.email);
-    emit(
-      state.copyWith(
-        email: email,
-        status: FormzSubmissionStatus.initial,
-      ),
-    );
-  }
-
-  void _onAlternativePhoneChanged(
-    ProfileAlternativePhoneChanged event,
-    Emitter<ProfileState> emit,
-  ) {
-    final alternativePhone = AlternativePhone.dirty(event.alternativePhone);
-    emit(
-      state.copyWith(
-        alternativePhone: alternativePhone,
-        status: FormzSubmissionStatus.initial,
-      ),
-    );
-  }
-
-  void _onSubmitted(
-    ProfileSubmitted event,
-    Emitter<ProfileState> emit,
-  ) async {
-    // Validate all fields before submission
-    final firstName = FirstName.dirty(state.firstName.value);
-    final lastName = LastName.dirty(state.lastName.value);
-    final email = Email.dirty(state.email.value);
-    final alternativePhone = AlternativePhone.dirty(state.alternativePhone.value);
-
+  /// Handles name input changes
+  void _onNameChanged(ProfileNameChanged event, Emitter<ProfileState> emit) {
+    final nameInput = NameInput.dirty(event.name);
     emit(state.copyWith(
-      firstName: firstName,
-      lastName: lastName,
-      email: email,
-      alternativePhone: alternativePhone,
+      nameInput: nameInput,
+      status: FormzSubmissionStatus.initial,
+      errorMessage: null,
+    ));
+  }
+
+  /// Handles date of birth changes
+  void _onDateOfBirthChanged(ProfileDateOfBirthChanged event, Emitter<ProfileState> emit) {
+    emit(state.copyWith(
+      dateOfBirth: event.dateOfBirth,
+      status: FormzSubmissionStatus.initial,
+    ));
+  }
+
+  /// Handles gender selection changes
+  void _onGenderChanged(ProfileGenderChanged event, Emitter<ProfileState> emit) {
+    emit(state.copyWith(
+      gender: event.gender,
+      status: FormzSubmissionStatus.initial,
+    ));
+  }
+
+  /// Handles profile photo changes
+  void _onPhotoChanged(ProfilePhotoChanged event, Emitter<ProfileState> emit) {
+    emit(state.copyWith(
+      profilePhoto: event.photoPath,
+      status: FormzSubmissionStatus.initial,
+    ));
+  }
+
+  /// Handles profile form submission
+  Future<void> _onSubmitted(ProfileSubmitted event, Emitter<ProfileState> emit) async {
+    // Validate form before submission
+    final nameInput = NameInput.dirty(state.nameInput.value);
+    
+    emit(state.copyWith(
+      nameInput: nameInput,
       status: FormzSubmissionStatus.initial,
     ));
 
-    if (!state.isValid) {
+    if (!Formz.validate([nameInput])) {
       emit(state.copyWith(
         status: FormzSubmissionStatus.failure,
-        errorMessage: 'Please complete all required fields correctly',
+        errorMessage: nameInput.displayError ?? 'Please enter a valid name',
+      ));
+      return;
+    }
+
+    if (state.dateOfBirth == null) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: 'Please select your date of birth',
+      ));
+      return;
+    }
+
+    if (state.gender == null || state.gender!.isEmpty) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: 'Please select your gender',
       ));
       return;
     }
@@ -101,30 +117,44 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
 
     try {
-      // Create user object with profile data
-      final user = AuthUser(
-        id: '', // Will be set by backend
-        phone: state.phone,
-        name: '${firstName.value} ${lastName.value}',
-        email: email.value.isNotEmpty ? email.value : null,
-        isVerified: true,
-        isNewUser: false,
-        profileComplete: true,
-        documentVerified: false,
+      final profileData = ProfileUpdateData(
+        fullName: nameInput.value,
+        dateOfBirth: state.dateOfBirth,
+        gender: state.gender,
+        profilePicture: state.profilePhoto,
+        languagesSpoken: [], // Will be set in language selection screen
       );
 
-      // Update profile using auth repo
-      final response = await authRepo.updateProfile(user);
+      ProfileResponse response;
       
+      if (isNewUser) {
+        // Create new profile
+        response = await profileRepo.createDriverProfile(user.phone, profileData);
+      } else {
+        // Update existing profile
+        response = await profileRepo.updateDriverProfile(user.id, profileData);
+      }
+
       if (response.success) {
-        emit(state.copyWith(status: FormzSubmissionStatus.success));
+        // Determine next step in onboarding
+        final nextStep = RouteDecisionService.getNextOnboardingStep(
+          currentStep: '/profile-creation',
+          completedSteps: ['profile'],
+          missingRequirements: [],
+        );
+
+        emit(state.copyWith(
+          status: FormzSubmissionStatus.success,
+          routeDecision: nextStep,
+          updatedProfile: response.data,
+        ));
       } else {
         emit(state.copyWith(
           status: FormzSubmissionStatus.failure,
-          errorMessage: response.message ?? 'Failed to create profile. Please try again.',
+          errorMessage: response.message ?? 'Failed to save profile',
         ));
       }
-    } catch (error) {
+    } catch (e) {
       emit(state.copyWith(
         status: FormzSubmissionStatus.failure,
         errorMessage: 'Network error. Please try again.',

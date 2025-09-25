@@ -269,7 +269,6 @@ class NotificationService {
       tz.TZDateTime.from(scheduledDate, tz.local),
       platformDetails,
       payload: payload,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 

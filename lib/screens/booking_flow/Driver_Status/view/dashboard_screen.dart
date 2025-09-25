@@ -4,6 +4,7 @@ import 'package:driver/widgets/colors.dart';
 import 'package:driver_status/driver_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:driver/services/developer_mode_service.dart';
 import '../../../../routes/main_routes.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -45,25 +46,30 @@ class DashboardView extends StatelessWidget {
               );
           }
         },
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              children: [
-                const SizedBox(height: 32),
-                const _HeaderSection(),
-                const SizedBox(height: 48),
-                const _StatusToggleCard(),
-                const SizedBox(height: 32),
-                const _EarningsCard(),
-                const SizedBox(height: 24),
-                const _WorkAreaCard(),
-                const Spacer(),
-                const _FooterSection(),
-              ],
+        child: GestureDetector(
+          onLongPress: () => DeveloperModeService.handleLongPress(context),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                children: [
+                  const SizedBox(height: 32),
+                  const _HeaderSection(),
+                  const SizedBox(height: 48),
+                  const _StatusToggleCard(),
+                  const SizedBox(height: 32),
+                  const _EarningsCard(),
+                  const SizedBox(height: 24),
+                  const _WorkAreaCard(),
+                  const Spacer(),
+                  const _FooterSection(),
+                ],
+              ),
             ),
           ),
         ),
+        floatingActionButton: DeveloperModeService.getDeveloperModeFAB(context),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       ),
     );
   }

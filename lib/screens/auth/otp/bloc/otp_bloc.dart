@@ -4,13 +4,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:auth_repo/auth_repo.dart';
+import 'package:profile_repo/profile_repo.dart';
+import 'package:driver/services/route_flow_service.dart';
 
 part 'otp_event.dart';
 part 'otp_state.dart';
 
 /// BLoC responsible for managing OTP verification state and business logic
 class OtpBloc extends Bloc<OtpEvent, OtpState> {
-  OtpBloc(this.authRepo, this.phone) : super(const OtpState()) {
+  OtpBloc({
+    required this.authRepo,
+    required this.profileRepo,
+    required this.phone,
+  }) : super(const OtpState()) {
     on<OtpChanged>(_onOtpChanged);
     on<OtpSubmitted>(_onOtpSubmitted);
     on<OtpResendRequested>(_onOtpResendRequested);
@@ -18,6 +24,7 @@ class OtpBloc extends Bloc<OtpEvent, OtpState> {
   }
 
   final AuthRepo authRepo;
+  final ProfileRepo profileRepo;
   final String phone;
   Timer? _resendTimer;
 
@@ -57,9 +64,16 @@ class OtpBloc extends Bloc<OtpEvent, OtpState> {
       final response = await authRepo.verifyOtp(state.otpInput.value);
       
       if (response.success && response.user != null) {
+        // After successful OTP verification, determine the next route
+        final routeDecision = await RouteFlowService.determineInitialRoute(
+          user: response.user!,
+          profileRepo: profileRepo,
+        );
+        
         emit(state.copyWith(
           status: FormzSubmissionStatus.success,
           user: response.user,
+          routeDecision: routeDecision,
         ));
       } else {
         emit(state.copyWith(

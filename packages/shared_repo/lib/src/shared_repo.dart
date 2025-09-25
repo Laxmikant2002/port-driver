@@ -57,7 +57,7 @@ class SharedRepo {
   /// Get cached settings
   Future<Settings?> getCachedSettings() async {
     try {
-      final cached = await localStorage.getItem('cached_settings');
+      final cached = localStorage.getString('cached_settings');
       if (cached != null) {
         final json = jsonDecode(cached) as Map<String, dynamic>;
         return Settings.fromJson(json);
@@ -71,7 +71,7 @@ class SharedRepo {
   /// Cache settings
   Future<void> cacheSettings(Settings settings) async {
     try {
-      await localStorage.setItem('cached_settings', jsonEncode(settings.toJson()));
+      localStorage.saveString('cached_settings', jsonEncode(settings.toJson()));
     } catch (e) {
       // Handle error silently
     }
@@ -79,7 +79,7 @@ class SharedRepo {
 
   Future<String> _getAuthToken() async {
     try {
-      final token = await localStorage.getItem('auth_token');
+      final token = localStorage.getString('auth_token');
       return token ?? '';
     } catch (e) {
       return '';

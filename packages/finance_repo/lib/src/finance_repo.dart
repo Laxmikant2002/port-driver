@@ -197,7 +197,7 @@ class FinanceRepo {
   /// Get cached wallet balance
   Future<WalletBalance?> getCachedBalance() async {
     try {
-      final cached = await localStorage.getItem('cached_wallet_balance');
+      final cached = localStorage.getString('cached_wallet_balance');
       if (cached != null) {
         final json = jsonDecode(cached) as Map<String, dynamic>;
         return WalletBalance.fromJson(json);
@@ -211,7 +211,7 @@ class FinanceRepo {
   /// Cache wallet balance
   Future<void> cacheBalance(WalletBalance balance) async {
     try {
-      await localStorage.setItem('cached_wallet_balance', jsonEncode(balance.toJson()));
+      localStorage.saveString('cached_wallet_balance', jsonEncode(balance.toJson()));
     } catch (e) {
       // Handle error silently
     }
@@ -220,7 +220,7 @@ class FinanceRepo {
   /// Get cached transactions
   Future<List<Transaction>> getCachedTransactions() async {
     try {
-      final cached = await localStorage.getItem('cached_transactions');
+      final cached = localStorage.getString('cached_transactions');
       if (cached != null) {
         final List<dynamic> jsonList = jsonDecode(cached);
         return jsonList.map((json) => Transaction.fromJson(json as Map<String, dynamic>)).toList();
@@ -235,7 +235,7 @@ class FinanceRepo {
   Future<void> cacheTransactions(List<Transaction> transactions) async {
     try {
       final jsonList = transactions.map((t) => t.toJson()).toList();
-      await localStorage.setItem('cached_transactions', jsonEncode(jsonList));
+      localStorage.saveString('cached_transactions', jsonEncode(jsonList));
     } catch (e) {
       // Handle error silently
     }
@@ -310,7 +310,7 @@ class FinanceRepo {
   /// Get cached payments
   Future<List<Payment>> getCachedPayments() async {
     try {
-      final cached = await localStorage.getItem('cached_payments');
+      final cached = localStorage.getString('cached_payments');
       if (cached != null) {
         final List<dynamic> jsonList = jsonDecode(cached);
         return jsonList.map((json) => Payment.fromJson(json as Map<String, dynamic>)).toList();
@@ -325,7 +325,7 @@ class FinanceRepo {
   Future<void> cachePayments(List<Payment> payments) async {
     try {
       final jsonList = payments.map((p) => p.toJson()).toList();
-      await localStorage.setItem('cached_payments', jsonEncode(jsonList));
+      localStorage.saveString('cached_payments', jsonEncode(jsonList));
     } catch (e) {
       // Handle error silently
     }
@@ -333,7 +333,7 @@ class FinanceRepo {
 
   Future<String> _getAuthToken() async {
     try {
-      final token = await localStorage.getItem('auth_token');
+      final token = localStorage.getString('auth_token');
       return token ?? '';
     } catch (e) {
       return '';

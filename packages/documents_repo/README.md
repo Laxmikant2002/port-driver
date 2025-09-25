@@ -11,11 +11,11 @@ A Flutter package for managing driver documents in the driver app.
 
 ## Models
 
-### Document
+### DriverDocument
 Represents a driver document with verification status.
 
 ```dart
-final document = Document(
+final document = DriverDocument(
   id: '1',
   type: DocumentType.drivingLicense,
   status: DocumentStatus.verified,

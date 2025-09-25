@@ -26,12 +26,20 @@ class RouteConstants {
   static const String tripSummary = '/trip-summary';
   static const String fareBreakdown = '/fare-breakdown';
 
-  // Profile routes
+  // Profile routes (onboarding flow)
   static const String profileCreation = '/profile-creation';
   static const String languageSelection = '/language-selection';
   static const String vehicleSelection = '/vehicle-selection';
   static const String workLocation = '/work-location';
   static const String profile = '/profile';
+
+  // Onboarding routes
+  static const String onboardingWelcome = '/onboarding-welcome';
+  static const String onboardingComplete = '/onboarding-complete';
+  
+  // Account status routes
+  static const String accountSuspended = '/account-suspended';
+  static const String accountInactive = '/account-inactive';
 
   // Document routes
   static const String documentsList = '/documents-list';

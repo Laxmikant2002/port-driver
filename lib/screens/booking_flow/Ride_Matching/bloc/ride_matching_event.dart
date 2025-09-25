@@ -16,9 +16,9 @@ final class RideMatchingInitialized extends RideMatchingEvent {
   String toString() => 'RideMatchingInitialized()';
 }
 
-/// Event triggered when a ride request is received
-final class RideRequestReceived extends RideMatchingEvent {
-  const RideRequestReceived(this.booking);
+/// Event triggered when an incoming ride request is received
+final class IncomingRideRequest extends RideMatchingEvent {
+  const IncomingRideRequest(this.booking);
 
   final Booking booking;
 
@@ -26,45 +26,71 @@ final class RideRequestReceived extends RideMatchingEvent {
   List<Object> get props => [booking];
 
   @override
-  String toString() => 'RideRequestReceived(booking: $booking)';
+  String toString() => 'IncomingRideRequest(booking: $booking)';
 }
 
-/// Event triggered when driver accepts a ride
-final class RideAccepted extends RideMatchingEvent {
-  const RideAccepted();
+/// Event triggered when a ride request is accepted
+final class RideRequestAccepted extends RideMatchingEvent {
+  const RideRequestAccepted();
 
   @override
-  String toString() => 'RideAccepted()';
+  String toString() => 'RideRequestAccepted()';
 }
 
-/// Event triggered when driver rejects a ride
-final class RideRejected extends RideMatchingEvent {
-  const RideRejected();
+/// Event triggered when a ride request is rejected
+final class RideRequestRejected extends RideMatchingEvent {
+  const RideRequestRejected(this.reason);
+
+  final String reason;
 
   @override
-  String toString() => 'RideRejected()';
+  List<Object> get props => [reason];
+
+  @override
+  String toString() => 'RideRequestRejected(reason: $reason)';
 }
 
-/// Event triggered when ride request form is submitted
-final class RideRequestSubmitted extends RideMatchingEvent {
-  const RideRequestSubmitted();
+/// Event triggered when a ride request times out
+final class RideRequestTimeout extends RideMatchingEvent {
+  const RideRequestTimeout();
 
   @override
-  String toString() => 'RideRequestSubmitted()';
+  String toString() => 'RideRequestTimeout()';
 }
 
-/// Event triggered on timer tick
-final class TimerTick extends RideMatchingEvent {
-  const TimerTick();
+/// Event triggered when driver arrives at pickup location
+final class DriverArrivedAtPickup extends RideMatchingEvent {
+  const DriverArrivedAtPickup();
 
   @override
-  String toString() => 'TimerTick()';
+  String toString() => 'DriverArrivedAtPickup()';
 }
 
-/// Event triggered when ride request expires
-final class RideRequestExpired extends RideMatchingEvent {
-  const RideRequestExpired();
+/// Event triggered when trip is started
+final class TripStarted extends RideMatchingEvent {
+  const TripStarted();
 
   @override
-  String toString() => 'RideRequestExpired()';
+  String toString() => 'TripStarted()';
+}
+
+/// Event triggered when trip is completed
+final class TripCompleted extends RideMatchingEvent {
+  const TripCompleted();
+
+  @override
+  String toString() => 'TripCompleted()';
+}
+
+/// Event triggered when location is updated
+final class LocationUpdated extends RideMatchingEvent {
+  const LocationUpdated(this.location);
+
+  final LatLng location;
+
+  @override
+  List<Object> get props => [location];
+
+  @override
+  String toString() => 'LocationUpdated(location: $location)';
 }

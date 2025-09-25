@@ -1,6 +1,8 @@
 import 'package:driver/locator.dart';
 import 'package:driver/screens/booking_flow/Driver_Status/bloc/driver_status_bloc.dart';
-import 'package:ui_components/ui_components.dart';
+import 'package:driver/screens/booking_flow/Ride_Matching/bloc/ride_matching_bloc.dart';
+import 'package:driver/screens/booking_flow/Ride_Matching/view/incoming_ride_request_sheet.dart';
+import 'package:driver/widgets/ui_components/ui_components.dart';
 import 'package:driver/widgets/colors.dart';
 import 'package:driver_status/driver_status.dart';
 import 'package:flutter/material.dart';
@@ -13,11 +15,20 @@ class RideScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => DriverStatusBloc(
-        driverStatusRepo: lc(),
-        socketService: lc(),
-      )..add(const DriverStatusInitialized()),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => DriverStatusBloc(
+            driverStatusRepo: lc(),
+            socketService: lc(),
+          )..add(const DriverStatusInitialized()),
+        ),
+        BlocProvider(
+          create: (context) => RideMatchingBloc(
+            bookingRepo: lc(),
+          )..add(const RideMatchingInitialized()),
+        ),
+      ],
       child: const _HomeScreen(),
     );
   }
@@ -444,38 +455,66 @@ class _HomeScreenState extends State<_HomeScreen> with SingleTickerProviderState
                     icon: const Icon(Icons.directions_car),
                     label: const Text('Test Ride Request'),
                     onPressed: () {
-                      showModalBottomSheet<void>(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) => RideRequestBottomSheet(
-                          riderName: 'John Doe',
-                          riderRating: 4.8,
-                          pickupLocation: '123 Main St, City',
-                          dropoffLocation: '456 Elm St, City',
-                          estimatedTime: '5 min',
-                          estimatedFare: '₹410.00',
-                          onAccept: () {
-                            debugPrint('Accept ride tapped');
-                            Navigator.pop(context);
-                            Future.delayed(const Duration(milliseconds: 300), () {
-                              if (mounted) {
-                                _showRideDetailsBottomSheet(context);
-                              }
-                            });
-                          },
-                          onReject: () {
-                            debugPrint('Reject ride tapped');
-                            Navigator.pop(context);
-                            // Add reject logic here
-                          },
+                      // Simulate incoming ride request
+                      final testBooking = Booking(
+                        id: 'test_booking_123',
+                        passengerId: 'passenger_123',
+                        driverId: 'driver_123',
+                        status: BookingStatus.pending,
+                        pickupLocation: BookingLocation(
+                          address: '123 Main St, City',
+                          latitude: 11.623377,
+                          longitude: 92.726486,
                         ),
+                        dropoffLocation: BookingLocation(
+                          address: '456 Elm St, City',
+                          latitude: 11.633377,
+                          longitude: 92.736486,
+                        ),
+                        fare: 410.0,
+                        distance: 2.5,
+                        estimatedDuration: 5,
+                        createdAt: DateTime.now(),
+                        passengerName: 'John Doe',
+                        passengerPhone: '+919876543210',
+                        vehicleType: 'Sedan',
+                        paymentMethod: 'Online',
+                      );
+                      
+                      context.read<RideMatchingBloc>().add(
+                        IncomingRideRequest(testBooking),
                       );
                     },
                   ),
                 ),
+              
+              // Incoming ride request overlay
+              const IncomingRideRequestOverlay(),
             ],
           ),
+        );
+      },
+    );
+  }
+}
+
+/// Incoming ride request overlay
+class IncomingRideRequestOverlay extends StatelessWidget {
+  const IncomingRideRequestOverlay({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<RideMatchingBloc, RideMatchingState>(
+      builder: (context, state) {
+        if (!state.hasIncomingRequest) {
+          return const SizedBox.shrink();
+        }
+
+        return Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: IncomingRideRequestSheetView(),
         );
       },
     );

@@ -3,6 +3,11 @@ import 'package:booking_repo/booking_repo.dart';
 import 'package:driver/screens/home/view/home_screen.dart';
 import 'package:driver/screens/booking_flow/Driver_Status/driver_status_screen.dart';
 import 'package:driver/screens/booking_flow/Ride_Progress/ride_progress_screen.dart';
+import 'package:driver/screens/booking_flow/Driver_Status/view/dashboard_screen.dart';
+import 'package:driver/screens/booking_flow/Driver_Status/view/work_area_selection_screen.dart';
+import 'package:driver/screens/booking_flow/Ride_Progress/view/incoming_ride_request_sheet.dart';
+import 'package:driver/screens/booking_flow/Ride_Progress/view/ride_detail_screen.dart';
+import 'package:driver/screens/testing/test_navigator_screen.dart';
 import 'route_constants.dart';
 
 /// Main application routes for driver status, booking, and trip management
@@ -120,6 +125,9 @@ class MainRoutes {
           ),
         );
       },
+      
+      // Testing route (only available in testing mode)
+      '/test-navigator': (context) => const TestNavigatorScreen(),
     };
   }
 }

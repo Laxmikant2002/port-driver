@@ -4,11 +4,13 @@ import 'package:booking_repo/booking_repo.dart';
 import 'package:documents_repo/documents_repo.dart';
 import 'package:driver_status/driver_status.dart';
 import 'package:history_repo/history_repo.dart';
+import 'package:profile_repo/profile_repo.dart';
 import 'package:trip_repo/trip_repo.dart';
 import 'package:driver/services/socket_service.dart';
 import 'package:get_it/get_it.dart';
 import 'package:localstorage/localstorage.dart'; // Correct import for Localstorage
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 final lc = GetIt.instance;
 
@@ -36,5 +38,9 @@ Future<void> initializeDependencies() async {
       baseUrl: 'https://api.example.com',
       apiClient: lc<ApiClient>(),
       localStorage: lc<Localstorage>(),
+    ))
+    ..registerLazySingleton(() => ProfileRepo(
+      baseUrl: 'https://api.example.com',
+      client: http.Client(),
     ));
 }

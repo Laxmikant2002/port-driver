@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 
-/// Document model for driver documents
-class Document extends Equatable {
-  const Document({
+/// Driver document model for driver documents
+class DriverDocument extends Equatable {
+  const DriverDocument({
     required this.id,
     required this.type,
     required this.status,
@@ -24,8 +24,8 @@ class Document extends Equatable {
   final String? rejectedReason;
   final Map<String, dynamic>? metadata;
 
-  factory Document.fromJson(Map<String, dynamic> json) {
-    return Document(
+  factory DriverDocument.fromJson(Map<String, dynamic> json) {
+    return DriverDocument(
       id: json['id'] as String,
       type: DocumentType.fromString(json['type'] as String),
       status: DocumentStatus.fromString(json['status'] as String),
@@ -56,7 +56,7 @@ class Document extends Equatable {
     };
   }
 
-  Document copyWith({
+  DriverDocument copyWith({
     String? id,
     DocumentType? type,
     DocumentStatus? status,
@@ -67,7 +67,7 @@ class Document extends Equatable {
     String? rejectedReason,
     Map<String, dynamic>? metadata,
   }) {
-    return Document(
+    return DriverDocument(
       id: id ?? this.id,
       type: type ?? this.type,
       status: status ?? this.status,
@@ -95,7 +95,7 @@ class Document extends Equatable {
 
   @override
   String toString() {
-    return 'Document('
+    return 'DriverDocument('
         'id: $id, '
         'type: $type, '
         'status: $status, '

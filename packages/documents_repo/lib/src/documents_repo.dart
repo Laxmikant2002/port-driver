@@ -193,7 +193,7 @@ class DocumentsRepo {
       for (final type in requiredTypes) {
         final document = response.documents!.firstWhere(
           (doc) => doc.type == type,
-          orElse: () => throw StateError('Document not found'),
+          orElse: () => throw StateError('DriverDocument not found'),
         );
 
         if (document.status != DocumentStatus.verified) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:auth_repo/auth_repo.dart';
 import 'package:formz/formz.dart';
+import 'package:profile_repo/profile_repo.dart';
 import 'package:driver/locator.dart';
 import '../../../../widgets/colors.dart';
 import 'package:driver/routes/account_routes.dart';
@@ -20,7 +21,11 @@ class OtpScreen extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) => OtpBloc(lc<AuthRepo>(), phone),
+          create: (context) => OtpBloc(
+            authRepo: lc<AuthRepo>(),
+            profileRepo: lc<ProfileRepo>(),
+            phone: phone,
+          ),
         ),
       ],
       child: const _OtpScreen(),
@@ -37,15 +42,19 @@ class _OtpScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: BlocListener<OtpBloc, OtpState>(
         listener: (context, state) {
-          if (state.isSuccess && state.user != null) {
-            // Navigate based on user status
-            if (state.user!.isNewUser || !state.user!.profileComplete) {
-              Navigator.pushReplacementNamed(context, AccountRoutes.profileCreation, arguments: state.user!.phone);
-            } else if (!state.user!.documentVerified) {
-              Navigator.pushReplacementNamed(context, AccountRoutes.documentIntro);
-            } else {
-              Navigator.pushReplacementNamed(context, MainRoutes.dashboard);
-            }
+          if (state.isSuccess && state.user != null && state.routeDecision != null) {
+            // Navigate based on route decision from backend
+            final routeDecision = state.routeDecision!;
+            
+            // Log the route decision for debugging
+            debugPrint('Route Decision: ${routeDecision.reason}');
+            debugPrint('Navigating to: ${routeDecision.route}');
+            
+            Navigator.pushReplacementNamed(
+              context, 
+              routeDecision.route, 
+              arguments: routeDecision.arguments,
+            );
           } else if (state.hasError) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()

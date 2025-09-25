@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'document.dart';
 
 /// Driver status enum
 enum DriverStatus {
@@ -79,7 +80,7 @@ class DriverProfile extends Equatable {
   final DriverStatus driverStatus;
   
   // Document Status
-  final List<Document> documents;
+  final List<DriverDocument> documents;
   final DocumentVerificationStatus documentVerificationStatus;
   
   // System Managed (not input, backend controls)
@@ -123,7 +124,7 @@ class DriverProfile extends Equatable {
       
       // Document Status
       documents: (json['documents'] as List<dynamic>?)
-          ?.map((e) => Document.fromJson(e as Map<String, dynamic>))
+          ?.map((e) => DriverDocument.fromJson(e as Map<String, dynamic>))
           .toList() ?? [],
       documentVerificationStatus: DocumentVerificationStatus.values.firstWhere(
         (e) => e.name == json['documentVerificationStatus'],
@@ -210,7 +211,7 @@ class DriverProfile extends Equatable {
     DriverStatus? driverStatus,
     
     // Document Status
-    List<Document>? documents,
+    List<DriverDocument>? documents,
     DocumentVerificationStatus? documentVerificationStatus,
     
     // System Managed

@@ -10,6 +10,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  api_client:
+    path: ../api_client
+  localstorage:
+    path: ../localstorage
+  json_annotation: ^4.8.1
+  equatable: ^2.0.5
 
 dev_dependencies:
   flutter_test:

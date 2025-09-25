@@ -223,7 +223,7 @@ class RewardsRepo {
   /// Get cached achievements
   Future<List<Achievement>> getCachedAchievements() async {
     try {
-      final cached = await localStorage.getItem('cached_achievements');
+      final cached = localStorage.getString('cached_achievements');
       if (cached != null) {
         final List<dynamic> jsonList = jsonDecode(cached);
         return jsonList.map((json) => Achievement.fromJson(json as Map<String, dynamic>)).toList();
@@ -238,7 +238,7 @@ class RewardsRepo {
   Future<void> cacheAchievements(List<Achievement> achievements) async {
     try {
       final jsonList = achievements.map((a) => a.toJson()).toList();
-      await localStorage.setItem('cached_achievements', jsonEncode(jsonList));
+      localStorage.saveString('cached_achievements', jsonEncode(jsonList));
     } catch (e) {
       // Handle error silently
     }
@@ -247,7 +247,7 @@ class RewardsRepo {
   /// Get cached challenges
   Future<List<Challenge>> getCachedChallenges() async {
     try {
-      final cached = await localStorage.getItem('cached_challenges');
+      final cached = localStorage.getString('cached_challenges');
       if (cached != null) {
         final List<dynamic> jsonList = jsonDecode(cached);
         return jsonList.map((json) => Challenge.fromJson(json as Map<String, dynamic>)).toList();
@@ -262,7 +262,7 @@ class RewardsRepo {
   Future<void> cacheChallenges(List<Challenge> challenges) async {
     try {
       final jsonList = challenges.map((c) => c.toJson()).toList();
-      await localStorage.setItem('cached_challenges', jsonEncode(jsonList));
+      localStorage.saveString('cached_challenges', jsonEncode(jsonList));
     } catch (e) {
       // Handle error silently
     }
@@ -271,7 +271,7 @@ class RewardsRepo {
   /// Get cached driver progress
   Future<DriverProgress?> getCachedDriverProgress() async {
     try {
-      final cached = await localStorage.getItem('cached_driver_progress');
+      final cached = localStorage.getString('cached_driver_progress');
       if (cached != null) {
         final json = jsonDecode(cached) as Map<String, dynamic>;
         return DriverProgress.fromJson(json);
@@ -285,7 +285,7 @@ class RewardsRepo {
   /// Cache driver progress
   Future<void> cacheDriverProgress(DriverProgress progress) async {
     try {
-      await localStorage.setItem('cached_driver_progress', jsonEncode(progress.toJson()));
+      localStorage.saveString('cached_driver_progress', jsonEncode(progress.toJson()));
     } catch (e) {
       // Handle error silently
     }

@@ -1,87 +1,71 @@
 part of 'profile_bloc.dart';
 
-enum FirstNameValidationError { empty }
-
-class FirstName extends FormzInput<String, FirstNameValidationError> {
-  const FirstName.pure() : super.pure('');
-  const FirstName.dirty([super.value = '']) : super.dirty();
+/// Form input for name validation using Formz
+class NameInput extends FormzInput<String, String> {
+  const NameInput.pure() : super.pure('');
+  const NameInput.dirty([String value = '']) : super.dirty(value);
 
   @override
-  FirstNameValidationError? validator(String value) {
-    if (value.isEmpty) return FirstNameValidationError.empty;
+  String? validator(String value) {
+    if (value.isEmpty) return 'empty';
+    if (value.length < 2) return 'too_short';
+    if (value.length > 50) return 'too_long';
+    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) return 'invalid';
+    
     return null;
   }
-}
 
-enum LastNameValidationError { empty }
-
-class LastName extends FormzInput<String, LastNameValidationError> {
-  const LastName.pure() : super.pure('');
-  const LastName.dirty([super.value = '']) : super.dirty();
-
+  /// Returns a user-friendly error message
   @override
-  LastNameValidationError? validator(String value) {
-    if (value.isEmpty) return LastNameValidationError.empty;
-    return null;
-  }
-}
-
-enum EmailValidationError { invalid }
-
-class Email extends FormzInput<String, EmailValidationError> {
-  const Email.pure() : super.pure('');
-  const Email.dirty([super.value = '']) : super.dirty();
-
-  static final RegExp _emailRegExp = RegExp(
-    r'^[a-zA-Z0-9.!#$%&*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$',
-  );
-
-  @override
-  EmailValidationError? validator(String value) {
-    if (value.isNotEmpty && !_emailRegExp.hasMatch(value)) {
-      return EmailValidationError.invalid;
+  String? get displayError {
+    if (error == null) return null;
+    
+    switch (error) {
+      case 'empty':
+        return 'Full name is required';
+      case 'too_short':
+        return 'Name must be at least 2 characters';
+      case 'too_long':
+        return 'Name must be less than 50 characters';
+      case 'invalid':
+        return 'Please enter a valid name (letters and spaces only)';
+      default:
+        return 'Invalid name';
     }
-    return null;
   }
-}
 
-enum AlternativePhoneValidationError { invalid }
-
-class AlternativePhone extends FormzInput<String, AlternativePhoneValidationError> {
-  const AlternativePhone.pure() : super.pure('');
-  const AlternativePhone.dirty([super.value = '']) : super.dirty();
-
+  /// Returns true if the name is valid
   @override
-  AlternativePhoneValidationError? validator(String value) {
-    if (value.isNotEmpty && value.length < 10) {
-      return AlternativePhoneValidationError.invalid;
-    }
-    return null;
-  }
+  bool get isValid => error == null && value.isNotEmpty;
 }
 
 /// Profile state containing form data and submission status
 final class ProfileState extends Equatable {
   const ProfileState({
+    this.nameInput = const NameInput.pure(),
+    this.dateOfBirth,
+    this.gender,
+    this.profilePhoto,
     this.status = FormzSubmissionStatus.initial,
-    this.firstName = const FirstName.pure(),
-    this.lastName = const LastName.pure(),
-    this.email = const Email.pure(),
-    this.alternativePhone = const AlternativePhone.pure(),
-    this.phone = '',
+    this.routeDecision,
+    this.updatedProfile,
     this.errorMessage,
   });
 
+  final NameInput nameInput;
+  final DateTime? dateOfBirth;
+  final String? gender;
+  final String? profilePhoto;
   final FormzSubmissionStatus status;
-  final FirstName firstName;
-  final LastName lastName;
-  final Email email;
-  final AlternativePhone alternativePhone;
-  final String phone;
+  final RouteDecision? routeDecision;
+  final DriverProfile? updatedProfile;
   final String? errorMessage;
 
   /// Returns true if the form is valid and ready for submission
-  bool get isValid => Formz.validate([firstName, lastName, email, alternativePhone]);
+  bool get isValid => Formz.validate([nameInput]) && 
+                     dateOfBirth != null && 
+                     gender != null && 
+                     gender!.isNotEmpty;
 
   /// Returns true if the form is currently being submitted
   bool get isSubmitting => status == FormzSubmissionStatus.inProgress;
@@ -95,46 +79,65 @@ final class ProfileState extends Equatable {
   /// Returns true if there's an error
   bool get hasError => isFailure && errorMessage != null;
 
+  /// Returns the age based on date of birth
+  int? get age {
+    if (dateOfBirth == null) return null;
+    final now = DateTime.now();
+    int age = now.year - dateOfBirth!.year;
+    if (now.month < dateOfBirth!.month || 
+        (now.month == dateOfBirth!.month && now.day < dateOfBirth!.day)) {
+      age--;
+    }
+    return age;
+  }
+
+  /// Returns true if the user is of legal driving age (18+)
+  bool get isLegalDrivingAge => (age ?? 0) >= 18;
+
   ProfileState copyWith({
+    NameInput? nameInput,
+    DateTime? dateOfBirth,
+    String? gender,
+    String? profilePhoto,
     FormzSubmissionStatus? status,
-    FirstName? firstName,
-    LastName? lastName,
-    Email? email,
-    AlternativePhone? alternativePhone,
-    String? phone,
+    RouteDecision? routeDecision,
+    DriverProfile? updatedProfile,
     String? errorMessage,
   }) {
     return ProfileState(
+      nameInput: nameInput ?? this.nameInput,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      gender: gender ?? this.gender,
+      profilePhoto: profilePhoto ?? this.profilePhoto,
       status: status ?? this.status,
-      firstName: firstName ?? this.firstName,
-      lastName: lastName ?? this.lastName,
-      email: email ?? this.email,
-      alternativePhone: alternativePhone ?? this.alternativePhone,
-      phone: phone ?? this.phone,
+      routeDecision: routeDecision ?? this.routeDecision,
+      updatedProfile: updatedProfile ?? this.updatedProfile,
       errorMessage: errorMessage,
     );
   }
 
   @override
   List<Object?> get props => [
+        nameInput,
+        dateOfBirth,
+        gender,
+        profilePhoto,
         status,
-        firstName,
-        lastName,
-        email,
-        alternativePhone,
-        phone,
+        routeDecision,
+        updatedProfile,
         errorMessage,
       ];
 
   @override
   String toString() {
     return 'ProfileState('
+        'nameInput: $nameInput, '
+        'dateOfBirth: $dateOfBirth, '
+        'gender: $gender, '
+        'profilePhoto: $profilePhoto, '
         'status: $status, '
-        'firstName: $firstName, '
-        'lastName: $lastName, '
-        'email: $email, '
-        'alternativePhone: $alternativePhone, '
-        'phone: $phone, '
+        'routeDecision: $routeDecision, '
+        'updatedProfile: $updatedProfile, '
         'errorMessage: $errorMessage'
         ')';
   }

@@ -1,9 +1,11 @@
 import 'package:driver/services/socket_service.dart';
+import 'package:driver/services/location_service.dart';
 import 'package:driver_status/driver_status.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'dart:async';
 
 part 'driver_status_event.dart';
 part 'driver_status_state.dart';
@@ -19,10 +21,14 @@ class DriverStatusBloc extends Bloc<DriverStatusEvent, DriverStatusState> {
     on<DriverStatusSubmitted>(_onSubmitted);
     on<LocationUpdated>(_onLocationUpdated);
     on<MapControllerUpdated>(_onMapControllerUpdated);
+    on<StartLocationTracking>(_onStartLocationTracking);
+    on<StopLocationTracking>(_onStopLocationTracking);
   }
 
   final DriverStatusRepo driverStatusRepo;
   final SocketService socketService;
+  final LocationService _locationService = LocationService();
+  StreamSubscription<LatLng>? _locationSubscription;
 
   Future<void> _onInitialized(
     DriverStatusInitialized event,
@@ -31,6 +37,16 @@ class DriverStatusBloc extends Bloc<DriverStatusEvent, DriverStatusState> {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
 
     try {
+      // Initialize location service
+      final locationInitialized = await _locationService.initialize();
+      if (!locationInitialized) {
+        emit(state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: 'Location permission required',
+        ));
+        return;
+      }
+
       // Get initial driver status and dashboard data
       final statusResponse = await driverStatusRepo.getDriverStatus();
       final dashboardResponse = await driverStatusRepo.getDashboardData();
@@ -43,6 +59,9 @@ class DriverStatusBloc extends Bloc<DriverStatusEvent, DriverStatusState> {
           statusResponse.workArea?.name ?? ''
         );
 
+        // Get current location
+        final currentLocation = _locationService.currentLocation;
+
         emit(state.copyWith(
           status: FormzSubmissionStatus.success,
           driverStatus: driverStatus,
@@ -50,11 +69,15 @@ class DriverStatusBloc extends Bloc<DriverStatusEvent, DriverStatusState> {
           earningsToday: dashboardResponse.earningsToday ?? 0.0,
           tripsToday: dashboardResponse.tripsToday ?? 0,
           lastActiveAt: statusResponse.lastActiveAt,
+          currentLocation: currentLocation,
+          isLocationLoaded: currentLocation != null,
+          currentStatus: 'Loaded',
         ));
 
         // Initialize socket if driver is online
         if (statusResponse.status == DriverStatus.online) {
           socketService.connect();
+          add(const StartLocationTracking());
         }
       } else {
         emit(state.copyWith(
@@ -145,9 +168,26 @@ class DriverStatusBloc extends Bloc<DriverStatusEvent, DriverStatusState> {
         // Handle socket connection based on status
         if (statusEnum == DriverStatus.online) {
           socketService.connect();
-          add(const LocationUpdated());
+          add(const StartLocationTracking());
+          
+          // Join driver to work area if set
+          if (state.selectedWorkArea != null) {
+            socketService.joinDriverToArea(
+              state.selectedWorkArea!.id,
+              {
+                'latitude': state.currentLocation?.latitude ?? 0.0,
+                'longitude': state.currentLocation?.longitude ?? 0.0,
+              },
+            );
+          }
         } else {
           socketService.disconnect();
+          add(const StopLocationTracking());
+          
+          // Leave driver from work area
+          if (state.selectedWorkArea != null) {
+            socketService.leaveDriverFromArea(state.selectedWorkArea!.id);
+          }
         }
       } else {
         emit(state.copyWith(
@@ -184,4 +224,72 @@ class DriverStatusBloc extends Bloc<DriverStatusEvent, DriverStatusState> {
     ));
   }
 
+  Future<void> _onStartLocationTracking(
+    StartLocationTracking event,
+    Emitter<DriverStatusState> emit,
+  ) async {
+    try {
+      final success = await _locationService.startTracking();
+      if (success) {
+        // Listen to location updates
+        _locationSubscription?.cancel();
+        _locationSubscription = _locationService.locationStream.listen(
+          (location) {
+            // Update state with new location
+            add(LocationUpdated());
+            
+            // Send location to backend via socket
+            if (state.isOnline) {
+              socketService.updateDriverLocation({
+                'driverId': 'current_driver_id', // TODO: Get from auth
+                'latitude': location.latitude,
+                'longitude': location.longitude,
+                'timestamp': DateTime.now().toIso8601String(),
+                'status': 'online',
+              });
+            }
+          },
+        );
+        
+        emit(state.copyWith(
+          currentStatus: 'Location tracking started',
+          isLocationLoaded: true,
+        ));
+      } else {
+        emit(state.copyWith(
+          errorMessage: 'Failed to start location tracking',
+        ));
+      }
+    } catch (e) {
+      emit(state.copyWith(
+        errorMessage: 'Error starting location tracking: ${e.toString()}',
+      ));
+    }
+  }
+
+  Future<void> _onStopLocationTracking(
+    StopLocationTracking event,
+    Emitter<DriverStatusState> emit,
+  ) async {
+    try {
+      await _locationService.stopTracking();
+      _locationSubscription?.cancel();
+      _locationSubscription = null;
+      
+      emit(state.copyWith(
+        currentStatus: 'Location tracking stopped',
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        errorMessage: 'Error stopping location tracking: ${e.toString()}',
+      ));
+    }
+  }
+
+  @override
+  Future<void> close() {
+    _locationSubscription?.cancel();
+    _locationService.dispose();
+    return super.close();
+  }
 }

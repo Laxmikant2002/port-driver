@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../../../models/driver_profile.dart';
+import 'package:profile_repo/src/models/driver_profile.dart';
 
 /// Profile update data model for driver profile updates
 class ProfileUpdateData {
@@ -66,6 +66,69 @@ class ProfileResponse {
       );
 }
 
+/// Driver status enum for route decision making
+enum DriverStatus {
+  newUser,           // Completely new user - needs profile creation
+  profileIncomplete, // Profile exists but incomplete - needs profile completion
+  documentsPending,  // Profile complete but documents not uploaded/verified
+  documentsRejected, // Documents uploaded but rejected - needs resubmission
+  verified,          // Fully verified and ready to work
+  suspended,         // Account suspended
+  inactive,          // Account inactive
+}
+
+/// Driver status response model
+class DriverStatusResponse {
+  final bool success;
+  final String? message;
+  final DriverStatus status;
+  final DriverProfile? profile;
+  final List<String> missingRequirements;
+
+  const DriverStatusResponse({
+    required this.success,
+    this.message,
+    required this.status,
+    this.profile,
+    this.missingRequirements = const [],
+  });
+
+  factory DriverStatusResponse.fromJson(Map<String, dynamic> json) {
+    return DriverStatusResponse(
+      success: json['success'] as bool,
+      message: json['message'] as String?,
+      status: _parseDriverStatus(json['status'] as String),
+      profile: json['profile'] != null 
+          ? DriverProfile.fromJson(json['profile'] as Map<String, dynamic>) 
+          : null,
+      missingRequirements: (json['missingRequirements'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ?? [],
+    );
+  }
+
+  static DriverStatus _parseDriverStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'new_user':
+        return DriverStatus.newUser;
+      case 'profile_incomplete':
+        return DriverStatus.profileIncomplete;
+      case 'documents_pending':
+        return DriverStatus.documentsPending;
+      case 'documents_rejected':
+        return DriverStatus.documentsRejected;
+      case 'verified':
+        return DriverStatus.verified;
+      case 'suspended':
+        return DriverStatus.suspended;
+      case 'inactive':
+        return DriverStatus.inactive;
+      default:
+        return DriverStatus.newUser;
+    }
+  }
+}
+
 /// Profile repository for handling profile-related API calls
 class ProfileRepo {
   const ProfileRepo({
@@ -75,6 +138,33 @@ class ProfileRepo {
 
   final String baseUrl;
   final http.Client client;
+
+  /// Check driver status for route decision making
+  Future<DriverStatusResponse> checkDriverStatus(String phoneNumber) async {
+    try {
+      final response = await client.get(
+        Uri.parse('$baseUrl/driver/status/$phoneNumber'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        return DriverStatusResponse.fromJson(json);
+      } else {
+        return DriverStatusResponse(
+          success: false,
+          message: 'Failed to check driver status',
+          status: DriverStatus.newUser,
+        );
+      }
+    } catch (e) {
+      return DriverStatusResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+        status: DriverStatus.newUser,
+      );
+    }
+  }
 
   /// Get driver profile data
   Future<ProfileResponse> getDriverProfile(String driverId) async {

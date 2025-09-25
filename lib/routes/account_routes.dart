@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:driver/screens/account/profile/view/profile_screen.dart' as AccountProfile;
-import 'package:driver/screens/auth/profile/view/profile_screen.dart' as AuthProfile;
-import 'package:driver/screens/auth/language_choose/view/language_screen.dart';
-import 'package:driver/screens/auth/vehicle_selection/view/vehicle_screen.dart';
-import 'package:driver/screens/auth/work_location/view/work_screen.dart';
 import 'package:driver/screens/document_upload/views/document_upload_screen.dart';
 import 'package:driver/screens/document_upload/views/document_intro_screen.dart';
 import 'package:driver/screens/document_upload/views/document_review_screen.dart';
@@ -20,6 +16,8 @@ import 'package:driver/screens/setting_section/notification_settings/view/notifi
 import 'package:driver/screens/setting_section/privacy/view/privacy_screen.dart';
 import 'package:driver/screens/setting_section/support/view/support_screen.dart';
 import 'package:driver/screens/setting_section/faq/view/faq_screen.dart';
+import 'package:driver/screens/account_status/account_suspended_screen.dart';
+import 'package:driver/screens/account_status/account_inactive_screen.dart';
 import 'package:driver/models/document_upload.dart' as local_models;
 import 'package:driver/locator.dart';
 import 'package:history_repo/history_repo.dart';
@@ -30,10 +28,6 @@ import 'route_constants.dart';
 /// Account management routes for profile, documents, history, settings, and support
 class AccountRoutes {
   // Route constants
-  static const String profileCreation = RouteConstants.profileCreation;
-  static const String languageSelection = RouteConstants.languageSelection;
-  static const String vehicleSelection = RouteConstants.vehicleSelection;
-  static const String workLocation = RouteConstants.workLocation;
   static const String profile = RouteConstants.profile;
 
   // Document routes
@@ -81,17 +75,14 @@ class AccountRoutes {
   static const String contactUs = RouteConstants.contactUs;
   static const String emergency = RouteConstants.emergency;
 
+  // Account status routes
+  static const String accountSuspended = RouteConstants.accountSuspended;
+  static const String accountInactive = RouteConstants.accountInactive;
+
   /// Returns all account-related routes
   static Map<String, WidgetBuilder> getRoutes() {
     return {
-      // Profile routes
-      profileCreation: (context) {
-        final phone = ModalRoute.of(context)?.settings.arguments as String? ?? '';
-        return AuthProfile.ProfileScreen(phone: phone);
-      },
-      languageSelection: (context) => const LanguageScreen(),
-      vehicleSelection: (context) => const VehicleScreen(),
-      workLocation: (context) => const WorkLocationPage(),
+      // Profile routes (onboarding routes are now in AuthRoutes)
       profile: (context) => const AccountProfile.ProfileScreen(phoneNumber: '+1234567890'),
 
       // Document routes
@@ -287,6 +278,16 @@ class AccountRoutes {
       faq: (context) => const FaqScreen(),
       contactUs: (context) => const HelpSupportScreen(),
       emergency: (context) => const HelpSupportScreen(),
+
+      // Account status routes
+      accountSuspended: (context) {
+        final profile = ModalRoute.of(context)?.settings.arguments;
+        return AccountSuspendedScreen(profile: profile);
+      },
+      accountInactive: (context) {
+        final profile = ModalRoute.of(context)?.settings.arguments;
+        return AccountInactiveScreen(profile: profile);
+      },
     };
   }
 }

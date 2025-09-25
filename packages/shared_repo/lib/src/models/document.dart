@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 
-/// Document model for KYC/document verification
-class Document extends Equatable {
-  const Document({
+/// Driver document model for KYC/document verification
+class DriverDocument extends Equatable {
+  const DriverDocument({
     required this.type,
     required this.title,
     required this.description,
@@ -26,8 +26,8 @@ class Document extends Equatable {
   final String? rejectionReason;
   final bool isRecommendedNext;
 
-  factory Document.fromJson(Map<String, dynamic> json) {
-    return Document(
+  factory DriverDocument.fromJson(Map<String, dynamic> json) {
+    return DriverDocument(
       type: DocumentType.fromString(json['type'] as String),
       title: json['title'] as String,
       description: json['description'] as String,
@@ -56,7 +56,7 @@ class Document extends Equatable {
     };
   }
 
-  Document copyWith({
+  DriverDocument copyWith({
     DocumentType? type,
     String? title,
     String? description,
@@ -68,7 +68,7 @@ class Document extends Equatable {
     String? rejectionReason,
     bool? isRecommendedNext,
   }) {
-    return Document(
+    return DriverDocument(
       type: type ?? this.type,
       title: title ?? this.title,
       description: description ?? this.description,

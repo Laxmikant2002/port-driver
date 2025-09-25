@@ -16,7 +16,7 @@ void main() {
         'metadata': {'size': 1024},
       };
 
-      final document = Document.fromJson(json);
+      final document = DriverDocument.fromJson(json);
 
       expect(document.id, '1');
       expect(document.type, DocumentType.drivingLicense);
@@ -27,7 +27,7 @@ void main() {
     });
 
     test('should convert document to JSON', () {
-      final document = Document(
+      final document = DriverDocument(
         id: '1',
         type: DocumentType.drivingLicense,
         status: DocumentStatus.verified,

@@ -34,6 +34,7 @@ final class OtpState extends Equatable {
     this.errorMessage,
     this.canResend = true,
     this.resendTimer = 30,
+    this.routeDecision,
   });
 
   final OtpInput otpInput;
@@ -42,6 +43,7 @@ final class OtpState extends Equatable {
   final String? errorMessage;
   final bool canResend;
   final int resendTimer;
+  final RouteDecision? routeDecision;
 
   /// Returns true if the form is valid and ready for submission
   bool get isValid => Formz.validate([otpInput]);
@@ -65,6 +67,7 @@ final class OtpState extends Equatable {
     String? errorMessage,
     bool? canResend,
     int? resendTimer,
+    RouteDecision? routeDecision,
   }) =>
       OtpState(
         otpInput: otpInput ?? this.otpInput,
@@ -73,6 +76,7 @@ final class OtpState extends Equatable {
         errorMessage: errorMessage,
         canResend: canResend ?? this.canResend,
         resendTimer: resendTimer ?? this.resendTimer,
+        routeDecision: routeDecision ?? this.routeDecision,
       );
 
   @override
@@ -83,6 +87,7 @@ final class OtpState extends Equatable {
         errorMessage,
         canResend,
         resendTimer,
+        routeDecision,
       ];
 
   @override
@@ -93,7 +98,8 @@ final class OtpState extends Equatable {
         'user: $user, '
         'errorMessage: $errorMessage, '
         'canResend: $canResend, '
-        'resendTimer: $resendTimer'
+        'resendTimer: $resendTimer, '
+        'routeDecision: $routeDecision'
         ')';
   }
 }
