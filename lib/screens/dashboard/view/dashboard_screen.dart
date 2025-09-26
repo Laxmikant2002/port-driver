@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:driver/widgets/colors.dart';
 import 'package:driver/locator.dart';
 import 'package:driver/services/location_service.dart';
@@ -36,6 +37,7 @@ class _DashboardView extends StatefulWidget {
 class _DashboardViewState extends State<_DashboardView> with TickerProviderStateMixin {
   GoogleMapController? _mapController;
   final LocationService _locationService = LocationService();
+  final PanelController _panelController = PanelController();
   
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {};
@@ -44,9 +46,7 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
   
   // Animation controllers
   late AnimationController _pulseController;
-  late AnimationController _slideController;
   late Animation<double> _pulseAnimation;
-  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
@@ -61,11 +61,6 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
       vsync: this,
     )..repeat();
     
-    _slideController = AnimationController(
-      duration: DashboardConstants.slideAnimationDuration,
-      vsync: this,
-    );
-    
     _pulseAnimation = Tween<double>(
       begin: 0.8,
       end: 2.0,
@@ -73,16 +68,6 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
       parent: _pulseController,
       curve: Curves.easeOut,
     ));
-    
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.elasticOut,
-    ));
-    
-    _slideController.forward();
   }
 
   Future<void> _initializeLocation() async {
@@ -182,61 +167,56 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
     }
   }
 
-  void _navigateToHotspot(Map<String, dynamic> hotspot) {
-    // Show hotspot details and navigate
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _buildHotspotDetailSheet(hotspot),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          // Google Map (70% of screen)
-          GoogleMap(
-            onMapCreated: _onMapCreated,
-            initialCameraPosition: CameraPosition(
-              target: _currentLocation ?? const LatLng(
-                DashboardConstants.nandedLat, 
-                DashboardConstants.nandedLng
+      body: SlidingUpPanel(
+        controller: _panelController,
+        minHeight: 120, // Collapsed height
+        maxHeight: MediaQuery.of(context).size.height * 0.8, // 80% of screen when expanded
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+        parallaxEnabled: true,
+        parallaxOffset: 0.5,
+        body: Stack(
+          children: [
+            // Google Map (Full Screen Background)
+            GoogleMap(
+              onMapCreated: _onMapCreated,
+              initialCameraPosition: CameraPosition(
+                target: _currentLocation ?? const LatLng(
+                  DashboardConstants.nandedLat, 
+                  DashboardConstants.nandedLng
+                ),
+                zoom: DashboardConstants.defaultZoom,
               ),
-              zoom: DashboardConstants.defaultZoom,
+              markers: _markers,
+              polylines: _polylines,
+              myLocationEnabled: false,
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
+              compassEnabled: true,
+              trafficEnabled: true,
+              buildingsEnabled: true,
             ),
-            markers: _markers,
-            polylines: _polylines,
-            myLocationEnabled: false, // We'll use custom marker
-            myLocationButtonEnabled: false,
-            zoomControlsEnabled: false,
-            mapToolbarEnabled: false,
-            compassEnabled: true,
-            trafficEnabled: true, // Important for Indian traffic
-            buildingsEnabled: true,
-            onTap: (LatLng position) {
-              // Handle map taps for hotspot interactions
-            },
-          ),
-          
-          // Top Header (10% of screen)
-          _buildTopHeader(),
-          
-          // Driver Status Indicator with Pulse Animation
-          if (_currentLocation != null)
-            _buildPulseIndicator(),
-          
-          // Bottom Status Bar (20% of screen)
-          _buildBottomStatusBar(),
-          
-          // Floating Action Buttons
-          _buildFloatingActionButtons(),
-          
-          // Online/Offline Mode Overlay
-          _buildModeOverlay(),
-        ],
+            
+            // Top Header
+            _buildTopHeader(),
+            
+            // Driver Status Indicator with Pulse Animation
+            if (_currentLocation != null)
+              _buildPulseIndicator(),
+            
+            // Floating Action Buttons
+            _buildFloatingActionButtons(),
+          ],
+        ),
+        panelBuilder: (scrollController) => _buildBottomPanel(scrollController),
       ),
     );
   }
@@ -403,63 +383,64 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
     );
   }
 
-  Widget _buildBottomStatusBar() {
+  Widget _buildBottomPanel(ScrollController scrollController) {
     return BlocBuilder<DriverStatusBloc, DriverStatusState>(
       builder: (context, state) {
-        return SlideTransition(
-          position: _slideAnimation,
-          child: Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: MediaQuery.of(context).size.height * DashboardConstants.bottomBarHeightRatio,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  // Handle bar
-                  Container(
-                    margin: const EdgeInsets.only(top: 8),
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.border,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  
-                  // Status and Earnings
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: state.isOnline 
-                          ? _buildOnlineStatusContent(state)
-                          : _buildOfflineStatusContent(state),
-                    ),
-                  ),
-                ],
-              ),
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: ListView(
+            controller: scrollController,
+            padding: EdgeInsets.zero,
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 8, bottom: 8),
+                alignment: Alignment.center,
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              
+              // Collapsed content (always visible)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: state.isOnline 
+                    ? _buildOnlineCollapsedContent(state)
+                    : _buildOfflineCollapsedContent(state),
+              ),
+              
+              // Expanded content (visible when panel is expanded)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: _buildExpandedContent(state),
+              ),
+            ],
           ),
         );
       },
     );
   }
 
-  Widget _buildOnlineStatusContent(DriverStatusState state) {
+  // Collapsed content (always visible at bottom)
+  Widget _buildOnlineCollapsedContent(DriverStatusState state) {
     return Column(
       children: [
         // Online Status Row
@@ -477,7 +458,7 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
             Text(
               DashboardConstants.onlineStatusText,
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
               ),
@@ -486,57 +467,32 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
             Text(
               '2h 15m active',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 color: AppColors.textSecondary,
               ),
             ),
           ],
         ),
         
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         
-        // Earnings Row with modern design
+        // Earnings Row (compact for collapsed state)
         Row(
           children: [
             Expanded(
-              child: _buildEarningsCard(DashboardConstants.todaysEarningsTitle, '₹450', Icons.currency_rupee),
+              child: _buildCompactEarningsCard(DashboardConstants.todaysEarningsTitle, '₹450'),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildEarningsCard(DashboardConstants.tripsCompletedTitle, '8', Icons.delivery_dining),
+              child: _buildCompactEarningsCard(DashboardConstants.tripsCompletedTitle, '8'),
             ),
           ],
-        ),
-        
-        const SizedBox(height: 16),
-        
-        // Go Offline Button
-        SizedBox(
-          width: double.infinity,
-          height: 48,
-          child: ElevatedButton(
-            onPressed: () => _toggleOnlineStatus(false),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(
-              DashboardConstants.goOfflineButtonText,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
         ),
       ],
     );
   }
 
-  Widget _buildOfflineStatusContent(DriverStatusState state) {
+  Widget _buildOfflineCollapsedContent(DriverStatusState state) {
     return Column(
       children: [
         // Offline Status
@@ -554,7 +510,7 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
             Text(
               DashboardConstants.offlineStatusText,
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
               ),
@@ -564,92 +520,10 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
         
         const SizedBox(height: 8),
         
-        Text(
-          DashboardConstants.goOnlinePrompt,
-          style: TextStyle(
-            fontSize: 14,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        
-        const SizedBox(height: 16),
-        
-        // Hotspots Card with modern design
-        GestureDetector(
-          onTap: () {
-            // Navigate to first hotspot
-            final firstHotspot = DashboardConstants.hotspots.first;
-            _navigateToHotspot(firstHotspot);
-          },
-          child: Container(
-            padding: const EdgeInsets.all(DashboardConstants.compactPadding),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(DashboardConstants.borderRadius),
-              border: Border.all(
-                color: AppColors.primary.withOpacity(0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.local_fire_department,
-                    color: AppColors.primary,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        DashboardConstants.highDemandAreaTitle,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      Text(
-                        '${DashboardConstants.hotspots.first['name']} - ${DashboardConstants.hotspots.first['earning']} potential',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward_ios,
-                    color: AppColors.primary,
-                    size: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        
-        const SizedBox(height: 16),
-        
-        // Go Online Button
+        // Go Online Button (compact)
         SizedBox(
           width: double.infinity,
-          height: 48,
+          height: 44,
           child: ElevatedButton(
             onPressed: () => _toggleOnlineStatus(true),
             style: ElevatedButton.styleFrom(
@@ -659,19 +533,12 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.power_settings_new, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  DashboardConstants.goOnlineButtonText,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+            child: Text(
+              DashboardConstants.goOnlineButtonText,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ),
@@ -679,28 +546,293 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
     );
   }
 
-  Widget _buildEarningsCard(String title, String value, IconData icon) {
+  // Expanded content (visible when panel is swiped up)
+  Widget _buildExpandedContent(DriverStatusState state) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Active Delivery Section
+        if (state.isOnline) ...[
+          _buildSectionHeader('Active Delivery', Icons.local_shipping),
+          const SizedBox(height: 12),
+          _buildActiveDeliveryCard(),
+          const SizedBox(height: 24),
+        ],
+        
+        // Delivery History Section
+        _buildSectionHeader('Recent Deliveries', Icons.history),
+        const SizedBox(height: 12),
+        _buildDeliveryHistoryList(),
+        const SizedBox(height: 24),
+        
+        // Earnings Details Section
+        _buildSectionHeader('Today\'s Earnings', Icons.account_balance_wallet),
+        const SizedBox(height: 12),
+        _buildDetailedEarningsCards(),
+        const SizedBox(height: 24),
+        
+        // Action Buttons
+        if (state.isOnline) 
+          _buildOfflineButton()
+        else 
+          _buildOnlineButton(),
+        
+        const SizedBox(height: 20), // Bottom padding
+      ],
+    );
+  }
+
+  // Helper methods for the new panel design
+  Widget _buildCompactEarningsCard(String title, String value) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.border,
-        ),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         children: [
-          Icon(
-            icon,
-            color: AppColors.primary,
-            size: 24,
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 10,
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, color: AppColors.primary, size: 20),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActiveDeliveryCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.person, color: AppColors.primary, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                'Rajesh Kumar',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.green,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'On Route',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.location_on, color: AppColors.textSecondary, size: 14),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  'Pickup: Nanded Railway Station',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Icon(Icons.flag, color: AppColors.textSecondary, size: 14),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  'Drop: Aurangabad MIDC',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Text(
+                '₹180',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '12.5 km • 25 min',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeliveryHistoryList() {
+    return Column(
+      children: List.generate(3, (index) => _buildDeliveryHistoryItem(index)),
+    );
+  }
+
+  Widget _buildDeliveryHistoryItem(int index) {
+    final deliveries = [
+      {'customer': 'Priya Sharma', 'amount': '₹120', 'location': 'Nanded City → Hadgaon'},
+      {'customer': 'Amit Patil', 'amount': '₹95', 'location': 'SRTMU → Degloor'},
+      {'customer': 'Sunita Devi', 'amount': '₹150', 'location': 'Nanded Fort → Kinwat'},
+    ];
+    
+    final delivery = deliveries[index];
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.check_circle,
+              color: AppColors.primary,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  delivery['customer']!,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  delivery['location']!,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            delivery['amount']!,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailedEarningsCards() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildDetailedEarningsCard('Total Earnings', '₹450', Icons.account_balance_wallet),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildDetailedEarningsCard('Completed', '8 trips', Icons.delivery_dining),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDetailedEarningsCard(String title, String value, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: AppColors.primary, size: 24),
           const SizedBox(height: 8),
           Text(
             value,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),
@@ -718,9 +850,64 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
     );
   }
 
+  Widget _buildOfflineButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton(
+        onPressed: () => _toggleOnlineStatus(false),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: Text(
+          DashboardConstants.goOfflineButtonText,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOnlineButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton(
+        onPressed: () => _toggleOnlineStatus(true),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.power_settings_new, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              DashboardConstants.goOnlineButtonText,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildFloatingActionButtons() {
     return Positioned(
-      bottom: MediaQuery.of(context).size.height * (DashboardConstants.bottomBarHeightRatio + 0.05),
+      bottom: 140, // Position above the collapsed panel (120px + 20px margin)
       right: DashboardConstants.defaultPadding,
       child: Column(
         children: [
@@ -771,332 +958,15 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
     );
   }
 
-  Widget _buildModeOverlay() {
-    return BlocBuilder<DriverStatusBloc, DriverStatusState>(
-      builder: (context, state) {
-        if (state.isOnline) {
-          return const SizedBox.shrink();
-        }
-        
-        // Show hotspots overlay when offline
-        return Positioned(
-          top: MediaQuery.of(context).size.height * 0.3,
-          left: 16,
-          right: 16,
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.surface.withOpacity(0.95),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.trending_up,
-                      color: AppColors.primary,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Busy Areas Nearby',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-                
-                const SizedBox(height: 12),
-                
-                // Hotspot cards from constants
-                ...DashboardConstants.hotspots.take(3).map((hotspot) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: _buildHotspotCard(
-                    hotspot['name'] as String,
-                    hotspot['distance'] as String,
-                    hotspot['earning'] as String,
-                    hotspot,
-                  ),
-                )).toList(),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 
-  Widget _buildHotspotCard(String location, String distance, String earning, Map<String, dynamic> hotspot) {
-    final demand = hotspot['demand'] as String;
-    final surge = hotspot['surge'] as String;
-    final evCharging = hotspot['evCharging'] as bool;
-    final demandColor = Color(hotspot['color'] as int);
-    
-    return GestureDetector(
-      onTap: () => _navigateToHotspot(hotspot),
-      child: Container(
-        padding: const EdgeInsets.all(DashboardConstants.compactPadding),
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(DashboardConstants.borderRadius),
-          border: Border.all(
-            color: AppColors.border,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: demandColor.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Demand indicator
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                color: demandColor,
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          location,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                      if (surge != '1.0x')
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.orange.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            surge,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.orange,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Text(
-                        '$distance away • $earning potential',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      if (evCharging) ...[
-                        const SizedBox(width: 4),
-                        Icon(
-                          Icons.electric_bolt,
-                          size: 12,
-                          color: Colors.green,
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: demandColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Icon(
-                Icons.arrow_forward_ios,
-                color: demandColor,
-                size: 12,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildHotspotDetailSheet(Map<String, dynamic> hotspot) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.4,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
-      ),
-      child: Column(
-        children: [
-          // Handle bar
-          Container(
-            margin: const EdgeInsets.only(top: 8),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.border,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(DashboardConstants.defaultPadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Row(
-                    children: [
-                      Container(
-                        width: 16,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: Color(hotspot['color'] as int),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              hotspot['name'] as String,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            Text(
-                              hotspot['nameHindi'] as String,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Details
-                  _buildDetailRow(Icons.timer, 'Distance', hotspot['distance'] as String),
-                  _buildDetailRow(Icons.currency_rupee, 'Earning Potential', hotspot['earning'] as String),
-                  _buildDetailRow(Icons.trending_up, 'Demand Level', (hotspot['demand'] as String).toUpperCase()),
-                  if (hotspot['surge'] != '1.0x')
-                    _buildDetailRow(Icons.local_fire_department, 'Surge Multiplier', hotspot['surge'] as String),
-                  if (hotspot['evCharging'] as bool)
-                    _buildDetailRow(Icons.electric_bolt, 'EV Charging', 'Available'),
-                  
-                  const Spacer(),
-                  
-                  // Navigate button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        // TODO: Implement navigation to hotspot
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(hotspot['color'] as int),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(DashboardConstants.borderRadius),
-                        ),
-                      ),
-                      child: const Text(
-                        'Navigate to Area',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildDetailRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 20,
-            color: AppColors.textSecondary,
-          ),
-          const SizedBox(width: 12),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const Spacer(),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
+
 
   @override
   void dispose() {
     _pulseController.dispose();
-    _slideController.dispose();
     _locationService.dispose();
     super.dispose();
   }

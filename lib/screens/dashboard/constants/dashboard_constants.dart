@@ -38,96 +38,19 @@ class DashboardConstants {
   static const double cardBorderRadius = 20.0; // Even more rounded
   static const double avatarSize = 48.0; // Larger avatar
   static const double pulseIndicatorSize = 80.0; // Larger pulse effect
-  
-  // 🔥 Nanded Area Hotspots (High-demand delivery zones)
-  static const List<Map<String, dynamic>> hotspots = [
-    {
-      'name': 'Nanded City Center',
-      'nameHindi': 'नांदेड सिटी सेंटर',
-      'distance': '5 min',
-      'earning': '₹450/hr',
-      'demand': 'high',
-      'type': 'business',
-      'surge': '1.3x',
-      'color': 0xFFF59E0B, // Amber for high demand
-      'icon': 'business',
-      'evCharging': true,
-    },
-    {
-      'name': 'Mahur Road',
-      'nameHindi': 'महूर रोड',
-      'distance': '8 min', 
-      'earning': '₹400/hr',
-      'demand': 'high',
-      'type': 'residential',
-      'surge': '1.2x',
-      'color': 0xFF10B981, // Green for medium-high demand
-      'icon': 'home',
-      'evCharging': true,
-    },
-    {
-      'name': 'Airport Road',
-      'nameHindi': 'एयरपोर्ट रोड',
-      'distance': '12 min',
-      'earning': '₹500/hr', 
-      'demand': 'high',
-      'type': 'business',
-      'surge': '1.4x',
-      'color': 0xFFF59E0B, // Amber for high demand
-      'icon': 'business',
-      'evCharging': false,
-    },
-    {
-      'name': 'Vishnupuri',
-      'nameHindi': 'विष्णुपुरी',
-      'distance': '6 min',
-      'earning': '₹380/hr',
-      'demand': 'medium',
-      'type': 'residential',
-      'surge': '1.1x',
-      'color': 0xFF3B82F6, // Blue for tech areas
-      'icon': 'home',
-      'evCharging': true,
-    },
-    {
-      'name': 'Shivaji Nagar',
-      'nameHindi': 'शिवाजी नगर',
-      'distance': '4 min',
-      'earning': '₹420/hr',
-      'demand': 'medium',
-      'type': 'residential',
-      'surge': '1.0x',
-      'color': 0xFF10B981, // Green for medium demand
-      'icon': 'home',
-      'evCharging': false,
-    },
-    {
-      'name': 'Gandhi Chowk',
-      'nameHindi': 'गांधी चौक',
-      'distance': '3 min',
-      'earning': '₹350/hr',
-      'demand': 'medium',
-      'type': 'residential',
-      'surge': '1.0x',
-      'color': 0xFF10B981, // Green for medium demand
-      'icon': 'home',
-      'evCharging': true,
-    },
-  ];
+
   
   // Status messages (English)
   static const String onlineStatusText = 'You\'re Online';
   static const String offlineStatusText = 'You\'re Offline';
   static const String goOnlinePrompt = 'Ready to earn? Go online to start receiving delivery requests';
-  static const String busyAreasTitle = 'Busy Areas Nearby';
-  static const String highDemandAreaTitle = 'High Demand Area';
+
   
   // Status messages (Hindi)
   static const String onlineStatusTextHindi = 'आप ऑनलाइन हैं';
   static const String offlineStatusTextHindi = 'आप ऑफलाइन हैं';
   static const String goOnlinePromptHindi = 'कमाई के लिए तैयार? डिलीवरी रिक्वेस्ट पाने के लिए ऑनलाइन जाएं';
-  static const String busyAreasTitleHindi = 'पास में व्यस्त क्षेत्र';
-  static const String highDemandAreaTitleHindi = 'उच्च मांग वाला क्षेत्र';
+
   
   // Button texts (English)
   static const String goOnlineButtonText = 'Go Online';

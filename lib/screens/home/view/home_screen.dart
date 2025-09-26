@@ -79,9 +79,10 @@
 // }
 
 // ignore_for_file: lines_longer_than_80_chars
+import 'package:driver/screens/dashboard/view/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:driver/screens/account_screen/views/account_screen.dart';
-import 'package:driver/screens/booking_flow/Driver_Status/driver_status_screen.dart';
+import 'package:driver/screens/dashboard/view/dashboard_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
