@@ -400,7 +400,27 @@ class _BypassButton extends StatelessWidget {
       width: double.infinity,
       height: 48,
       child: ElevatedButton(
-        onPressed: () => Navigator.pushReplacementNamed(context, '/profile', arguments: phone),
+        onPressed: () {
+          // Navigate directly to profile screen with dummy user data
+          Navigator.pushReplacementNamed(
+            context, 
+            '/profile-creation',
+            arguments: {
+              'user': AuthUser(
+                id: 'test-user-id',
+                phone: phone,
+                name: 'Test User',
+                email: 'test@example.com',
+                isVerified: true,
+                isNewUser: true,
+                profileComplete: false,
+                documentVerified: false,
+              ),
+              'isNewUser': true,
+              'profile': null,
+            },
+          );
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.warning,
           shape: RoundedRectangleBorder(

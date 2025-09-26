@@ -3,7 +3,7 @@ import 'package:booking_repo/booking_repo.dart';
 import 'package:driver/screens/home/view/home_screen.dart';
 import 'package:driver/screens/booking_flow/Driver_Status/driver_status_screen.dart';
 import 'package:driver/screens/booking_flow/Ride_Progress/ride_progress_screen.dart';
-import 'package:driver/screens/booking_flow/Driver_Status/view/dashboard_screen.dart';
+import 'package:driver/screens/dashboard/view/dashboard_screen.dart' as modern_dashboard;
 import 'package:driver/screens/booking_flow/Driver_Status/view/work_area_selection_screen.dart';
 import 'package:driver/screens/booking_flow/Ride_Progress/view/incoming_ride_request_sheet.dart';
 import 'package:driver/screens/booking_flow/Ride_Progress/view/ride_detail_screen.dart';
@@ -36,10 +36,10 @@ class MainRoutes {
     return {
       // Driver status routes
       home: (context) => const HomeScreen(),
-      dashboard: (context) => const DashboardScreen(),
+      dashboard: (context) => const modern_dashboard.DashboardScreen(),
       workAreaSelection: (context) => const WorkAreaSelectionScreen(),
-      goOnline: (context) => const DashboardScreen(),
-      goOffline: (context) => const DashboardScreen(),
+      goOnline: (context) => const modern_dashboard.DashboardScreen(),
+      goOffline: (context) => const modern_dashboard.DashboardScreen(),
 
       // Booking routes
       incomingRideRequest: (context) {

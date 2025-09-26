@@ -41,9 +41,7 @@ enum DocumentType {
   bool get isRequired {
     return this == DocumentType.drivingLicense ||
            this == DocumentType.aadhaarCard ||
-           this == DocumentType.panCard ||
-           this == DocumentType.registrationCertificate ||
-           this == DocumentType.vehicleInsurance;
+           this == DocumentType.panCard;
   }
 
   /// Returns whether this document requires both front and back images
