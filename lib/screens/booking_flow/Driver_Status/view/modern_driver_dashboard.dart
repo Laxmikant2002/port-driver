@@ -294,6 +294,46 @@ class _ModernDriverDashboardState extends State<ModernDriverDashboard>
               ),
             ),
             
+            // Small Online/Offline Toggle Button
+            GestureDetector(
+              onTap: () => _toggleOnlineStatus(!state.isOnline),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                  color: state.isOnline ? AppColors.success : AppColors.error,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (state.isOnline ? AppColors.success : AppColors.error).withOpacity(0.3),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      state.isOnline ? Icons.stop : Icons.play_arrow,
+                      color: Colors.white,
+                      size: 12,
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      state.isOnline ? 'Off' : 'On',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(width: 8),
+            
             // Notification bell
             IconButton(
               onPressed: () {
@@ -329,6 +369,7 @@ class _ModernDriverDashboardState extends State<ModernDriverDashboard>
             ),
           ),
           const SizedBox(height: 12),
+          
           
           // Current location button
           FloatingActionButton(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
@@ -51,8 +52,22 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
   @override
   void initState() {
     super.initState();
+    _configureSystemUI();
     _initializeAnimations();
     _initializeLocation();
+  }
+
+  void _configureSystemUI() {
+    // Configure system UI overlay style for better visibility over dark map
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light, // White icons for dark background
+        statusBarBrightness: Brightness.dark, // For iOS
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+    );
   }
 
   void _initializeAnimations() {
@@ -172,17 +187,27 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SlidingUpPanel(
-        controller: _panelController,
-        minHeight: 120, // Collapsed height
-        maxHeight: MediaQuery.of(context).size.height * 0.8, // 80% of screen when expanded
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
+      body: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+          systemNavigationBarColor: Colors.transparent,
+          systemNavigationBarIconBrightness: Brightness.light,
         ),
-        parallaxEnabled: true,
-        parallaxOffset: 0.5,
-        body: Stack(
+        child: SlidingUpPanel(
+          controller: _panelController,
+          minHeight: 120, // Collapsed height
+          maxHeight: MediaQuery.of(context).size.height * 0.8, // 80% of screen when expanded
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+          parallaxEnabled: true,
+          parallaxOffset: 0.5,
+          body: Stack(
           children: [
             // Google Map (Full Screen Background)
             GoogleMap(
@@ -217,55 +242,91 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
           ],
         ),
         panelBuilder: (scrollController) => _buildBottomPanel(scrollController),
+        ),
       ),
     );
   }
 
   Widget _buildTopHeader() {
     return Positioned(
-      top: MediaQuery.of(context).padding.top,
+      top: 0,
       left: 0,
       right: 0,
       child: Container(
-        height: 80,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        height: MediaQuery.of(context).padding.top + 80,
+        padding: EdgeInsets.only(
+          top: MediaQuery.of(context).padding.top,
+          left: 16,
+          right: 16,
+          bottom: 8,
+        ),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.black.withOpacity(0.7),
+              Colors.black.withOpacity(0.85),
+              Colors.black.withOpacity(0.65),
+              Colors.black.withOpacity(0.35),
               Colors.transparent,
             ],
+            stops: const [0.0, 0.3, 0.7, 1.0],
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            // Profile Avatar
-            GestureDetector(
-              onTap: () {
-                // Navigate to profile
-              },
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+            // Online/Offline Toggle Button
+            BlocBuilder<DriverStatusBloc, DriverStatusState>(
+              builder: (context, state) {
+                return GestureDetector(
+                  onTap: () {
+                    _toggleOnlineStatus(!state.isOnline);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: state.isOnline ? Colors.green : Colors.red,
+                      borderRadius: BorderRadius.circular(22),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.person,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
-              ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          state.isOnline ? 'Online' : 'Offline',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
             
             const Spacer(),
@@ -966,6 +1027,17 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
 
   @override
   void dispose() {
+    // Reset system UI to default when leaving dashboard
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark, // Default dark icons
+        statusBarBrightness: Brightness.light, // For iOS
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+    );
+    
     _pulseController.dispose();
     _locationService.dispose();
     super.dispose();
