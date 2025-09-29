@@ -160,8 +160,8 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
     _mapController = controller;
     _isMapReady = true;
     
-    // Apply dark mode style for better night driving
-    controller.setMapStyle(DashboardConstants.darkMapStyle);
+  // Apply light mode style for white map background
+  controller.setMapStyle(DashboardConstants.lightMapStyle);
     
     if (_currentLocation != null) {
       _updateDriverLocation(_currentLocation!);

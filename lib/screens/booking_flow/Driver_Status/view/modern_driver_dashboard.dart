@@ -370,6 +370,18 @@ class _ModernDriverDashboardState extends State<ModernDriverDashboard>
           ),
           const SizedBox(height: 12),
           
+          // Test Booking Flow button (only show when online)
+          if (state.isOnline)
+            FloatingActionButton(
+              heroTag: 'test_booking',
+              backgroundColor: AppColors.cyan,
+              onPressed: () => _showTestFlowDialog(),
+              child: const Icon(
+                Icons.play_arrow,
+                color: Colors.white,
+              ),
+            ),
+          if (state.isOnline) const SizedBox(height: 12),
           
           // Current location button
           FloatingActionButton(
@@ -814,6 +826,115 @@ class _ModernDriverDashboardState extends State<ModernDriverDashboard>
             borderRadius: BorderRadius.circular(12),
           ),
         ),
+      ),
+    );
+  }
+
+  /// Test booking flow dialog
+  void _showTestFlowDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              Icons.play_arrow,
+              color: AppColors.cyan,
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Test Booking Flow',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'This will simulate the complete booking flow:\n\n'
+          '• Incoming ride request notification\n'
+          '• Ride acceptance flow\n'
+          '• Navigation screen\n'
+          '• Trip progress tracking\n'
+          '• Trip completion\n\n'
+          'Perfect for testing all screens and bottom sheets!',
+          style: TextStyle(
+            fontSize: 14,
+            color: AppColors.textSecondary,
+            height: 1.4,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.cyan, AppColors.primary],
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _startTestBookingFlow();
+              },
+              child: const Text(
+                'Start Test',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Start the test booking flow
+  void _startTestBookingFlow() {
+    // Simulate incoming ride request after a short delay
+    Future.delayed(const Duration(seconds: 1), () {
+      _simulateIncomingRequest();
+    });
+    
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              Icons.play_arrow,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            const Text('Test booking flow started!'),
+          ],
+        ),
+        backgroundColor: AppColors.cyan,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
