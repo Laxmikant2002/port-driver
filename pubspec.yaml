@@ -21,8 +21,6 @@ dependencies:
     path: ./packages/localstorage
   notifications_repo:
     path: ./packages/notifications_repo
-  booking_repo:
-    path: ./packages/booking_repo
   driver_status:
     path: ./packages/driver_status
   finance_repo:
@@ -31,10 +29,8 @@ dependencies:
     path: ./packages/history_repo
   shared_repo:
     path: ./packages/shared_repo
-  # ui_components:
-  #   path: ./packages/ui_components
-  rewards_repo:
-    path: ./packages/rewards_repo
+  vehicle_repo:
+    path: ./packages/vehicle_repo
   
   firebase_core: ^4.1.1
   firebase_messaging: ^16.0.2
@@ -53,6 +49,11 @@ dependencies:
   pinput: ^5.0.2
   shared_preferences: ^2.5.3
   formz: ^0.8.0
+  
+  # Modern dependencies for enhanced functionality
+  dio: ^5.7.0
+  dio_cache_interceptor: ^4.0.4
+  connectivity_plus: ^6.1.0
   #new
   geolocator: ^14.0.2
   google_maps_flutter: ^2.13.1

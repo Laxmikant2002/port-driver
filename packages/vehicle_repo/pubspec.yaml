@@ -1,5 +1,5 @@
-name: trip_repo
-description: "Comprehensive trip repository managing complete ride lifecycle (booking + trip + payments)."
+name: vehicle_repo
+description: "A new Flutter package project."
 version: 0.0.1
 homepage:
 
@@ -12,9 +12,6 @@ dependencies:
     sdk: flutter
   api_client:
     path: ../api_client
-  localstorage:
-    path: ../localstorage
-  json_annotation: ^4.8.1
   equatable: ^2.0.5
 
 dev_dependencies:

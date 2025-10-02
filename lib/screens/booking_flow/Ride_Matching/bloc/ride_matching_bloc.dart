@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:booking_repo/booking_repo.dart';
+import 'package:trip_repo/trip_repo.dart';
 import 'package:driver/widgets/colors.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
@@ -26,7 +26,7 @@ class RideMatchingBloc extends Bloc<RideMatchingEvent, RideMatchingState> {
     on<LocationUpdated>(_onLocationUpdated);
   }
 
-  final BookingRepo bookingRepo;
+  final TripRepo bookingRepo;
 
   Future<void> _onInitialized(
     RideMatchingInitialized event,

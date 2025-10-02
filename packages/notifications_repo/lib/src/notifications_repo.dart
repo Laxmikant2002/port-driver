@@ -1,17 +1,24 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:api_client/api_client.dart';
+import 'package:localstorage/localstorage.dart';
 import 'models/notification.dart';
 import 'models/notification_type.dart';
 import 'models/notification_priority.dart';
 import 'models/notification_response.dart';
 
-/// Repository for managing notifications
+/// Repository for managing notifications with modern architecture
 class NotificationsRepo {
-  NotificationsRepo({required SharedPreferences prefs}) : _prefs = prefs;
+  const NotificationsRepo({
+    required this.apiClient,
+    required this.localStorage,
+  });
 
-  final SharedPreferences _prefs;
+  final ApiClient apiClient;
+  final Localstorage localStorage;
+  
   static const String _notificationsKey = 'cached_notifications';
   static const String _settingsKey = 'notification_settings';
+  static const String _pushTokenKey = 'push_token';
 
   /// Get notifications with optional filtering
   Future<NotificationResponse> getNotifications({
@@ -21,41 +28,48 @@ class NotificationsRepo {
     bool? unreadOnly,
   }) async {
     try {
-      // In a real implementation, this would make an API call
-      // For now, we'll return cached notifications
+      // Build query parameters
+      final queryParams = <String, dynamic>{};
+      if (limit != null) queryParams['limit'] = limit;
+      if (offset != null) queryParams['offset'] = offset;
+      if (type != null) queryParams['type'] = type.name;
+      if (unreadOnly != null) queryParams['unreadOnly'] = unreadOnly;
+
+      final response = await apiClient.get<Map<String, dynamic>>(
+        NotificationsPaths.getNotifications,
+        queryParameters: queryParams,
+      );
+
+      if (response is DataSuccess) {
+        final data = response.data!;
+        final notifications = (data['notifications'] as List<dynamic>)
+            .map((json) => Notification.fromJson(json as Map<String, dynamic>))
+            .toList();
+        
+        // Cache notifications locally for offline access
+        await cacheNotifications(notifications);
+        
+        return NotificationResponse(
+          success: true,
+          notifications: notifications,
+          unreadCount: data['unreadCount'] as int? ?? 0,
+        );
+      } else {
+        // Fallback to cached notifications on API failure
+        final cachedNotifications = await getCachedNotifications();
+        return NotificationResponse(
+          success: true,
+          notifications: cachedNotifications,
+          unreadCount: cachedNotifications.where((n) => !n.isRead).length,
+        );
+      }
+    } catch (e) {
+      // Fallback to cached notifications on network error
       final cachedNotifications = await getCachedNotifications();
-      
-      List<Notification> filtered = List.from(cachedNotifications);
-      
-      // Apply filters
-      if (type != null) {
-        filtered = filtered.where((n) => n.type == type).toList();
-      }
-      
-      if (unreadOnly == true) {
-        filtered = filtered.where((n) => !n.isRead).toList();
-      }
-      
-      // Apply pagination
-      if (offset != null && offset > 0) {
-        filtered = filtered.skip(offset).toList();
-      }
-      
-      if (limit != null && limit > 0) {
-        filtered = filtered.take(limit).toList();
-      }
-      
-      final unreadCount = cachedNotifications.where((n) => !n.isRead).length;
-      
       return NotificationResponse(
         success: true,
-        notifications: filtered,
-        unreadCount: unreadCount,
-      );
-    } catch (e) {
-      return NotificationResponse(
-        success: false,
-        message: 'Failed to load notifications: $e',
+        notifications: cachedNotifications,
+        unreadCount: cachedNotifications.where((n) => !n.isRead).length,
       );
     }
   }
@@ -63,21 +77,32 @@ class NotificationsRepo {
   /// Mark a notification as read
   Future<NotificationResponse> markAsRead(String notificationId) async {
     try {
-      final notifications = await getCachedNotifications();
-      final updatedNotifications = notifications.map((notification) {
-        if (notification.id == notificationId) {
-          return notification.copyWith(isRead: true);
-        }
-        return notification;
-      }).toList();
-      
-      await cacheNotifications(updatedNotifications);
-      
-      return const NotificationResponse(success: true);
+      final response = await apiClient.post<Map<String, dynamic>>(
+        '${NotificationsPaths.markAsRead}/$notificationId',
+      );
+
+      if (response is DataSuccess) {
+        // Update local cache
+        final notifications = await getCachedNotifications();
+        final updatedNotifications = notifications.map((notification) {
+          if (notification.id == notificationId) {
+            return notification.copyWith(isRead: true);
+          }
+          return notification;
+        }).toList();
+        await cacheNotifications(updatedNotifications);
+        
+        return const NotificationResponse(success: true);
+      } else {
+        return NotificationResponse(
+          success: false,
+          message: 'Failed to mark notification as read',
+        );
+      }
     } catch (e) {
       return NotificationResponse(
         success: false,
-        message: 'Failed to mark notification as read: $e',
+        message: 'Network error: ${e.toString()}',
       );
     }
   }
@@ -85,18 +110,29 @@ class NotificationsRepo {
   /// Mark all notifications as read
   Future<NotificationResponse> markAllAsRead() async {
     try {
-      final notifications = await getCachedNotifications();
-      final updatedNotifications = notifications.map((notification) {
-        return notification.copyWith(isRead: true);
-      }).toList();
-      
-      await cacheNotifications(updatedNotifications);
-      
-      return const NotificationResponse(success: true);
+      final response = await apiClient.post<Map<String, dynamic>>(
+        NotificationsPaths.markAllAsRead,
+      );
+
+      if (response is DataSuccess) {
+        // Update local cache
+        final notifications = await getCachedNotifications();
+        final updatedNotifications = notifications.map((notification) {
+          return notification.copyWith(isRead: true);
+        }).toList();
+        await cacheNotifications(updatedNotifications);
+        
+        return const NotificationResponse(success: true);
+      } else {
+        return NotificationResponse(
+          success: false,
+          message: 'Failed to mark all notifications as read',
+        );
+      }
     } catch (e) {
       return NotificationResponse(
         success: false,
-        message: 'Failed to mark all notifications as read: $e',
+        message: 'Network error: ${e.toString()}',
       );
     }
   }
@@ -104,18 +140,29 @@ class NotificationsRepo {
   /// Delete a notification
   Future<NotificationResponse> deleteNotification(String notificationId) async {
     try {
-      final notifications = await getCachedNotifications();
-      final updatedNotifications = notifications
-          .where((notification) => notification.id != notificationId)
-          .toList();
-      
-      await cacheNotifications(updatedNotifications);
-      
-      return const NotificationResponse(success: true);
+      final response = await apiClient.delete<Map<String, dynamic>>(
+        '${NotificationsPaths.deleteNotification}/$notificationId',
+      );
+
+      if (response is DataSuccess) {
+        // Update local cache
+        final notifications = await getCachedNotifications();
+        final updatedNotifications = notifications
+            .where((notification) => notification.id != notificationId)
+            .toList();
+        await cacheNotifications(updatedNotifications);
+        
+        return const NotificationResponse(success: true);
+      } else {
+        return NotificationResponse(
+          success: false,
+          message: 'Failed to delete notification',
+        );
+      }
     } catch (e) {
       return NotificationResponse(
         success: false,
-        message: 'Failed to delete notification: $e',
+        message: 'Network error: ${e.toString()}',
       );
     }
   }
@@ -123,14 +170,136 @@ class NotificationsRepo {
   /// Delete all notifications
   Future<NotificationResponse> deleteAllNotifications() async {
     try {
-      await _prefs.remove(_notificationsKey);
-      
-      return const NotificationResponse(success: true);
+      final response = await apiClient.delete<Map<String, dynamic>>(
+        NotificationsPaths.deleteAllNotifications,
+      );
+
+      if (response is DataSuccess) {
+        // Clear local cache
+        await localStorage.remove(_notificationsKey);
+        
+        return const NotificationResponse(success: true);
+      } else {
+        return NotificationResponse(
+          success: false,
+          message: 'Failed to delete all notifications',
+        );
+      }
     } catch (e) {
       return NotificationResponse(
         success: false,
-        message: 'Failed to delete all notifications: $e',
+        message: 'Network error: ${e.toString()}',
       );
+    }
+  }
+
+  /// Get unread notification count
+  Future<int> getUnreadCount() async {
+    try {
+      final response = await apiClient.get<Map<String, dynamic>>(
+        NotificationsPaths.getUnreadCount,
+      );
+
+      if (response is DataSuccess) {
+        return response.data!['unreadCount'] as int? ?? 0;
+      } else {
+        // Fallback to cached count
+        final cachedNotifications = await getCachedNotifications();
+        return cachedNotifications.where((n) => !n.isRead).length;
+      }
+    } catch (e) {
+      // Fallback to cached count
+      final cachedNotifications = await getCachedNotifications();
+      return cachedNotifications.where((n) => !n.isRead).length;
+    }
+  }
+
+  /// Update push token for notifications
+  Future<bool> updatePushToken(String pushToken) async {
+    try {
+      final response = await apiClient.post<Map<String, dynamic>>(
+        NotificationsPaths.updatePushToken,
+        data: {'pushToken': pushToken},
+      );
+
+      if (response is DataSuccess) {
+        // Store token locally
+        await localStorage.saveString(_pushTokenKey, pushToken);
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Get notification preferences
+  Future<Map<String, dynamic>> getNotificationPreferences() async {
+    try {
+      final response = await apiClient.get<Map<String, dynamic>>(
+        NotificationsPaths.getNotificationPreferences,
+      );
+
+      if (response is DataSuccess) {
+        return response.data!;
+      } else {
+        return _getDefaultSettings();
+      }
+    } catch (e) {
+      return _getDefaultSettings();
+    }
+  }
+
+  /// Update notification preferences
+  Future<bool> updateNotificationPreferences(Map<String, dynamic> preferences) async {
+    try {
+      final response = await apiClient.put<Map<String, dynamic>>(
+        NotificationsPaths.updateNotificationPreferences,
+        data: preferences,
+      );
+
+      if (response is DataSuccess) {
+        // Update local cache
+        await localStorage.saveString(_settingsKey, jsonEncode(preferences));
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Get notification history
+  Future<List<Notification>> getNotificationHistory({
+    int? limit,
+    int? offset,
+    DateTime? fromDate,
+    DateTime? toDate,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (limit != null) queryParams['limit'] = limit;
+      if (offset != null) queryParams['offset'] = offset;
+      if (fromDate != null) queryParams['fromDate'] = fromDate.toIso8601String();
+      if (toDate != null) queryParams['toDate'] = toDate.toIso8601String();
+
+      final response = await apiClient.get<Map<String, dynamic>>(
+        NotificationsPaths.getNotificationHistory,
+        queryParameters: queryParams,
+      );
+
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return (data['notifications'] as List<dynamic>)
+            .map((json) => Notification.fromJson(json as Map<String, dynamic>))
+            .toList();
+      } else {
+        return [];
+      }
+    } catch (e) {
+      return [];
     }
   }
 
@@ -138,7 +307,7 @@ class NotificationsRepo {
   Future<void> cacheNotifications(List<Notification> notifications) async {
     try {
       final jsonList = notifications.map((n) => _notificationToJson(n)).toList();
-      await _prefs.setString(_notificationsKey, jsonEncode(jsonList));
+      await localStorage.saveString(_notificationsKey, jsonEncode(jsonList));
     } catch (e) {
       // Handle error silently for caching
     }
@@ -147,7 +316,7 @@ class NotificationsRepo {
   /// Get cached notifications
   Future<List<Notification>> getCachedNotifications() async {
     try {
-      final jsonString = _prefs.getString(_notificationsKey);
+      final jsonString = localStorage.getString(_notificationsKey);
       if (jsonString == null) {
         return _getSampleNotifications();
       }
@@ -162,7 +331,7 @@ class NotificationsRepo {
   /// Save notification settings
   Future<bool> saveNotificationSettings(Map<String, dynamic> settings) async {
     try {
-      await _prefs.setString(_settingsKey, jsonEncode(settings));
+      await localStorage.saveString(_settingsKey, jsonEncode(settings));
       return true;
     } catch (e) {
       return false;
@@ -172,7 +341,7 @@ class NotificationsRepo {
   /// Get notification settings
   Future<Map<String, dynamic>> getNotificationSettings() async {
     try {
-      final jsonString = _prefs.getString(_settingsKey);
+      final jsonString = localStorage.getString(_settingsKey);
       if (jsonString == null) {
         return _getDefaultSettings();
       }

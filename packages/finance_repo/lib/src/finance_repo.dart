@@ -1,5 +1,4 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:api_client/api_client.dart';
 import 'package:localstorage/localstorage.dart';
 import 'models/transaction.dart';
 import 'models/wallet_response.dart';
@@ -9,29 +8,20 @@ import 'models/payment.dart';
 /// Finance repository for managing driver wallet and transactions
 class FinanceRepo {
   const FinanceRepo({
-    required this.baseUrl,
-    required this.client,
+    required this.apiClient,
     required this.localStorage,
   });
 
-  final String baseUrl;
-  final http.Client client;
+  final ApiClient apiClient;
   final Localstorage localStorage;
 
   /// Get wallet balance
   Future<WalletResponse> getWalletBalance() async {
     try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/finance/wallet/balance'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
-      );
+      final response = await apiClient.get<Map<String, dynamic>>(FinancePaths.getWalletBalance);
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return WalletResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return WalletResponse.fromJson(response.data!);
       } else {
         return WalletResponse(
           success: false,
@@ -64,19 +54,13 @@ class FinanceRepo {
       if (startDate != null) queryParams['startDate'] = startDate.toIso8601String();
       if (endDate != null) queryParams['endDate'] = endDate.toIso8601String();
 
-      final uri = Uri.parse('$baseUrl/finance/transactions').replace(queryParameters: queryParams);
-      
-      final response = await client.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
+      final response = await apiClient.get<Map<String, dynamic>>(
+        FinancePaths.getTransactions,
+        queryParameters: queryParams,
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return WalletResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return WalletResponse.fromJson(response.data!);
       } else {
         return WalletResponse(
           success: false,
@@ -167,19 +151,13 @@ class FinanceRepo {
       if (startDate != null) queryParams['startDate'] = startDate.toIso8601String();
       if (endDate != null) queryParams['endDate'] = endDate.toIso8601String();
 
-      final uri = Uri.parse('$baseUrl/finance/earnings').replace(queryParameters: queryParams);
-      
-      final response = await client.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
+      final response = await apiClient.get<Map<String, dynamic>>(
+        FinancePaths.getEarningsSummary,
+        queryParameters: queryParams,
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return WalletResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return WalletResponse.fromJson(response.data!);
       } else {
         return WalletResponse(
           success: false,

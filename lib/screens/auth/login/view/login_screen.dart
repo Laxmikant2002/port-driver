@@ -221,8 +221,6 @@ class _BottomCard extends StatelessWidget {
               },
             ),
             const SizedBox(height: 16),
-            // Temporary testing button - remove when backend is connected
-            const _TestingButton(),
           ],
         ),
       ),
@@ -334,48 +332,6 @@ class _ContinueButton extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-// Temporary testing button - Remove when backend is connected
-class _TestingButton extends StatelessWidget {
-  const _TestingButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 48,
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
-      ),
-      child: TextButton.icon(
-        onPressed: () {
-          // Navigate directly to OTP screen with a dummy phone number
-          Navigator.pushNamed(context, AuthRoutes.otp, arguments: '9876543210');
-        },
-        icon: const Icon(
-          Icons.bug_report_outlined,
-          color: Colors.grey,
-          size: 18,
-        ),
-        label: const Text(
-          'Skip to OTP (Testing Only)',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey,
-          ),
-        ),
-        style: TextButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
     );
   }
 }

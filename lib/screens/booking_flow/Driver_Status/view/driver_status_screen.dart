@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:booking_repo/booking_repo.dart';
+import 'package:trip_repo/trip_repo.dart';
 import 'package:driver/locator.dart';
 import 'package:driver/services/socket_service.dart';
 import 'package:driver_status/driver_status.dart';
@@ -27,7 +27,7 @@ class RideScreen extends StatelessWidget {
         ),
         BlocProvider(
           create: (context) => RideMatchingBloc(
-            bookingRepo: lc<BookingRepo>(),
+            bookingRepo: lc<TripRepo>(),
           )..add(const RideMatchingInitialized()),
         ),
       ],

@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:finance_repo/finance_repo.dart' hide PaymentStatus;
-import 'package:booking_repo/booking_repo.dart' hide Booking;
+import 'package:trip_repo/trip_repo.dart' hide Booking;
 import 'package:driver/models/driver_earnings.dart';
 import 'package:driver/models/booking.dart';
 import 'package:equatable/equatable.dart';
@@ -23,7 +23,7 @@ class EarningsBloc extends Bloc<EarningsEvent, EarningsState> {
   }
 
   final FinanceRepo financeRepo;
-  final BookingRepo bookingRepo;
+  final TripRepo bookingRepo;
 
   Future<void> _onInitialized(
     EarningsInitialized event,

@@ -7,7 +7,7 @@ import 'package:driver/services/location_service.dart';
 import 'package:driver/services/google_map_services.dart';
 import 'package:driver/widgets/colors.dart';
 import 'package:driver/widgets/ui_components/ui_components.dart';
-import 'package:booking_repo/booking_repo.dart';
+import 'package:trip_repo/trip_repo.dart';
 
 class TripProgressScreen extends StatefulWidget {
   const TripProgressScreen({super.key});
@@ -216,7 +216,7 @@ class _TripProgressScreenState extends State<TripProgressScreen> {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => BookingBloc(
-        bookingRepo: lc<BookingRepo>(),
+        bookingRepo: lc<TripRepo>(),
       )..add(const BookingInitialized()),
       child: Scaffold(
         body: BlocListener<BookingBloc, BookingState>(

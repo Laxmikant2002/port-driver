@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:driver/screens/auth/auth_check_screen.dart';
 import 'package:driver/screens/auth/login/login.dart';
 import 'package:driver/screens/auth/otp/view/otp_screen.dart';
 import 'package:driver/screens/auth/profile/view/profile_screen.dart';
@@ -33,8 +34,9 @@ class AuthRoutes {
   /// Returns all authentication and onboarding routes
   static Map<String, WidgetBuilder> getRoutes() {
     return {
-      // Authentication flow
-      login: (context) => const LoginScreen(),
+      // Authentication flow - AuthCheckScreen is now the initial route
+      login: (context) => const AuthCheckScreen(),
+      '/login': (context) => const LoginScreen(), // Direct login route
       otp: (context) => const OtpScreen(),
       
       // Onboarding flow

@@ -6,6 +6,7 @@ import 'package:equatable/equatable.dart';
 import 'package:auth_repo/auth_repo.dart';
 import 'package:profile_repo/profile_repo.dart';
 import 'package:driver/services/route_flow_service.dart';
+import 'package:driver/app/bloc/auth_bloc.dart';
 
 part 'otp_event.dart';
 part 'otp_state.dart';
@@ -16,6 +17,7 @@ class OtpBloc extends Bloc<OtpEvent, OtpState> {
     required this.authRepo,
     required this.profileRepo,
     required this.phone,
+    this.authBloc,
   }) : super(const OtpState()) {
     on<OtpChanged>(_onOtpChanged);
     on<OtpSubmitted>(_onOtpSubmitted);
@@ -26,6 +28,7 @@ class OtpBloc extends Bloc<OtpEvent, OtpState> {
   final AuthRepo authRepo;
   final ProfileRepo profileRepo;
   final String phone;
+  final AuthBloc? authBloc;
   Timer? _resendTimer;
 
   /// Handles OTP input changes
@@ -64,6 +67,9 @@ class OtpBloc extends Bloc<OtpEvent, OtpState> {
       final response = await authRepo.verifyOtp(state.otpInput.value);
       
       if (response.success && response.user != null) {
+        // Notify AuthBloc about successful login
+        authBloc?.add(const AuthLoginRequested());
+        
         // After successful OTP verification, determine the next route
         final routeDecision = await RouteFlowService.determineInitialRoute(
           user: response.user!,

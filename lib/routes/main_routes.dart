@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:booking_repo/booking_repo.dart';
+import 'package:trip_repo/trip_repo.dart';
 import 'package:driver/screens/home/view/home_screen.dart';
 import 'package:driver/screens/booking_flow/Driver_Status/driver_status_screen.dart';
 import 'package:driver/screens/booking_flow/Ride_Progress/ride_progress_screen.dart';
