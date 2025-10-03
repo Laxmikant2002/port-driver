@@ -1,6 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:driver/services/core/service_interface.dart';
 
+// Re-export types from other files for convenience
+export 'performance_monitor.dart';
+export 'developer_mode_service.dart';
+export 'route_flow_service.dart';
+
 /// {@template performance_service_interface}
 /// Interface for performance monitoring operations.
 /// {@endtemplate}
@@ -248,7 +253,4 @@ class SystemServiceError extends ServiceError {
   });
 }
 
-// Re-export types from other files for convenience
-export 'performance_monitor.dart';
-export 'developer_mode_service.dart';
-export 'route_flow_service.dart';
+// Note: Re-exports moved to top of file to avoid directive placement errors

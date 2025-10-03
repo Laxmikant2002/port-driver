@@ -155,16 +155,16 @@ class TripHistoryService {
       driverId: trip.driverId,
       status: _convertTripStatus(trip.status),
       pickupLocation: local_models.BookingLocation(
-        address: trip.startLocation.address,
+        address: trip.startLocation.address ?? '',
         latitude: trip.startLocation.latitude,
         longitude: trip.startLocation.longitude,
-        landmark: trip.startLocation.landmark,
+        landmark: null, // TripLocation doesn't have landmark
       ),
       dropoffLocation: local_models.BookingLocation(
-        address: trip.endLocation.address,
+        address: trip.endLocation.address ?? '',
         latitude: trip.endLocation.latitude,
         longitude: trip.endLocation.longitude,
-        landmark: trip.endLocation.landmark,
+        landmark: null, // TripLocation doesn't have landmark
       ),
       fare: trip.fare,
       distance: trip.distance,
@@ -191,8 +191,8 @@ class TripHistoryService {
       commission: trip.fare * 0.15, // 15% commission
       distanceKm: trip.distance,
       durationMinutes: trip.duration,
-      pickupAddress: trip.startLocation.address,
-      dropoffAddress: trip.endLocation.address,
+      pickupAddress: trip.startLocation.address ?? '',
+      dropoffAddress: trip.endLocation.address ?? '',
       customerName: trip.passengerName ?? 'Unknown Passenger',
     );
   }
@@ -200,11 +200,7 @@ class TripHistoryService {
   /// Convert trip_repo.TripStatus to local_models.BookingStatus
   local_models.BookingStatus _convertTripStatus(trip_repo.TripStatus status) {
     switch (status) {
-      case trip_repo.TripStatus.pending:
-        return local_models.BookingStatus.pending;
-      case trip_repo.TripStatus.accepted:
-        return local_models.BookingStatus.accepted;
-      case trip_repo.TripStatus.started:
+      case trip_repo.TripStatus.active:
         return local_models.BookingStatus.started;
       case trip_repo.TripStatus.completed:
         return local_models.BookingStatus.completed;
@@ -226,6 +222,8 @@ class TripHistoryService {
         return local_models.PaymentMode.wallet;
       case null:
         return local_models.PaymentMode.cash;
+      default:
+        return local_models.PaymentMode.cash;
     }
   }
 
@@ -236,9 +234,7 @@ class TripHistoryService {
         return local_models.PaymentStatus.completed;
       case trip_repo.TripStatus.cancelled:
         return local_models.PaymentStatus.failed;
-      case trip_repo.TripStatus.pending:
-      case trip_repo.TripStatus.accepted:
-      case trip_repo.TripStatus.started:
+      case trip_repo.TripStatus.active:
         return local_models.PaymentStatus.pending;
     }
   }

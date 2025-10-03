@@ -10,6 +10,7 @@
 export 'system_service.dart';
 
 // Individual system services
-export 'performance_monitor.dart';
+// Note: performance_monitor.dart export commented out due to PerformanceMetric type conflict
+// export 'performance_monitor.dart';
 export 'developer_mode_service.dart';
 export 'route_flow_service.dart';

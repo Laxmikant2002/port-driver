@@ -58,10 +58,10 @@ final class UnifiedEarningsRewardsState extends Equatable {
   List<local_models.Booking> get cashTrips => earningsData?.cashTrips ?? [];
 
   /// Returns achievements if available
-  List<Achievement> get achievements => rewardsData?.achievements ?? [];
+  List<rewards_repo.Achievement> get achievements => rewardsData?.achievements ?? [];
 
   /// Returns challenges if available
-  List<Challenge> get challenges => rewardsData?.challenges ?? [];
+  List<rewards_repo.Challenge> get challenges => rewardsData?.challenges ?? [];
 
   /// Returns driver progress if available
   DriverProgress? get driverProgress => rewardsData?.driverProgress;
@@ -92,36 +92,24 @@ final class UnifiedEarningsRewardsState extends Equatable {
       .fold(0.0, (sum, trip) => sum + trip.amount);
 
   /// Returns unlocked achievements
-  List<Achievement> get unlockedAchievements => 
+  List<rewards_repo.Achievement> get unlockedAchievements => 
       achievements.where((a) => a.isUnlocked).toList();
 
-  /// Returns in-progress achievements
-  List<Achievement> get inProgressAchievements => 
-      achievements.where((a) => a.isInProgress).toList();
-
-  /// Returns locked achievements
-  List<Achievement> get lockedAchievements => 
-      achievements.where((a) => a.isLocked).toList();
-
-  /// Returns active challenges
-  List<Challenge> get activeChallenges => 
-      challenges.where((c) => c.isActive).toList();
+  /// Returns locked achievements (not unlocked)
+  List<rewards_repo.Achievement> get lockedAchievements => 
+      achievements.where((a) => !a.isUnlocked).toList();
 
   /// Returns completed challenges
-  List<Challenge> get completedChallenges => 
+  List<rewards_repo.Challenge> get completedChallenges => 
       challenges.where((c) => c.isCompleted).toList();
 
-  /// Returns daily challenges
-  List<Challenge> get dailyChallenges => 
-      challenges.where((c) => c.duration == ChallengeDuration.daily).toList();
+  /// Returns active challenges (not completed and not expired)
+  List<rewards_repo.Challenge> get activeChallenges => 
+      challenges.where((c) => !c.isCompleted && c.endDate.isAfter(DateTime.now())).toList();
 
-  /// Returns weekly challenges
-  List<Challenge> get weeklyChallenges => 
-      challenges.where((c) => c.duration == ChallengeDuration.weekly).toList();
-
-  /// Returns monthly challenges
-  List<Challenge> get monthlyChallenges => 
-      challenges.where((c) => c.duration == ChallengeDuration.monthly).toList();
+  /// Returns expired challenges
+  List<rewards_repo.Challenge> get expiredChallenges => 
+      challenges.where((c) => !c.isCompleted && c.endDate.isBefore(DateTime.now())).toList();
 
   /// Returns current tab name
   String get currentTabName {

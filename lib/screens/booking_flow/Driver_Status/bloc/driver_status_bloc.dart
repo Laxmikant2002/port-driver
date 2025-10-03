@@ -1,5 +1,5 @@
-import 'package:driver/services/socket_service.dart';
-import 'package:driver/services/location_service.dart';
+import 'package:driver/services/network/socket_service.dart';
+import 'package:driver/services/location/location_service.dart';
 import 'package:driver_status/driver_status.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,8 +38,8 @@ class DriverStatusBloc extends Bloc<DriverStatusEvent, DriverStatusState> {
 
     try {
       // Initialize location service
-      final locationInitialized = await _locationService.initialize();
-      if (!locationInitialized) {
+      await _locationService.initialize();
+      if (!_locationService.isInitialized) {
         emit(state.copyWith(
           status: FormzSubmissionStatus.failure,
           errorMessage: 'Location permission required',
@@ -229,8 +229,8 @@ class DriverStatusBloc extends Bloc<DriverStatusEvent, DriverStatusState> {
     Emitter<DriverStatusState> emit,
   ) async {
     try {
-      final success = await _locationService.startTracking();
-      if (success) {
+      final result = await _locationService.startTracking();
+      if (result.isSuccess) {
         // Listen to location updates
         _locationSubscription?.cancel();
         _locationSubscription = _locationService.locationStream.listen(

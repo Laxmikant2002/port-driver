@@ -4,6 +4,10 @@ import 'package:documents_repo/src/models/document_upload_request.dart' as docum
 import 'package:driver/core/error/document_upload_error.dart';
 import 'package:driver/models/document_upload.dart' as local_models;
 import 'package:driver/services/core/service_interface.dart';
+import 'package:driver/services/document/document_quality_validator.dart';
+import 'package:driver/services/document/document_expiry_tracker.dart';
+import 'package:driver/services/document/document_backup_service.dart';
+import 'package:driver/services/document/document_verification_monitor.dart';
 
 /// {@template document_service_interface}
 /// Interface for document-related operations.
@@ -183,9 +187,3 @@ class DocumentServiceModule {
   };
 }
 
-// Re-export types from other files for convenience
-export 'document_upload_service.dart';
-export 'document_quality_validator.dart';
-export 'document_expiry_tracker.dart';
-export 'document_backup_service.dart';
-export 'document_verification_monitor.dart';

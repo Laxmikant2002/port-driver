@@ -6,6 +6,10 @@ import 'package:notifications_repo/notifications_repo.dart' as notification_repo
 import 'package:localstorage/localstorage.dart';
 import 'package:driver/services/core/service_interface.dart';
 
+// Re-export types from other files for convenience
+export 'notification_service.dart';
+export 'notification_preferences_service.dart';
+
 /// {@template notification_service_interface}
 /// Interface for notification operations.
 /// {@endtemplate}
@@ -218,7 +222,3 @@ class NotificationServiceError extends ServiceError {
     super.details,
   });
 }
-
-// Re-export types from other files for convenience
-export 'notification_service.dart';
-export 'notification_preferences_service.dart';

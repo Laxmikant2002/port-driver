@@ -1,4 +1,4 @@
-part of 'notification_settings_bloc.dart';
+part of 'notification_bloc.dart';
 
 /// Base class for all Notification events
 sealed class NotificationEvent extends Equatable {

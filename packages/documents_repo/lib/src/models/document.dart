@@ -13,6 +13,7 @@ class DriverDocument extends Equatable {
     this.uploadedAt,
     this.verifiedAt,
     this.rejectedReason,
+    this.expiryDate,
     this.metadata,
   });
 
@@ -26,6 +27,7 @@ class DriverDocument extends Equatable {
   final DateTime? uploadedAt;
   final DateTime? verifiedAt;
   final String? rejectedReason;
+  final DateTime? expiryDate;
   final Map<String, dynamic>? metadata;
 
   factory DriverDocument.fromJson(Map<String, dynamic> json) {
@@ -44,6 +46,9 @@ class DriverDocument extends Equatable {
           ? DateTime.parse(json['verifiedAt'] as String) 
           : null,
       rejectedReason: json['rejectedReason'] as String?,
+      expiryDate: json['expiryDate'] != null 
+          ? DateTime.parse(json['expiryDate'] as String) 
+          : null,
       metadata: json['metadata'] as Map<String, dynamic>?,
     );
   }
@@ -60,6 +65,7 @@ class DriverDocument extends Equatable {
       'uploadedAt': uploadedAt?.toIso8601String(),
       'verifiedAt': verifiedAt?.toIso8601String(),
       'rejectedReason': rejectedReason,
+      'expiryDate': expiryDate?.toIso8601String(),
       'metadata': metadata,
     };
   }
@@ -75,6 +81,7 @@ class DriverDocument extends Equatable {
     DateTime? uploadedAt,
     DateTime? verifiedAt,
     String? rejectedReason,
+    DateTime? expiryDate,
     Map<String, dynamic>? metadata,
   }) {
     return DriverDocument(
@@ -88,6 +95,7 @@ class DriverDocument extends Equatable {
       uploadedAt: uploadedAt ?? this.uploadedAt,
       verifiedAt: verifiedAt ?? this.verifiedAt,
       rejectedReason: rejectedReason ?? this.rejectedReason,
+      expiryDate: expiryDate ?? this.expiryDate,
       metadata: metadata ?? this.metadata,
     );
   }
@@ -104,6 +112,7 @@ class DriverDocument extends Equatable {
         uploadedAt,
         verifiedAt,
         rejectedReason,
+        expiryDate,
         metadata,
       ];
 

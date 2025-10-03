@@ -29,7 +29,7 @@ abstract class DocumentUploadError extends Equatable {
 /// {@endtemplate}
 class FileNotFoundError extends DocumentUploadError {
   /// {@macro file_not_found_error}
-  const FileNotFoundError({
+  FileNotFoundError({
     required String filePath,
   }) : super(
           message: 'File not found: $filePath',
@@ -43,7 +43,7 @@ class FileNotFoundError extends DocumentUploadError {
 /// {@endtemplate}
 class FileSizeError extends DocumentUploadError {
   /// {@macro file_size_error}
-  const FileSizeError({
+  FileSizeError({
     required int actualSize,
     required int maxSize,
   }) : super(
@@ -58,7 +58,7 @@ class FileSizeError extends DocumentUploadError {
 /// {@endtemplate}
 class FileFormatError extends DocumentUploadError {
   /// {@macro file_format_error}
-  const FileFormatError({
+  FileFormatError({
     required String fileName,
     required List<String> supportedFormats,
   }) : super(
@@ -73,7 +73,7 @@ class FileFormatError extends DocumentUploadError {
 /// {@endtemplate}
 class NetworkError extends DocumentUploadError {
   /// {@macro network_error}
-  const NetworkError({
+  NetworkError({
     required String message,
     this.statusCode,
   }) : super(
@@ -91,7 +91,7 @@ class NetworkError extends DocumentUploadError {
 /// {@endtemplate}
 class UploadFailedError extends DocumentUploadError {
   /// {@macro upload_failed_error}
-  const UploadFailedError({
+  UploadFailedError({
     required String message,
     this.retryable = true,
   }) : super(
@@ -109,7 +109,7 @@ class UploadFailedError extends DocumentUploadError {
 /// {@endtemplate}
 class ValidationError extends DocumentUploadError {
   /// {@macro validation_error}
-  const ValidationError({
+  ValidationError({
     required String message,
     required String field,
   }) : super(
@@ -155,7 +155,7 @@ class DocumentUploadErrorHandler {
     }
 
     if (exception.toString().contains('File not found')) {
-      return const FileNotFoundError(filePath: 'unknown');
+      return FileNotFoundError(filePath: 'unknown');
     }
 
     if (exception.toString().contains('network') || 

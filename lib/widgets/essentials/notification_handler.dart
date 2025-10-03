@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:notifications_repo/notifications_repo.dart' as notification_repo;
-import 'package:driver/services/notification_service.dart';
+// import 'package:driver/services/notification_service.dart'; // Removed - using notifications_repo instead
 import 'package:driver/routes/main_routes.dart';
 import 'package:driver/routes/account_routes.dart';
 
@@ -19,14 +19,14 @@ class NotificationHandler extends StatefulWidget {
 }
 
 class _NotificationHandlerState extends State<NotificationHandler> {
-  final NotificationService _notificationService = NotificationService();
+  // final NotificationService _notificationService = NotificationService(); // Removed - using notifications_repo instead
   StreamSubscription<notification_repo.Notification>? _notificationSubscription;
   OverlayEntry? _overlayEntry;
 
   @override
   void initState() {
     super.initState();
-    _notificationSubscription = _notificationService.notificationStream.listen(_handleNotification);
+    // _notificationSubscription = _notificationService.notificationStream.listen(_handleNotification); // Removed - using notifications_repo instead
   }
 
   @override
@@ -37,8 +37,12 @@ class _NotificationHandlerState extends State<NotificationHandler> {
   }
 
   void _handleNotification(notification_repo.Notification notification) {
-    if (notification.type.shouldShowPopup && mounted) {
-      _showNotificationPopup(notification);
+    // Check if notification should show popup based on priority
+    if (notification.priority == notification_repo.NotificationPriority.high || 
+        notification.priority == notification_repo.NotificationPriority.urgent) {
+      if (mounted) {
+        _showNotificationPopup(notification);
+      }
     }
   }
 
@@ -78,29 +82,28 @@ class _NotificationHandlerState extends State<NotificationHandler> {
     final context = this.context;
     
     switch (notification.type) {
-      case notification_repo.NotificationType.newRideRequest:
-      case notification_repo.NotificationType.bookingConfirmed:
-      case notification_repo.NotificationType.bookingCancelled:
+      case notification_repo.NotificationType.ride:
         // Navigate to rides screen
         Navigator.pushNamed(context, MainRoutes.dashboard);
         break;
-      case notification_repo.NotificationType.documentApproved:
-      case notification_repo.NotificationType.documentRejected:
-        // Navigate to documents screen
-        Navigator.pushNamed(context, AccountRoutes.documentIntro);
-        break;
-      case notification_repo.NotificationType.paymentReceived:
-      case notification_repo.NotificationType.weeklyPayoutCredited:
+      case notification_repo.NotificationType.payment:
         // Navigate to wallet screen
         Navigator.pushNamed(context, AccountRoutes.wallet);
         break;
-      case notification_repo.NotificationType.vehicleAssignmentChanged:
-        // Navigate to profile screen
-        Navigator.pushNamed(context, AccountRoutes.profile);
-        break;
-      default:
+      case notification_repo.NotificationType.system:
         // Navigate to notification settings screen
         Navigator.pushNamed(context, AccountRoutes.notificationSettings);
+        break;
+      case notification_repo.NotificationType.emergency:
+        // Navigate to emergency screen or show alert
+        Navigator.pushNamed(context, AccountRoutes.emergency);
+        break;
+      case notification_repo.NotificationType.promotion:
+      case notification_repo.NotificationType.maintenance:
+      case notification_repo.NotificationType.support:
+      default:
+        // Navigate to notifications screen
+        Navigator.pushNamed(context, AccountRoutes.notifications);
         break;
     }
   }
@@ -243,24 +246,20 @@ class _NotificationPopupState extends State<_NotificationPopup>
 
   Color _getNotificationColor() {
     switch (widget.notification.type) {
-      case notification_repo.NotificationType.newRideRequest:
+      case notification_repo.NotificationType.ride:
         return Colors.blue;
-      case notification_repo.NotificationType.bookingConfirmed:
+      case notification_repo.NotificationType.payment:
         return Colors.green;
-      case notification_repo.NotificationType.bookingCancelled:
-        return Colors.red;
-      case notification_repo.NotificationType.paymentReceived:
-      case notification_repo.NotificationType.weeklyPayoutCredited:
-        return Colors.green;
-      case notification_repo.NotificationType.documentApproved:
-        return Colors.green;
-      case notification_repo.NotificationType.documentRejected:
-        return Colors.red;
-      case notification_repo.NotificationType.penaltyWarning:
-      case notification_repo.NotificationType.suspensionWarning:
-        return Colors.orange;
+      case notification_repo.NotificationType.system:
+        return Colors.grey;
       case notification_repo.NotificationType.emergency:
         return Colors.red;
+      case notification_repo.NotificationType.promotion:
+        return Colors.orange;
+      case notification_repo.NotificationType.maintenance:
+        return Colors.amber;
+      case notification_repo.NotificationType.support:
+        return Colors.cyan;
       default:
         return Colors.grey;
     }
@@ -276,47 +275,22 @@ class _NotificationPopupState extends State<_NotificationPopup>
 
   IconData _getNotificationIcon() {
     switch (widget.notification.type) {
-      case notification_repo.NotificationType.newRideRequest:
-        return Icons.directions_car;
-      case notification_repo.NotificationType.bookingConfirmed:
-        return Icons.check_circle;
-      case notification_repo.NotificationType.bookingCancelled:
-        return Icons.cancel;
-      case notification_repo.NotificationType.pickupReminder:
-        return Icons.access_time;
-      case notification_repo.NotificationType.documentApproved:
-        return Icons.verified;
-      case notification_repo.NotificationType.documentRejected:
-        return Icons.error;
-      case notification_repo.NotificationType.vehicleAssignmentChanged:
-        return Icons.directions_car;
-      case notification_repo.NotificationType.paymentReceived:
-      case notification_repo.NotificationType.weeklyPayoutCredited:
-        return Icons.account_balance_wallet;
-      case notification_repo.NotificationType.appUpdate:
-        return Icons.system_update;
-      case notification_repo.NotificationType.policyUpdate:
-        return Icons.policy;
-      case notification_repo.NotificationType.workAreaUpdate:
-        return Icons.location_on;
-      case notification_repo.NotificationType.penaltyWarning:
-        return Icons.warning;
-      case notification_repo.NotificationType.suspensionWarning:
-        return Icons.block;
-      case notification_repo.NotificationType.emergency:
-        return Icons.emergency;
-      case notification_repo.NotificationType.system:
-        return Icons.settings;
       case notification_repo.NotificationType.ride:
         return Icons.directions_car;
       case notification_repo.NotificationType.payment:
         return Icons.payment;
+      case notification_repo.NotificationType.system:
+        return Icons.settings;
+      case notification_repo.NotificationType.emergency:
+        return Icons.emergency;
       case notification_repo.NotificationType.promotion:
         return Icons.local_offer;
       case notification_repo.NotificationType.maintenance:
         return Icons.build;
       case notification_repo.NotificationType.support:
         return Icons.support_agent;
+      default:
+        return Icons.notifications;
     }
   }
 }

@@ -5,7 +5,9 @@ import 'package:finance_repo/finance_repo.dart';
 import 'package:driver/core/error/error_handler.dart';
 import 'package:driver/core/extensions/extensions.dart';
 import 'package:driver/services/earnings/unified_earnings_rewards_service.dart';
+import 'package:driver/services/earnings/earnings_service.dart';
 import 'package:driver/models/booking.dart' as local_models;
+import 'package:rewards_repo/rewards_repo.dart' as rewards_repo;
 
 part 'unified_earnings_rewards_event.dart';
 part 'unified_earnings_rewards_state.dart';

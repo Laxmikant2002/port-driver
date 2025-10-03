@@ -1,5 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:rewards_repo/rewards_repo.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:rewards_repo/rewards_repo.dart' as rewards_repo;
 import 'package:driver/services/services.dart';
 import 'package:driver/locator.dart';
 
@@ -37,21 +38,21 @@ class RewardsNotificationService {
   }
 
   /// Show achievement unlocked notification
-  Future<void> showAchievementUnlockedNotification(Achievement achievement) async {
+  Future<void> showAchievementUnlockedNotification(rewards_repo.Achievement achievement) async {
     await _showNotification(
       id: achievement.id.hashCode,
       title: '🎉 Achievement Unlocked!',
-      body: 'You unlocked "${achievement.title}" - ${achievement.description}',
+      body: 'You unlocked "${achievement.name}" - ${achievement.description}',
       payload: 'achievement:${achievement.id}',
     );
   }
 
   /// Show challenge completed notification
-  Future<void> showChallengeCompletedNotification(Challenge challenge) async {
+  Future<void> showChallengeCompletedNotification(rewards_repo.Challenge challenge) async {
     await _showNotification(
       id: challenge.id.hashCode,
       title: '🏆 Challenge Completed!',
-      body: 'You completed "${challenge.title}" - Claim your reward!',
+      body: 'You completed "${challenge.name}" - Claim your reward!',
       payload: 'challenge:${challenge.id}',
     );
   }
@@ -77,21 +78,21 @@ class RewardsNotificationService {
   }
 
   /// Show daily challenge notification
-  Future<void> showDailyChallengeNotification(Challenge challenge) async {
+  Future<void> showDailyChallengeNotification(rewards_repo.Challenge challenge) async {
     await _showNotification(
       id: challenge.id.hashCode + 1000, // Offset to avoid conflicts
       title: '📅 Daily Challenge',
-      body: 'New daily challenge: "${challenge.title}"',
+      body: 'New daily challenge: "${challenge.name}"',
       payload: 'dailychallenge:${challenge.id}',
     );
   }
 
   /// Show weekly challenge notification
-  Future<void> showWeeklyChallengeNotification(Challenge challenge) async {
+  Future<void> showWeeklyChallengeNotification(rewards_repo.Challenge challenge) async {
     await _showNotification(
       id: challenge.id.hashCode + 2000, // Offset to avoid conflicts
       title: '📆 Weekly Challenge',
-      body: 'New weekly challenge: "${challenge.title}"',
+      body: 'New weekly challenge: "${challenge.name}"',
       payload: 'weeklychallenge:${challenge.id}',
     );
   }
@@ -117,22 +118,22 @@ class RewardsNotificationService {
   }
 
   /// Show reminder notification for incomplete challenges
-  Future<void> showChallengeReminderNotification(Challenge challenge) async {
+  Future<void> showChallengeReminderNotification(rewards_repo.Challenge challenge) async {
     await _showNotification(
       id: challenge.id.hashCode + 3000, // Offset to avoid conflicts
       title: '⏰ Challenge Reminder',
-      body: 'Don\'t forget: "${challenge.title}" expires soon!',
+      body: 'Don\'t forget: "${challenge.name}" expires soon!',
       payload: 'reminder:${challenge.id}',
     );
   }
 
   /// Show achievement progress notification
-  Future<void> showAchievementProgressNotification(Achievement achievement, double progress) async {
+  Future<void> showAchievementProgressNotification(rewards_repo.Achievement achievement, double progress) async {
     final progressPercent = (progress * 100).toInt();
     await _showNotification(
       id: achievement.id.hashCode + 4000, // Offset to avoid conflicts
       title: '📈 Achievement Progress',
-      body: '${achievement.title}: $progressPercent% complete!',
+      body: '${achievement.name}: $progressPercent% complete!',
       payload: 'progress:${achievement.id}',
     );
   }
@@ -164,7 +165,6 @@ class RewardsNotificationService {
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
@@ -185,7 +185,6 @@ class RewardsNotificationService {
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
@@ -201,12 +200,11 @@ class RewardsNotificationService {
           'streak_reminders',
           'Streak Reminders',
           channelDescription: 'Reminders to maintain your streak',
-          importance: Importance.medium,
-          priority: Priority.medium,
+          importance: Importance.defaultImportance,
+          priority: Priority.defaultPriority,
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
@@ -316,9 +314,9 @@ class RewardsNotificationService {
   }
 
   /// Helper method to get next instance of time
-  TZDateTime _nextInstanceOfTime(int hour, int minute) {
-    final now = TZDateTime.now(TZLocal());
-    var scheduledDate = TZDateTime(TZLocal(), now.year, now.month, now.day, hour, minute);
+  tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
@@ -326,9 +324,9 @@ class RewardsNotificationService {
   }
 
   /// Helper method to get next instance of weekday
-  TZDateTime _nextInstanceOfWeekday(int weekday, int hour, int minute) {
-    final now = TZDateTime.now(TZLocal());
-    var scheduledDate = TZDateTime(TZLocal(), now.year, now.month, now.day, hour, minute);
+  tz.TZDateTime _nextInstanceOfWeekday(int weekday, int hour, int minute) {
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
     while (scheduledDate.weekday != weekday) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
@@ -344,12 +342,12 @@ extension RewardsNotificationExtension on UnifiedEarningsRewardsService {
   /// Check for new achievements and show notifications
   Future<void> checkAndNotifyAchievements() async {
     try {
-      final rewardsData = await _getRewardsData();
+      final rewardsData = await getRewardsData();
       final notificationService = RewardsNotificationService();
       
       // Check for newly unlocked achievements
       for (final achievement in rewardsData.achievements) {
-        if (achievement.isUnlocked && achievement.reward > 0) {
+        if (achievement.isUnlocked && (achievement.rewardAmount ?? 0) > 0) {
           await notificationService.showAchievementUnlockedNotification(achievement);
         }
       }
@@ -361,12 +359,12 @@ extension RewardsNotificationExtension on UnifiedEarningsRewardsService {
   /// Check for completed challenges and show notifications
   Future<void> checkAndNotifyChallenges() async {
     try {
-      final rewardsData = await _getRewardsData();
+      final rewardsData = await getRewardsData();
       final notificationService = RewardsNotificationService();
       
       // Check for completed challenges
       for (final challenge in rewardsData.challenges) {
-        if (challenge.isCompleted && challenge.reward > 0) {
+        if (challenge.isCompleted && (challenge.rewardAmount ?? 0) > 0) {
           await notificationService.showChallengeCompletedNotification(challenge);
         }
       }
@@ -378,7 +376,7 @@ extension RewardsNotificationExtension on UnifiedEarningsRewardsService {
   /// Check for level up and show notification
   Future<void> checkAndNotifyLevelUp() async {
     try {
-      final rewardsData = await _getRewardsData();
+      final rewardsData = await getRewardsData();
       final notificationService = RewardsNotificationService();
       
       if (rewardsData.driverProgress?.canLevelUp == true) {
@@ -395,7 +393,7 @@ extension RewardsNotificationExtension on UnifiedEarningsRewardsService {
   /// Check for streak milestones and show notification
   Future<void> checkAndNotifyStreakMilestones() async {
     try {
-      final rewardsData = await _getRewardsData();
+      final rewardsData = await getRewardsData();
       final notificationService = RewardsNotificationService();
       
       final currentStreak = rewardsData.driverProgress?.currentStreak ?? 0;

@@ -5,7 +5,7 @@ import 'package:formz/formz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:auth_repo/auth_repo.dart';
 import 'package:profile_repo/profile_repo.dart';
-import 'package:driver/services/route_flow_service.dart';
+import 'package:driver/services/system/route_flow_service.dart';
 import 'package:driver/app/bloc/auth_bloc.dart';
 
 part 'otp_event.dart';

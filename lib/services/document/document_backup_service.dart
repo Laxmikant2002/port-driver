@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
@@ -104,7 +105,7 @@ class DocumentBackupService {
 
       // Save backup metadata
       final metadataFile = File(path.join(documentBackupDir.path, 'metadata.json'));
-      await metadataFile.writeAsString(backupInfo.toJson());
+      await metadataFile.writeAsString(jsonEncode(backupInfo.toJson()));
 
       return BackupResult.success(backupInfo: backupInfo);
     } catch (e) {
@@ -117,7 +118,7 @@ class DocumentBackupService {
     try {
       // This would typically use http package to download the image
       // For now, we'll just return the original path
-      final fileName = '$prefix_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final fileName = 'backup_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final localPath = path.join(backupDir.path, fileName);
       
       // In a real implementation, you would download the image here
@@ -313,7 +314,7 @@ class DocumentBackupService {
   /// Saves sync info
   Future<void> _saveSyncInfo(DocumentSyncInfo syncInfo) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('sync_${syncInfo.documentId}', syncInfo.toJson());
+    await prefs.setString('sync_${syncInfo.documentId}', jsonEncode(syncInfo.toJson()));
   }
 
   /// Gets backup info for a document

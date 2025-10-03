@@ -7,6 +7,7 @@ import 'package:driver/models/booking.dart' as local_models;
 import 'package:finance_repo/finance_repo.dart';
 import 'package:driver/screens/account/unified_earnings_rewards/bloc/unified_earnings_rewards_bloc.dart';
 import 'package:formz/formz.dart';
+import 'package:rewards_repo/rewards_repo.dart' as rewards_repo;
 
 /// Unified screen that combines earnings and rewards functionality
 /// This replaces the separate EarningsScreen and RewardsScreen
@@ -911,7 +912,7 @@ class _UnifiedEarningsRewardsViewState extends State<UnifiedEarningsRewardsView>
     );
   }
 
-  Widget _buildAchievementItem(BuildContext context, Achievement achievement) {
+  Widget _buildAchievementItem(BuildContext context, rewards_repo.Achievement achievement) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -944,7 +945,7 @@ class _UnifiedEarningsRewardsViewState extends State<UnifiedEarningsRewardsView>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  achievement.title,
+                  achievement.name,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -964,7 +965,7 @@ class _UnifiedEarningsRewardsViewState extends State<UnifiedEarningsRewardsView>
           ),
           if (achievement.isUnlocked)
             Text(
-              '${achievement.reward}',
+              '${achievement.rewardAmount ?? 0}',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -1012,7 +1013,7 @@ class _UnifiedEarningsRewardsViewState extends State<UnifiedEarningsRewardsView>
     );
   }
 
-  Widget _buildChallengeItem(BuildContext context, Challenge challenge) {
+  Widget _buildChallengeItem(BuildContext context, rewards_repo.Challenge challenge) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -1041,7 +1042,7 @@ class _UnifiedEarningsRewardsViewState extends State<UnifiedEarningsRewardsView>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  challenge.title,
+                  challenge.name,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -1060,7 +1061,7 @@ class _UnifiedEarningsRewardsViewState extends State<UnifiedEarningsRewardsView>
             ),
           ),
           Text(
-            '${challenge.reward}',
+            '${challenge.rewardAmount ?? 0}',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,

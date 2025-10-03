@@ -7,6 +7,7 @@ import 'package:driver/models/document_upload.dart' as local_models;
 import 'package:driver/widgets/colors.dart';
 import 'package:driver/core/error/document_upload_error.dart';
 import 'package:driver/services/services.dart';
+import 'package:documents_repo/documents_repo.dart' as documents_repo;
 
 import 'package:driver/screens/document_upload/bloc/document_upload_bloc.dart';
 import 'package:driver/locator.dart';
@@ -109,7 +110,7 @@ class _EnhancedDocumentUploadScreenState extends State<EnhancedDocumentUploadScr
           if (state.isSuccess) {
             _progressController.forward();
             Navigator.of(context).pop();
-            _showSuccessSnackBar();
+            _showSuccessSnackBar('Document uploaded successfully!');
           } else if (state.hasError) {
             _showErrorSnackBar(state.errorMessage!);
           }

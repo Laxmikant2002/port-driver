@@ -1,6 +1,6 @@
 part of 'notification_bloc.dart';
 
-/// Notification state containing notification data and submission status
+/// Modern Notification state with comprehensive data management
 final class NotificationState extends Equatable {
   const NotificationState({
     this.allNotifications = const [],
@@ -39,8 +39,7 @@ final class NotificationState extends Equatable {
   bool get isSubmitting => status == FormzSubmissionStatus.inProgress;
 
   /// Returns the current notifications being displayed (filtered or all)
-  List<Notification> get currentNotifications => 
-      filteredNotifications.isNotEmpty ? filteredNotifications : allNotifications;
+  List<Notification> get currentNotifications => filteredNotifications.isNotEmpty ? filteredNotifications : allNotifications;
 
   /// Returns notifications grouped by date
   Map<String, List<Notification>> get notificationsByDate {
@@ -99,51 +98,37 @@ final class NotificationState extends Equatable {
 
   /// Returns urgent notifications
   List<Notification> get urgentNotifications {
-    return allNotifications
-        .where((n) => n.priority == NotificationPriority.urgent)
-        .toList();
+    return allNotifications.where((n) => n.priority == NotificationPriority.urgent).toList();
   }
 
   /// Returns high priority notifications
   List<Notification> get highPriorityNotifications {
-    return allNotifications
-        .where((n) => n.priority == NotificationPriority.high)
-        .toList();
+    return allNotifications.where((n) => n.priority == NotificationPriority.high).toList();
   }
 
   /// Returns system notifications
   List<Notification> get systemNotifications {
-    return allNotifications
-        .where((n) => n.type == NotificationType.system)
-        .toList();
+    return allNotifications.where((n) => n.type == NotificationType.system).toList();
   }
 
   /// Returns ride notifications
   List<Notification> get rideNotifications {
-    return allNotifications
-        .where((n) => n.type == NotificationType.ride)
-        .toList();
+    return allNotifications.where((n) => n.type == NotificationType.ride).toList();
   }
 
   /// Returns payment notifications
   List<Notification> get paymentNotifications {
-    return allNotifications
-        .where((n) => n.type == NotificationType.payment)
-        .toList();
+    return allNotifications.where((n) => n.type == NotificationType.payment).toList();
   }
 
   /// Returns promotion notifications
   List<Notification> get promotionNotifications {
-    return allNotifications
-        .where((n) => n.type == NotificationType.promotion)
-        .toList();
+    return allNotifications.where((n) => n.type == NotificationType.promotion).toList();
   }
 
   /// Returns emergency notifications
   List<Notification> get emergencyNotifications {
-    return allNotifications
-        .where((n) => n.type == NotificationType.emergency)
-        .toList();
+    return allNotifications.where((n) => n.type == NotificationType.emergency).toList();
   }
 
   /// Returns true if there are unread notifications
@@ -160,9 +145,7 @@ final class NotificationState extends Equatable {
     final distribution = <NotificationPriority, int>{};
     
     for (final priority in NotificationPriority.values) {
-      distribution[priority] = allNotifications
-          .where((n) => n.priority == priority)
-          .length;
+      distribution[priority] = allNotifications.where((n) => n.priority == priority).length;
     }
     
     return distribution;
@@ -173,12 +156,82 @@ final class NotificationState extends Equatable {
     final distribution = <NotificationType, int>{};
     
     for (final type in NotificationType.values) {
-      distribution[type] = allNotifications
-          .where((n) => n.type == type)
-          .length;
+      distribution[type] = allNotifications.where((n) => n.type == type).length;
     }
     
     return distribution;
+  }
+
+  /// Returns notification statistics
+  Map<String, int> get statistics {
+    return {
+      'total': allNotifications.length,
+      'unread': unreadCount,
+      'read': allNotifications.length - unreadCount,
+      'urgent': urgentNotifications.length,
+      'high_priority': highPriorityNotifications.length,
+      'system': systemNotifications.length,
+      'ride': rideNotifications.length,
+      'payment': paymentNotifications.length,
+      'promotion': promotionNotifications.length,
+      'emergency': emergencyNotifications.length,
+    };
+  }
+
+  /// Returns notifications for a specific date
+  List<Notification> getNotificationsForDate(DateTime date) {
+    final dateString = date.toLocal().toString().split(' ')[0];
+    return notificationsByDate[dateString] ?? [];
+  }
+
+  /// Returns notifications for a specific type
+  List<Notification> getNotificationsForType(NotificationType type) {
+    return notificationsByType[type] ?? [];
+  }
+
+  /// Returns notifications for a specific priority
+  List<Notification> getNotificationsForPriority(NotificationPriority priority) {
+    return notificationsByPriority[priority] ?? [];
+  }
+
+  /// Returns unread notifications for a specific type
+  List<Notification> getUnreadNotificationsForType(NotificationType type) {
+    return getNotificationsForType(type).where((n) => !n.isRead).toList();
+  }
+
+  /// Returns unread notifications for a specific priority
+  List<Notification> getUnreadNotificationsForPriority(NotificationPriority priority) {
+    return getNotificationsForPriority(priority).where((n) => !n.isRead).toList();
+  }
+
+  /// Returns the most recent notification
+  Notification? get mostRecentNotification {
+    if (allNotifications.isEmpty) return null;
+    
+    final sorted = List<Notification>.from(allNotifications);
+    sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return sorted.first;
+  }
+
+  /// Returns the oldest unread notification
+  Notification? get oldestUnreadNotification {
+    final unread = allNotifications.where((n) => !n.isRead).toList();
+    if (unread.isEmpty) return null;
+    
+    unread.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    return unread.first;
+  }
+
+  /// Returns true if there are notifications older than specified days
+  bool hasNotificationsOlderThan(int days) {
+    final cutoffDate = DateTime.now().subtract(Duration(days: days));
+    return allNotifications.any((n) => n.createdAt.isBefore(cutoffDate));
+  }
+
+  /// Returns notifications older than specified days
+  List<Notification> getNotificationsOlderThan(int days) {
+    final cutoffDate = DateTime.now().subtract(Duration(days: days));
+    return allNotifications.where((n) => n.createdAt.isBefore(cutoffDate)).toList();
   }
 
   NotificationState copyWith({

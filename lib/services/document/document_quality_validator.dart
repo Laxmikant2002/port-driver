@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
@@ -347,7 +348,7 @@ class DocumentQualityValidator {
   img.Image _enhanceImage(img.Image image) {
     // Apply basic enhancements
     var enhanced = img.adjustColor(image, brightness: 1.1, contrast: 1.1);
-    enhanced = img.sharpen(enhanced, amount: 0.5);
+    enhanced = img.convolution(enhanced, filter: [0, -1, 0, -1, 5, -1, 0, -1, 0]);
     return enhanced;
   }
 
@@ -368,9 +369,9 @@ class DocumentQualityValidator {
     for (var y = 0; y < image.height; y += 10) {
       for (var x = 0; x < image.width; x += 10) {
         final pixel = image.getPixel(x, y);
-        final r = img.getRed(pixel) / 255.0;
-        final g = img.getGreen(pixel) / 255.0;
-        final b = img.getBlue(pixel) / 255.0;
+        final r = (pixel.r / 255.0);
+        final g = (pixel.g / 255.0);
+        final b = (pixel.b / 255.0);
         totalBrightness += (r + g + b) / 3.0;
         pixelCount++;
       }
@@ -389,9 +390,9 @@ class DocumentQualityValidator {
     for (var y = 0; y < image.height; y += 10) {
       for (var x = 0; x < image.width; x += 10) {
         final pixel = image.getPixel(x, y);
-        final r = img.getRed(pixel) / 255.0;
-        final g = img.getGreen(pixel) / 255.0;
-        final b = img.getBlue(pixel) / 255.0;
+        final r = (pixel.r / 255.0);
+        final g = (pixel.g / 255.0);
+        final b = (pixel.b / 255.0);
         final brightness = (r + g + b) / 3.0;
         brightnesses.add(brightness);
         totalBrightness += brightness;
@@ -408,7 +409,7 @@ class DocumentQualityValidator {
       variance += (brightness - mean) * (brightness - mean);
     }
     
-    return (variance / pixelCount).sqrt();
+    return sqrt(variance / pixelCount);
   }
 
   /// Calculates blur score
@@ -422,9 +423,9 @@ class DocumentQualityValidator {
     for (var y = 1; y < image.height - 1; y += 5) {
       for (var x = 1; x < image.width - 1; x += 5) {
         final pixel = image.getPixel(x, y);
-        final r = img.getRed(pixel) / 255.0;
-        final g = img.getGreen(pixel) / 255.0;
-        final b = img.getBlue(pixel) / 255.0;
+        final r = (pixel.r / 255.0);
+        final g = (pixel.g / 255.0);
+        final b = (pixel.b / 255.0);
         mean += (r + g + b) / 3.0;
         pixelCount++;
       }
@@ -437,9 +438,9 @@ class DocumentQualityValidator {
     for (var y = 1; y < image.height - 1; y += 5) {
       for (var x = 1; x < image.width - 1; x += 5) {
         final pixel = image.getPixel(x, y);
-        final r = img.getRed(pixel) / 255.0;
-        final g = img.getGreen(pixel) / 255.0;
-        final b = img.getBlue(pixel) / 255.0;
+        final r = (pixel.r / 255.0);
+        final g = (pixel.g / 255.0);
+        final b = (pixel.b / 255.0);
         final brightness = (r + g + b) / 3.0;
         variance += (brightness - mean) * (brightness - mean);
       }

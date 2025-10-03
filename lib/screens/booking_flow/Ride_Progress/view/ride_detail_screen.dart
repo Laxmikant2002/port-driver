@@ -17,7 +17,7 @@ class RideDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => BookingBloc(
-        bookingRepo: lc(),
+        bookingRepo: sl<TripRepo>(),
       )..add(RideRequestReceived(booking)),
       child: const RideDetailView(),
     );

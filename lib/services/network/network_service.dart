@@ -4,6 +4,10 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:driver/services/core/service_interface.dart';
 
+// Re-export types from other files for convenience
+export 'socket_service.dart';
+export 'offline_service.dart';
+
 /// {@template socket_service_interface}
 /// Interface for socket communication operations.
 /// {@endtemplate}
@@ -201,7 +205,3 @@ class NetworkServiceError extends ServiceError {
     super.details,
   });
 }
-
-// Re-export types from other files for convenience
-export 'socket_service.dart';
-export 'offline_service.dart';

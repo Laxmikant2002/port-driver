@@ -4,6 +4,8 @@ import 'package:equatable/equatable.dart';
 import 'package:driver/core/error/error_handler.dart';
 import 'package:driver/core/extensions/extensions.dart';
 import 'package:driver/models/booking.dart' as local_models;
+import 'package:driver/services/earnings/unified_earnings_rewards_service.dart';
+import 'package:intl/intl.dart';
 
 /// Modern earnings service that integrates with backend packages
 class EarningsService {
@@ -13,7 +15,7 @@ class EarningsService {
   });
 
   final FinanceRepo financeRepo;
-  final TripRepo tripRepo;
+  final trip_repo.TripRepo tripRepo;
 
   /// Get comprehensive earnings data for a date range
   Future<EarningsData> getEarningsData({
@@ -60,7 +62,7 @@ class EarningsService {
           netEarnings: earningsResponse.balance?.netEarnings ?? 0.0,
           availableBalance: walletResponse.balance?.availableBalance ?? 0.0,
           pendingBalance: walletResponse.balance?.pendingBalance ?? 0.0,
-          payoutStatus: walletResponse.balance?.payoutStatus ?? PayoutStatus.pending,
+          payoutStatus: _parsePayoutStatus(walletResponse.balance?.payoutStatus) ?? PayoutStatus.pending,
           lastPayoutAmount: walletResponse.balance?.lastPayoutAmount ?? 0.0,
           lastPayoutDate: walletResponse.balance?.lastPayoutDate,
           currency: walletResponse.balance?.currency ?? '₹',
@@ -89,19 +91,27 @@ class EarningsService {
   /// Get today's earnings
   Future<EarningsData> getTodayEarnings() async {
     final now = DateTime.now();
-    return getEarningsData(startDate: now.startOfDay, endDate: now.endOfDay);
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    return getEarningsData(startDate: startOfDay, endDate: endOfDay);
   }
 
   /// Get this week's earnings
   Future<EarningsData> getWeekEarnings() async {
     final now = DateTime.now();
-    return getEarningsData(startDate: now.startOfWeek, endDate: now.endOfDay);
+    final weekDay = now.weekday;
+    final startOfWeek = now.subtract(Duration(days: weekDay - 1));
+    final startOfWeekDate = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
+    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    return getEarningsData(startDate: startOfWeekDate, endDate: endOfDay);
   }
 
   /// Get this month's earnings
   Future<EarningsData> getMonthEarnings() async {
     final now = DateTime.now();
-    return getEarningsData(startDate: now.startOfMonth, endDate: now.endOfDay);
+    final startOfMonth = DateTime(now.year, now.month, 1);
+    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    return getEarningsData(startDate: startOfMonth, endDate: endOfDay);
   }
 
   /// Request payout
@@ -161,21 +171,34 @@ class EarningsService {
   local_models.Booking _convertTripRepoBookingToLocal(trip_repo.Booking tripBooking) {
     return local_models.Booking(
       id: tripBooking.id,
-      customerName: tripBooking.passengerName ?? 'Unknown',
-      customerPhone: tripBooking.passengerPhone ?? '',
-      peopleCount: 1, // Default to 1 passenger
-      amount: tripBooking.fare,
       status: _convertBookingStatus(tripBooking.status),
-      createdAt: tripBooking.createdAt,
-      paymentMode: tripBooking.paymentMethod == 'cash' 
-          ? local_models.PaymentMode.cash 
-          : local_models.PaymentMode.online,
-      paymentStatus: tripBooking.status == trip_repo.BookingStatus.completed
-          ? local_models.PaymentStatus.completed
-          : local_models.PaymentStatus.pending,
+      pickupLocation: local_models.BookingLocation(
+        address: tripBooking.pickupLocation.address,
+        latitude: tripBooking.pickupLocation.latitude,
+        longitude: tripBooking.pickupLocation.longitude,
+        landmark: tripBooking.pickupLocation.landmark,
+      ),
+      dropoffLocation: local_models.BookingLocation(
+        address: tripBooking.dropoffLocation.address,
+        latitude: tripBooking.dropoffLocation.latitude,
+        longitude: tripBooking.dropoffLocation.longitude,
+        landmark: tripBooking.dropoffLocation.landmark,
+      ),
       fare: tripBooking.fare,
+      distance: tripBooking.distance,
+      estimatedDuration: tripBooking.estimatedDuration,
+      createdAt: tripBooking.createdAt,
+      // Derived properties
+      amount: tripBooking.fare,
+      paymentMode: local_models.PaymentMode.cash, // Default to cash
+      paymentStatus: local_models.PaymentStatus.pending, // Default to pending
+      netEarnings: tripBooking.fare * 0.8, // Assume 20% commission
+      commission: tripBooking.fare * 0.2, // Assume 20% commission
       distanceKm: tripBooking.distance,
       durationMinutes: tripBooking.estimatedDuration,
+      pickupAddress: tripBooking.pickupLocation.address,
+      dropoffAddress: tripBooking.dropoffLocation.address,
+      customerName: tripBooking.passengerName ?? 'Unknown',
     );
   }
 
@@ -183,21 +206,34 @@ class EarningsService {
   local_models.Booking _convertTripRepoTripToLocal(trip_repo.Trip trip) {
     return local_models.Booking(
       id: trip.id,
-      customerName: trip.passengerName ?? 'Unknown',
-      customerPhone: trip.passengerPhone ?? '',
-      peopleCount: 1, // Default to 1 passenger
-      amount: trip.fare,
       status: _convertTripStatus(trip.status),
-      createdAt: trip.createdAt,
-      paymentMode: trip.paymentMethod == 'cash' 
-          ? local_models.PaymentMode.cash 
-          : local_models.PaymentMode.online,
-      paymentStatus: trip.status == trip_repo.TripStatus.completed
-          ? local_models.PaymentStatus.completed
-          : local_models.PaymentStatus.pending,
+      pickupLocation: local_models.BookingLocation(
+        address: trip.startLocation.address ?? 'Unknown Location',
+        latitude: trip.startLocation.latitude,
+        longitude: trip.startLocation.longitude,
+        landmark: null, // TripLocation doesn't have landmark
+      ),
+      dropoffLocation: local_models.BookingLocation(
+        address: trip.endLocation.address ?? 'Unknown Location',
+        latitude: trip.endLocation.latitude,
+        longitude: trip.endLocation.longitude,
+        landmark: null, // TripLocation doesn't have landmark
+      ),
       fare: trip.fare,
+      distance: trip.distance,
+      estimatedDuration: trip.duration, // Use duration instead of estimatedDuration
+      createdAt: trip.createdAt,
+      // Derived properties
+      amount: trip.fare,
+      paymentMode: local_models.PaymentMode.cash, // Default to cash
+      paymentStatus: local_models.PaymentStatus.pending, // Default to pending
+      netEarnings: trip.fare * 0.8, // Assume 20% commission
+      commission: trip.fare * 0.2, // Assume 20% commission
       distanceKm: trip.distance,
-      durationMinutes: trip.estimatedDuration,
+      durationMinutes: trip.duration,
+      pickupAddress: trip.startLocation.address ?? 'Unknown Location',
+      dropoffAddress: trip.endLocation.address ?? 'Unknown Location',
+      customerName: trip.passengerName ?? 'Unknown',
     );
   }
 
@@ -205,11 +241,11 @@ class EarningsService {
   local_models.BookingStatus _convertBookingStatus(trip_repo.BookingStatus status) {
     switch (status) {
       case trip_repo.BookingStatus.pending:
-        return local_models.BookingStatus.confirmed;
+        return local_models.BookingStatus.pending;
       case trip_repo.BookingStatus.accepted:
-        return local_models.BookingStatus.checkedIn;
+        return local_models.BookingStatus.accepted;
       case trip_repo.BookingStatus.started:
-        return local_models.BookingStatus.checkedIn;
+        return local_models.BookingStatus.started;
       case trip_repo.BookingStatus.completed:
         return local_models.BookingStatus.completed;
       case trip_repo.BookingStatus.cancelled:
@@ -220,12 +256,8 @@ class EarningsService {
   /// Convert trip_repo TripStatus to local BookingStatus
   local_models.BookingStatus _convertTripStatus(trip_repo.TripStatus status) {
     switch (status) {
-      case trip_repo.TripStatus.pending:
-        return local_models.BookingStatus.confirmed;
-      case trip_repo.TripStatus.accepted:
-        return local_models.BookingStatus.checkedIn;
-      case trip_repo.TripStatus.started:
-        return local_models.BookingStatus.checkedIn;
+      case trip_repo.TripStatus.active:
+        return local_models.BookingStatus.started;
       case trip_repo.TripStatus.completed:
         return local_models.BookingStatus.completed;
       case trip_repo.TripStatus.cancelled:
@@ -306,4 +338,24 @@ class EarningsSummary extends Equatable {
         lastPayoutDate,
         currency,
       ];
+}
+
+/// Helper method to parse payout status string to enum
+PayoutStatus? _parsePayoutStatus(String? status) {
+  if (status == null) return null;
+  
+  switch (status.toLowerCase()) {
+    case 'none':
+      return PayoutStatus.none;
+    case 'pending':
+      return PayoutStatus.pending;
+    case 'processing':
+      return PayoutStatus.processing;
+    case 'completed':
+      return PayoutStatus.completed;
+    case 'failed':
+      return PayoutStatus.failed;
+    default:
+      return PayoutStatus.pending;
+  }
 }

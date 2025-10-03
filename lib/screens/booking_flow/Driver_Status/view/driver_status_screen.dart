@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:trip_repo/trip_repo.dart';
 import 'package:driver/locator.dart';
-import 'package:driver/services/socket_service.dart';
+import 'package:driver/services/network/socket_service.dart';
 import 'package:driver_status/driver_status.dart';
 
 import '../bloc/driver_status_bloc.dart';

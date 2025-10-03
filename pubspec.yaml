@@ -31,6 +31,8 @@ dependencies:
     path: ./packages/shared_repo
   vehicle_repo:
     path: ./packages/vehicle_repo
+  rewards_repo:
+    path: ./packages/rewards_repo
   
   firebase_core: ^4.1.1
   firebase_messaging: ^16.0.2

@@ -2,6 +2,7 @@ import 'package:finance_repo/finance_repo.dart';
 import 'package:trip_repo/trip_repo.dart' as trip_repo;
 import 'package:equatable/equatable.dart';
 import 'package:driver/models/booking.dart' as local_models;
+import 'package:rewards_repo/rewards_repo.dart' as rewards_repo;
 import 'earnings_service.dart';
 
 /// Payout status enum
@@ -34,7 +35,7 @@ class UnifiedEarningsRewardsService {
       final earningsData = await _getEarningsData(startDate, endDate);
       
       // Get rewards data
-      final rewardsData = await _getRewardsData();
+      final rewardsData = await getRewardsData();
       
       // Calculate combined metrics
       final combinedMetrics = _calculateCombinedMetrics(earningsData, rewardsData);
@@ -109,7 +110,7 @@ class UnifiedEarningsRewardsService {
   }
 
   /// Get rewards data (mock implementation using finance_repo)
-  Future<RewardsData> _getRewardsData() async {
+  Future<RewardsData> getRewardsData() async {
     try {
       // Create mock achievements based on earnings data
       final achievements = _createMockAchievements();
@@ -147,68 +148,67 @@ class UnifiedEarningsRewardsService {
   }
 
   /// Create mock achievements
-  List<Achievement> _createMockAchievements() {
-    return const [
-      Achievement(
+  List<rewards_repo.Achievement> _createMockAchievements() {
+    return [
+      rewards_repo.Achievement(
         id: '1',
-        title: 'First Trip',
+        name: 'First Trip',
         description: 'Complete your first trip',
+        icon: '🎯',
         isUnlocked: true,
-        isInProgress: false,
-        isLocked: false,
-        reward: 50.0,
-        progress: 100.0,
-        target: 1.0,
+        unlockedAt: DateTime.now().subtract(const Duration(days: 1)),
+        rewardAmount: 50.0,
+        category: 'trips',
       ),
-      Achievement(
+      rewards_repo.Achievement(
         id: '2',
-        title: 'Weekend Warrior',
+        name: 'Weekend Warrior',
         description: 'Complete 10 trips in a weekend',
+        icon: '🏆',
         isUnlocked: false,
-        isInProgress: true,
-        isLocked: false,
-        reward: 200.0,
-        progress: 6.0,
-        target: 10.0,
+        unlockedAt: DateTime.now(),
+        rewardAmount: 200.0,
+        category: 'trips',
       ),
-      Achievement(
+      rewards_repo.Achievement(
         id: '3',
-        title: 'Cash Master',
+        name: 'Cash Master',
         description: 'Collect ₹1000 in cash trips',
+        icon: '💰',
         isUnlocked: false,
-        isInProgress: false,
-        isLocked: true,
-        reward: 100.0,
-        progress: 0.0,
-        target: 1000.0,
+        unlockedAt: DateTime.now(),
+        rewardAmount: 100.0,
+        category: 'earnings',
       ),
     ];
   }
 
   /// Create mock challenges
-  List<Challenge> _createMockChallenges() {
-    return const [
-      Challenge(
+  List<rewards_repo.Challenge> _createMockChallenges() {
+    return [
+      rewards_repo.Challenge(
         id: '1',
-        title: 'Daily Driver',
+        name: 'Daily Driver',
         description: 'Complete 5 trips today',
-        isActive: true,
-        isCompleted: false,
-        reward: 150.0,
-        progress: 3.0,
         target: 5.0,
-        duration: ChallengeDuration.daily,
-      ),
-      Challenge(
-        id: '2',
-        title: 'Weekend Challenge',
-        description: 'Earn ₹2000 this weekend',
-        isActive: true,
+        progress: 3.0,
         isCompleted: false,
-        reward: 300.0,
-        progress: 1200.0,
+        endDate: DateTime.now().add(const Duration(days: 1)),
+        rewardAmount: 150.0,
+        category: 'trips',
+        startDate: DateTime.now().subtract(const Duration(hours: 2)),
+      ),
+      rewards_repo.Challenge(
+        id: '2',
+        name: 'Weekend Challenge',
+        description: 'Earn ₹2000 this weekend',
         target: 2000.0,
-        duration: ChallengeDuration.weekly,
+        progress: 1200.0,
+        isCompleted: false,
+        endDate: DateTime.now().add(const Duration(days: 7)),
+        rewardAmount: 300.0,
+        category: 'earnings',
+        startDate: DateTime.now().subtract(const Duration(days: 1)),
       ),
     ];
   }
@@ -279,17 +279,17 @@ class UnifiedEarningsRewardsService {
   }
 
   /// Calculate achievement bonus from unlocked achievements
-  double _calculateAchievementBonus(List<Achievement> achievements) {
+  double _calculateAchievementBonus(List<rewards_repo.Achievement> achievements) {
     return achievements
         .where((achievement) => achievement.isUnlocked)
-        .fold(0.0, (sum, achievement) => sum + achievement.reward);
+        .fold(0.0, (sum, achievement) => sum + (achievement.rewardAmount ?? 0.0));
   }
 
   /// Calculate challenge bonus from completed challenges
-  double _calculateChallengeBonus(List<Challenge> challenges) {
+  double _calculateChallengeBonus(List<rewards_repo.Challenge> challenges) {
     return challenges
         .where((challenge) => challenge.isCompleted)
-        .fold(0.0, (sum, challenge) => sum + challenge.reward);
+        .fold(0.0, (sum, challenge) => sum + (challenge.rewardAmount ?? 0.0));
   }
 
   /// Calculate earnings multiplier based on driver level
@@ -314,7 +314,7 @@ class UnifiedEarningsRewardsService {
   Future<bool> requestPayoutWithRewards(double amount) async {
     try {
       // Check if driver has any pending rewards
-      final rewardsData = await _getRewardsData();
+      final rewardsData = await getRewardsData();
       final hasPendingRewards = rewardsData.availableRewards > 0;
       
       if (hasPendingRewards) {
@@ -383,21 +383,34 @@ class UnifiedEarningsRewardsService {
   local_models.Booking _convertTripRepoBookingToLocal(trip_repo.Booking booking) {
     return local_models.Booking(
       id: booking.id,
-      customerName: booking.passengerName ?? 'Unknown',
-      customerPhone: booking.passengerPhone ?? '',
-      peopleCount: 1,
-      amount: booking.fare,
       status: _convertBookingStatus(booking.status),
-      createdAt: booking.createdAt,
-      paymentMode: booking.paymentMethod == 'cash'
-          ? local_models.PaymentMode.cash
-          : local_models.PaymentMode.online,
-             paymentStatus: booking.status == trip_repo.BookingStatus.completed
-                 ? local_models.PaymentStatus.completed
-                 : local_models.PaymentStatus.pending,
+      pickupLocation: local_models.BookingLocation(
+        address: booking.pickupLocation.address,
+        latitude: booking.pickupLocation.latitude,
+        longitude: booking.pickupLocation.longitude,
+        landmark: booking.pickupLocation.landmark,
+      ),
+      dropoffLocation: local_models.BookingLocation(
+        address: booking.dropoffLocation.address,
+        latitude: booking.dropoffLocation.latitude,
+        longitude: booking.dropoffLocation.longitude,
+        landmark: booking.dropoffLocation.landmark,
+      ),
       fare: booking.fare,
+      distance: booking.distance,
+      estimatedDuration: booking.estimatedDuration,
+      createdAt: booking.createdAt,
+      // Derived properties
+      amount: booking.fare,
+      paymentMode: local_models.PaymentMode.cash, // Default to cash
+      paymentStatus: local_models.PaymentStatus.pending, // Default to pending
+      netEarnings: booking.fare * 0.8, // Assume 20% commission
+      commission: booking.fare * 0.2, // Assume 20% commission
       distanceKm: booking.distance,
       durationMinutes: booking.estimatedDuration,
+      pickupAddress: booking.pickupLocation.address,
+      dropoffAddress: booking.dropoffLocation.address,
+      customerName: booking.passengerName ?? 'Unknown',
     );
   }
 
@@ -405,11 +418,11 @@ class UnifiedEarningsRewardsService {
   local_models.BookingStatus _convertBookingStatus(trip_repo.BookingStatus status) {
     switch (status) {
       case trip_repo.BookingStatus.pending:
-        return local_models.BookingStatus.confirmed;
+        return local_models.BookingStatus.pending;
       case trip_repo.BookingStatus.accepted:
-        return local_models.BookingStatus.checkedIn;
+        return local_models.BookingStatus.accepted;
       case trip_repo.BookingStatus.started:
-        return local_models.BookingStatus.checkedIn;
+        return local_models.BookingStatus.started;
       case trip_repo.BookingStatus.completed:
         return local_models.BookingStatus.completed;
       case trip_repo.BookingStatus.cancelled:
@@ -444,8 +457,8 @@ class RewardsData extends Equatable {
     required this.availableRewards,
   });
 
-  final List<Achievement> achievements;
-  final List<Challenge> challenges;
+  final List<rewards_repo.Achievement> achievements;
+  final List<rewards_repo.Challenge> challenges;
   final DriverProgress? driverProgress;
   final double totalRewards;
   final double availableRewards;
@@ -501,68 +514,7 @@ class CombinedMetrics extends Equatable {
       ];
 }
 
-/// Achievement model for rewards system
-class Achievement extends Equatable {
-  const Achievement({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.isUnlocked,
-    required this.isInProgress,
-    required this.isLocked,
-    required this.reward,
-    required this.progress,
-    required this.target,
-  });
-
-  final String id;
-  final String title;
-  final String description;
-  final bool isUnlocked;
-  final bool isInProgress;
-  final bool isLocked;
-  final double reward;
-  final double progress;
-  final double target;
-
-  @override
-  List<Object?> get props => [id, title, description, isUnlocked, isInProgress, isLocked, reward, progress, target];
-}
-
-/// Challenge model for rewards system
-class Challenge extends Equatable {
-  const Challenge({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.isActive,
-    required this.isCompleted,
-    required this.reward,
-    required this.progress,
-    required this.target,
-    required this.duration,
-  });
-
-  final String id;
-  final String title;
-  final String description;
-  final bool isActive;
-  final bool isCompleted;
-  final double reward;
-  final double progress;
-  final double target;
-  final ChallengeDuration duration;
-
-  @override
-  List<Object?> get props => [id, title, description, isActive, isCompleted, reward, progress, target, duration];
-}
-
-/// Challenge duration enum
-enum ChallengeDuration {
-  daily,
-  weekly,
-  monthly,
-}
+// Achievement and Challenge models are now imported from rewards_repo
 
 /// Driver progress model
 class DriverProgress extends Equatable {
@@ -602,22 +554,4 @@ class DriverLevel extends Equatable {
 
   @override
   List<Object?> get props => [id, name, color];
-}
-
-/// Earnings data model (existing)
-class EarningsData extends Equatable {
-  const EarningsData({
-    required this.summary,
-    this.recentTrips = const [],
-    this.cashTrips = const [],
-    this.transactionHistory = const [],
-  });
-
-  final EarningsSummary summary;
-  final List<local_models.Booking> recentTrips;
-  final List<local_models.Booking> cashTrips;
-  final List<Transaction> transactionHistory;
-
-  @override
-  List<Object?> get props => [summary, recentTrips, cashTrips, transactionHistory];
 }

@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:driver/locator.dart';
 import 'package:driver/screens/booking_flow/Ride_Progress/bloc/booking_bloc.dart';
-import 'package:driver/services/location_service.dart';
-import 'package:driver/services/google_map_services.dart';
+import 'package:driver/services/location/location_service.dart';
+import 'package:driver/services/location/google_map_services.dart';
 import 'package:driver/widgets/colors.dart';
 import 'package:driver/widgets/ui_components/ui_components.dart';
 import 'package:trip_repo/trip_repo.dart';
@@ -34,8 +34,8 @@ class _TripProgressScreenState extends State<TripProgressScreen> {
   }
 
   Future<void> _initializeLocation() async {
-    final initialized = await _locationService.initialize();
-    if (initialized) {
+    await _locationService.initialize();
+    if (_locationService.isInitialized) {
       _currentLocation = _locationService.currentLocation;
       
       // Listen to location updates

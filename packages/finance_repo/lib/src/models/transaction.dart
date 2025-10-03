@@ -160,6 +160,15 @@ class WalletBalance extends Equatable {
     required this.totalWithdrawals,
     this.currency = 'USD',
     this.lastUpdated,
+    this.totalTrips,
+    this.onlineEarnings,
+    this.cashCollected,
+    this.commissionPercentage,
+    this.totalCommission,
+    this.netEarnings,
+    this.payoutStatus,
+    this.lastPayoutAmount,
+    this.lastPayoutDate,
   });
 
   final double availableBalance;
@@ -168,6 +177,15 @@ class WalletBalance extends Equatable {
   final double totalWithdrawals;
   final String currency;
   final DateTime? lastUpdated;
+  final int? totalTrips;
+  final double? onlineEarnings;
+  final double? cashCollected;
+  final double? commissionPercentage;
+  final double? totalCommission;
+  final double? netEarnings;
+  final String? payoutStatus;
+  final double? lastPayoutAmount;
+  final DateTime? lastPayoutDate;
 
   factory WalletBalance.fromJson(Map<String, dynamic> json) {
     return WalletBalance(
@@ -178,6 +196,17 @@ class WalletBalance extends Equatable {
       currency: json['currency'] as String? ?? 'USD',
       lastUpdated: json['lastUpdated'] != null 
           ? DateTime.parse(json['lastUpdated'] as String) 
+          : null,
+      totalTrips: json['totalTrips'] as int?,
+      onlineEarnings: (json['onlineEarnings'] as num?)?.toDouble(),
+      cashCollected: (json['cashCollected'] as num?)?.toDouble(),
+      commissionPercentage: (json['commissionPercentage'] as num?)?.toDouble(),
+      totalCommission: (json['totalCommission'] as num?)?.toDouble(),
+      netEarnings: (json['netEarnings'] as num?)?.toDouble(),
+      payoutStatus: json['payoutStatus'] as String?,
+      lastPayoutAmount: (json['lastPayoutAmount'] as num?)?.toDouble(),
+      lastPayoutDate: json['lastPayoutDate'] != null 
+          ? DateTime.parse(json['lastPayoutDate'] as String) 
           : null,
     );
   }
@@ -190,6 +219,15 @@ class WalletBalance extends Equatable {
       'totalWithdrawals': totalWithdrawals,
       'currency': currency,
       'lastUpdated': lastUpdated?.toIso8601String(),
+      'totalTrips': totalTrips,
+      'onlineEarnings': onlineEarnings,
+      'cashCollected': cashCollected,
+      'commissionPercentage': commissionPercentage,
+      'totalCommission': totalCommission,
+      'netEarnings': netEarnings,
+      'payoutStatus': payoutStatus,
+      'lastPayoutAmount': lastPayoutAmount,
+      'lastPayoutDate': lastPayoutDate?.toIso8601String(),
     };
   }
 
@@ -200,6 +238,15 @@ class WalletBalance extends Equatable {
     double? totalWithdrawals,
     String? currency,
     DateTime? lastUpdated,
+    int? totalTrips,
+    double? onlineEarnings,
+    double? cashCollected,
+    double? commissionPercentage,
+    double? totalCommission,
+    double? netEarnings,
+    String? payoutStatus,
+    double? lastPayoutAmount,
+    DateTime? lastPayoutDate,
   }) {
     return WalletBalance(
       availableBalance: availableBalance ?? this.availableBalance,
@@ -208,6 +255,15 @@ class WalletBalance extends Equatable {
       totalWithdrawals: totalWithdrawals ?? this.totalWithdrawals,
       currency: currency ?? this.currency,
       lastUpdated: lastUpdated ?? this.lastUpdated,
+      totalTrips: totalTrips ?? this.totalTrips,
+      onlineEarnings: onlineEarnings ?? this.onlineEarnings,
+      cashCollected: cashCollected ?? this.cashCollected,
+      commissionPercentage: commissionPercentage ?? this.commissionPercentage,
+      totalCommission: totalCommission ?? this.totalCommission,
+      netEarnings: netEarnings ?? this.netEarnings,
+      payoutStatus: payoutStatus ?? this.payoutStatus,
+      lastPayoutAmount: lastPayoutAmount ?? this.lastPayoutAmount,
+      lastPayoutDate: lastPayoutDate ?? this.lastPayoutDate,
     );
   }
 
@@ -219,5 +275,14 @@ class WalletBalance extends Equatable {
         totalWithdrawals,
         currency,
         lastUpdated,
+        totalTrips,
+        onlineEarnings,
+        cashCollected,
+        commissionPercentage,
+        totalCommission,
+        netEarnings,
+        payoutStatus,
+        lastPayoutAmount,
+        lastPayoutDate,
       ];
 }

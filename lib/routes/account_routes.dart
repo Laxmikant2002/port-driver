@@ -13,6 +13,7 @@ import 'package:driver/screens/account/documents/views/documents_list_screen.dar
 import 'package:driver/screens/account/help_support/views/help_support_screen.dart';
 import 'package:driver/screens/account/profile/view/profile_screen.dart' as account_profile;
 import 'package:driver/screens/account/unified_earnings_rewards/unified_earnings_rewards.dart';
+import 'package:driver/screens/account/trip_history/trip_history_screen.dart';
 import 'package:driver/screens/account_status/account_inactive_screen.dart';
 import 'package:driver/screens/account_status/account_suspended_screen.dart';
 import 'package:driver/screens/document_upload/bloc/document_upload_bloc.dart';
@@ -20,7 +21,7 @@ import 'package:driver/screens/document_upload/views/document_intro_screen.dart'
 import 'package:driver/screens/document_upload/views/document_review_screen.dart';
 import 'package:driver/screens/document_upload/views/document_upload_screen.dart';
 import 'package:driver/screens/setting_section/faq/view/faq_screen.dart';
-import 'package:driver/screens/setting_section/notification_settings/view/notification_settings_screen.dart';
+import 'package:driver/screens/notifications/notifications.dart';
 import 'package:driver/screens/setting_section/privacy/view/privacy_screen.dart';
 import 'package:driver/screens/setting_section/settings/view/settings_screen.dart';
 import 'package:driver/screens/setting_section/settings/views/about.dart';
@@ -69,6 +70,7 @@ class AccountRoutes {
   static const String languageSelection = RouteConstants.languageSelection;
 
   // Notification routes
+  static const String notifications = RouteConstants.notifications;
   static const String notificationSettings = RouteConstants.notificationSettings;
   static const String bookingNotifications = RouteConstants.bookingNotifications;
   static const String earningsNotifications = RouteConstants.earningsNotifications;
@@ -201,6 +203,7 @@ class AccountRoutes {
       },
 
       // Notification routes
+      notifications: (context) => const NotificationScreen(),
       notificationSettings: (context) => const NotificationSettingsScreen(),
       bookingNotifications: (context) {
         return const Scaffold(

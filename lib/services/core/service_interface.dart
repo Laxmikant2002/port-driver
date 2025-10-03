@@ -158,7 +158,7 @@ class ServiceRegistry {
   static T get<T extends ServiceInterface>() {
     final service = _services[T];
     if (service == null) {
-      throw ServiceError(
+      throw _ServiceNotFoundError(
         message: 'Service ${T.toString()} not registered',
         code: 'SERVICE_NOT_FOUND',
       );
@@ -193,4 +193,13 @@ class ServiceRegistry {
   static List<String> get registeredServices {
     return _services.values.map((s) => s.serviceName).toList();
   }
+}
+
+/// Concrete implementation of ServiceError for service not found
+class _ServiceNotFoundError extends ServiceError {
+  const _ServiceNotFoundError({
+    required super.message,
+    super.code,
+    super.details,
+  });
 }

@@ -76,6 +76,7 @@ class RouteConstants {
   static const String privacyPolicy = '/privacy-policy';
 
   // Notification routes
+  static const String notifications = '/notifications';
   static const String notificationSettings = '/notification-settings';
   static const String bookingNotifications = '/booking-notifications';
   static const String earningsNotifications = '/earnings-notifications';

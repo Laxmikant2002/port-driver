@@ -679,10 +679,10 @@ class _DocumentUploadButton extends StatelessWidget {
   void _uploadDocument(BuildContext context) {
     final bloc = context.read<DocumentUploadBloc>();
     
-    if (widget.documentType.requiresBothSides && frontImage != null && backImage != null) {
+    if (documentType.requiresBothSides && frontImage != null && backImage != null) {
       // Upload both front and back images
       bloc.add(DocumentUploadCompleted(
-        type: widget.documentType,
+        type: documentType,
         frontImagePath: frontImage!.path,
         backImagePath: backImage!.path,
         fileName: frontImage!.name,
@@ -691,7 +691,7 @@ class _DocumentUploadButton extends StatelessWidget {
     } else if (frontImage != null) {
       // Upload single image
       bloc.add(DocumentUploadCompleted(
-        type: widget.documentType,
+        type: documentType,
         frontImagePath: frontImage!.path,
         fileName: frontImage!.name,
         fileSize: File(frontImage!.path).lengthSync(),

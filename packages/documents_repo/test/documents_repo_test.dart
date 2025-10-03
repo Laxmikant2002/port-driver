@@ -21,7 +21,7 @@ void main() {
       expect(document.id, '1');
       expect(document.type, DocumentType.drivingLicense);
       expect(document.status, DocumentStatus.verified);
-      expect(document.fileUrl, 'https://example.com/doc.pdf');
+      expect(document.frontImageUrl, 'https://example.com/doc.pdf');
       expect(document.fileName, 'license.pdf');
       expect(document.metadata, {'size': 1024});
     });
@@ -31,7 +31,7 @@ void main() {
         id: '1',
         type: DocumentType.drivingLicense,
         status: DocumentStatus.verified,
-        fileUrl: 'https://example.com/doc.pdf',
+        frontImageUrl: 'https://example.com/doc.pdf',
         fileName: 'license.pdf',
         uploadedAt: DateTime.parse('2023-01-01T00:00:00Z'),
         verifiedAt: DateTime.parse('2023-01-02T00:00:00Z'),

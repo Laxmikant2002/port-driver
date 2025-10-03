@@ -6,6 +6,7 @@ import 'package:notifications_repo/notifications_repo.dart';
 part 'notification_event.dart';
 part 'notification_state.dart';
 
+/// Modern Notification Bloc for managing notification state
 class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   NotificationBloc({required this.notificationsRepo}) : super(const NotificationState()) {
     on<NotificationsLoaded>(_onNotificationsLoaded);
@@ -28,6 +29,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     
     try {
+      // Load both notifications and settings
       final response = await notificationsRepo.getNotifications(
         limit: event.limit,
         offset: event.offset,
@@ -35,20 +37,19 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         unreadOnly: event.unreadOnly,
       );
       
+      final settings = await notificationsRepo.getNotificationSettings();
+      
       if (response.success && response.notifications != null) {
         // Cache notifications for offline access
         await notificationsRepo.cacheNotifications(response.notifications!);
         
-        // Get cached notifications as fallback
-        final cachedNotifications = await notificationsRepo.getCachedNotifications();
-        
         // Get unread count
-        final unreadCount = response.unreadCount ?? 
-            response.notifications!.where((n) => !n.isRead).length;
+        final unreadCount = response.unreadCount ?? response.notifications!.where((n) => !n.isRead).length;
         
         emit(state.copyWith(
           allNotifications: response.notifications!,
           unreadCount: unreadCount,
+          notificationSettings: settings,
           status: FormzSubmissionStatus.success,
           clearError: true,
         ));
@@ -60,6 +61,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         emit(state.copyWith(
           allNotifications: cachedNotifications,
           unreadCount: unreadCount,
+          notificationSettings: settings,
           status: FormzSubmissionStatus.success,
           clearError: true,
         ));
@@ -68,10 +70,12 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
       // Fallback to cached notifications
       final cachedNotifications = await notificationsRepo.getCachedNotifications();
       final unreadCount = cachedNotifications.where((n) => !n.isRead).length;
+      final settings = await notificationsRepo.getNotificationSettings();
       
       emit(state.copyWith(
         allNotifications: cachedNotifications,
         unreadCount: unreadCount,
+        notificationSettings: settings,
         status: FormzSubmissionStatus.failure,
         errorMessage: 'Network error: ${error.toString()}',
       ));
@@ -239,18 +243,15 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     
     // Apply filters
     if (event.type != null) {
-      filteredNotifications = filteredNotifications
-          .where((n) => n.type == event.type).toList();
+      filteredNotifications = filteredNotifications.where((n) => n.type == event.type).toList();
     }
     
     if (event.priority != null) {
-      filteredNotifications = filteredNotifications
-          .where((n) => n.priority == event.priority).toList();
+      filteredNotifications = filteredNotifications.where((n) => n.priority == event.priority).toList();
     }
     
     if (event.unreadOnly != null && event.unreadOnly!) {
-      filteredNotifications = filteredNotifications
-          .where((n) => !n.isRead).toList();
+      filteredNotifications = filteredNotifications.where((n) => !n.isRead).toList();
     }
 
     emit(state.copyWith(
@@ -284,7 +285,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     
     try {
-      final success = await notificationsRepo.saveNotificationSettings(event.settings);
+      final success = await notificationsRepo.updateNotificationPreferences(event.settings);
       
       if (success) {
         emit(state.copyWith(

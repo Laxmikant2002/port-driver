@@ -26,6 +26,9 @@ import 'package:vehicle_repo/vehicle_repo.dart';
 /// Service Locator instance for dependency injection
 final sl = GetIt.instance;
 
+/// Alias for sl() - shorter dependency injection access
+T lc<T extends Object>({String? instanceName}) => sl<T>(instanceName: instanceName);
+
 /// Environment configuration
 enum Environment { development, staging, production }
 
@@ -89,10 +92,11 @@ Future<void> initializeDependencies() async {
   
   // Register services
   sl
-    ..registerLazySingleton<SocketService>(SocketService.new)
-    ..registerLazySingleton<NotificationService>(NotificationService.new)
-    ..registerLazySingleton<DeveloperModeService>(DeveloperModeService.new)
-    ..registerLazySingleton<OfflineService>(OfflineService.new)
+    // Note: SocketService, DeveloperModeService, and OfflineService removed - not implemented yet
+    // ..registerLazySingleton<SocketService>(SocketService.new)
+    // ..registerLazySingleton<NotificationService>(NotificationService.new) // Removed - using notifications_repo
+    // ..registerLazySingleton<DeveloperModeService>(DeveloperModeService.new)
+    // ..registerLazySingleton<OfflineService>(OfflineService.new)
     ..registerLazySingleton<DocumentUploadService>(() => DocumentUploadService(
       documentsRepo: sl<DocumentsRepo>(),
     ))
@@ -160,20 +164,20 @@ Future<void> initializeDependencies() async {
     ..registerLazySingleton<SharedRepo>(() => SharedRepo(
       apiClient: sl<ApiClient>(),
       localStorage: sl<Localstorage>(),
-    ))
-    ..registerLazySingleton<RewardsRepo>(() => RewardsRepo(
-      apiClient: sl<ApiClient>(),
-      localStorage: sl<Localstorage>(),
     ));
+    // ..registerLazySingleton<RewardsRepo>(() => RewardsRepo(
+    //   apiClient: sl<ApiClient>(),
+    //   localStorage: sl<Localstorage>(),
+    // )); // Removed - rewards_repo package not available
   
   // Initialize notification service
-  await sl<NotificationService>().initialize();
+  // await sl<NotificationService>().initialize(); // Removed - using notifications_repo
   
-  // Initialize offline service
-  await sl<OfflineService>().initialize(
-    localStorage: sl<Localstorage>(),
-    connectivity: sl<Connectivity>(),
-  );
+  // Initialize offline service - commented out as service is not implemented
+  // await sl<OfflineService>().initialize(
+  //   localStorage: sl<Localstorage>(),
+  //   connectivity: sl<Connectivity>(),
+  // );
 }
 
 /// Reset all dependencies (useful for testing)
