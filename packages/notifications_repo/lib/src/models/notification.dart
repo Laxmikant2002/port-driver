@@ -23,6 +23,34 @@ class Notification {
   final bool isRead;
   final Map<String, dynamic>? data;
 
+  /// Creates a Notification from JSON
+  factory Notification.fromJson(Map<String, dynamic> json) {
+    return Notification(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      body: json['body'] as String,
+      type: NotificationType.fromString(json['type'] as String),
+      priority: NotificationPriority.fromString(json['priority'] as String),
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      isRead: json['isRead'] as bool? ?? false,
+      data: json['data'] as Map<String, dynamic>?,
+    );
+  }
+
+  /// Converts this notification to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'body': body,
+      'type': type.value,
+      'priority': priority.value,
+      'createdAt': createdAt.toIso8601String(),
+      'isRead': isRead,
+      'data': data,
+    };
+  }
+
   /// Creates a copy of this notification with the given fields replaced
   Notification copyWith({
     String? id,

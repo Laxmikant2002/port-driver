@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../../widgets/colors.dart';
+
+import 'package:driver/widgets/colors.dart';
+
 import '../bloc/faq_bloc.dart';
 
 class FaqScreen extends StatelessWidget {
@@ -69,8 +71,8 @@ class _HeaderSection extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withOpacity(0.1),
-            AppColors.cyan.withOpacity(0.05),
+            AppColors.primary.withValues(alpha: 0.1),
+            AppColors.cyan.withValues(alpha: 0.05),
           ],
         ),
       ),
@@ -80,7 +82,7 @@ class _HeaderSection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.cyan.withOpacity(0.1),
+              color: AppColors.cyan.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(
@@ -129,7 +131,7 @@ class _SearchSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
+            color: AppColors.primary.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -152,7 +154,7 @@ class _SearchSection extends StatelessWidget {
             margin: const EdgeInsets.all(12),
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.cyan.withOpacity(0.1),
+              color: AppColors.cyan.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -274,7 +276,7 @@ class _FaqListSection extends StatelessWidget {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: AppColors.cyan.withOpacity(0.1),
+              color: AppColors.cyan.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -326,7 +328,7 @@ class _FaqItemCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.08),
+                color: AppColors.primary.withValues(alpha: 0.08),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
@@ -443,7 +445,7 @@ class _HelpfulButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected 
-              ? (isHelpful ? AppColors.success : AppColors.error).withOpacity(0.1)
+              ? (isHelpful ? AppColors.success : AppColors.error).withValues(alpha: 0.1)
               : AppColors.background,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(

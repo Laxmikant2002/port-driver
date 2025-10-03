@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:api_client/api_client.dart';
 import 'package:localstorage/localstorage.dart';
 import 'models/transaction.dart';
@@ -78,18 +79,13 @@ class FinanceRepo {
   /// Request withdrawal
   Future<WalletResponse> requestWithdrawal(WithdrawalRequest request) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/finance/withdraw'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
-        body: jsonEncode(request.toJson()),
+      final response = await apiClient.post<Map<String, dynamic>>(
+        FinancePaths.requestWithdrawal,
+        data: request.toJson(),
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return WalletResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return WalletResponse.fromJson(response.data!);
       } else {
         return WalletResponse(
           success: false,
@@ -114,19 +110,13 @@ class FinanceRepo {
       if (limit != null) queryParams['limit'] = limit.toString();
       if (offset != null) queryParams['offset'] = offset.toString();
 
-      final uri = Uri.parse('$baseUrl/finance/withdrawals').replace(queryParameters: queryParams);
-      
-      final response = await client.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
+      final response = await apiClient.get<Map<String, dynamic>>(
+        '/finance/withdrawals',
+        queryParameters: queryParams,
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return WalletResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return WalletResponse.fromJson(response.data!);
       } else {
         return WalletResponse(
           success: false,
@@ -222,18 +212,13 @@ class FinanceRepo {
   /// Process payment
   Future<PaymentResponse> processPayment(PaymentRequest request) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/finance/payments'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
-        body: jsonEncode(request.toJson()),
+      final response = await apiClient.post<Map<String, dynamic>>(
+        '/finance/payments',
+        data: request.toJson(),
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return PaymentResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return PaymentResponse.fromJson(response.data!);
       } else {
         return PaymentResponse(
           success: false,
@@ -258,19 +243,13 @@ class FinanceRepo {
       if (limit != null) queryParams['limit'] = limit.toString();
       if (offset != null) queryParams['offset'] = offset.toString();
 
-      final uri = Uri.parse('$baseUrl/finance/payments').replace(queryParameters: queryParams);
-      
-      final response = await client.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
+      final response = await apiClient.get<Map<String, dynamic>>(
+        '/finance/payments',
+        queryParameters: queryParams,
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return PaymentResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return PaymentResponse.fromJson(response.data!);
       } else {
         return PaymentResponse(
           success: false,
@@ -312,21 +291,16 @@ class FinanceRepo {
   /// Request payout for driver earnings
   Future<WalletResponse> requestPayout({required double amount}) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/finance/payout/request'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
-        body: jsonEncode({
+      final response = await apiClient.post<Map<String, dynamic>>(
+        '/finance/payout/request',
+        data: {
           'amount': amount,
           'requestedAt': DateTime.now().toIso8601String(),
-        }),
+        },
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return WalletResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return WalletResponse.fromJson(response.data!);
       } else {
         return WalletResponse(
           success: false,
@@ -351,19 +325,13 @@ class FinanceRepo {
       if (startDate != null) queryParams['startDate'] = startDate.toIso8601String();
       if (endDate != null) queryParams['endDate'] = endDate.toIso8601String();
 
-      final uri = Uri.parse('$baseUrl/finance/driver/earnings').replace(queryParameters: queryParams);
-      
-      final response = await client.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
+      final response = await apiClient.get<Map<String, dynamic>>(
+        '/finance/driver/earnings',
+        queryParameters: queryParams,
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return WalletResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return WalletResponse.fromJson(response.data!);
       } else {
         return WalletResponse(
           success: false,
@@ -378,12 +346,4 @@ class FinanceRepo {
     }
   }
 
-  Future<String> _getAuthToken() async {
-    try {
-      final token = localStorage.getString('auth_token');
-      return token ?? '';
-    } catch (e) {
-      return '';
-    }
-  }
 }

@@ -20,8 +20,8 @@ class ProfileScreen extends StatelessWidget {
 
     return BlocProvider(
       create: (context) => ProfileBloc(
-        authRepo: lc<AuthRepo>(),
-        profileRepo: lc<ProfileRepo>(),
+        authRepo: sl<AuthRepo>(),
+        profileRepo: sl<ProfileRepo>(),
         user: user,
         existingProfile: existingProfile,
         isNewUser: isNewUser,
@@ -93,8 +93,8 @@ class _HeaderSection extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withOpacity(0.1),
-            AppColors.cyan.withOpacity(0.05),
+            AppColors.primary.withValues(alpha: 0.1),
+            AppColors.cyan.withValues(alpha: 0.05),
           ],
         ),
       ),
@@ -104,7 +104,7 @@ class _HeaderSection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.cyan.withOpacity(0.1),
+              color: AppColors.cyan.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(
@@ -154,7 +154,7 @@ class _ProfileForm extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
+            color: AppColors.primary.withValues(alpha: 0.08),
             blurRadius: 32,
             offset: const Offset(0, 12),
             spreadRadius: 0,
@@ -518,7 +518,7 @@ class _GenderOption extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.cyan.withOpacity(0.1) : AppColors.backgroundSecondary,
+          color: isSelected ? AppColors.cyan.withValues(alpha: 0.1) : AppColors.backgroundSecondary,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? AppColors.cyan : AppColors.border,
@@ -565,7 +565,7 @@ class _ContinueButton extends StatelessWidget {
             boxShadow: isValid && !isLoading
                 ? [
                     BoxShadow(
-                      color: AppColors.cyan.withOpacity(0.3),
+                      color: AppColors.cyan.withValues(alpha: 0.3),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),

@@ -79,9 +79,10 @@
 // }
 
 // ignore_for_file: lines_longer_than_80_chars
-import 'package:driver/screens/dashboard/view/dashboard_screen.dart';
 import 'package:flutter/material.dart';
+
 import 'package:driver/screens/account_screen/views/account_screen.dart';
+import 'package:driver/screens/dashboard/view/dashboard_screen.dart';
 import 'package:driver/widgets/colors.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -111,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
           color: AppColors.surface,
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.08),
+              color: AppColors.primary.withValues(alpha: 0.08),
               blurRadius: 32,
               offset: const Offset(0, -8),
               spreadRadius: 0,

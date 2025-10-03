@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:developer';
 import 'package:api_client/src/models/data_state.dart';
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 
@@ -145,7 +144,7 @@ class ApiClient {
         LogInterceptor(
           requestBody: true,
           responseBody: false, // Disable response body logging for performance
-          logPrint: (object) => log(object),
+          logPrint: (object) => log(object.toString()),
         ),
       );
     }
@@ -247,7 +246,10 @@ class ApiClient {
       return _handleDioError<T>(e);
     } catch (e) {
       return DataFailed<T>(
-        DataError(null, 'Unexpected error: ${e.toString()}'),
+        DataError(
+          message: 'Unexpected error: ${e.toString()}',
+          type: DataErrorType.unknown,
+        ),
       );
     }
   }
@@ -272,7 +274,10 @@ class ApiClient {
       return _handleDioError<T>(e);
     } catch (e) {
       return DataFailed<T>(
-        DataError(null, 'Unexpected error: ${e.toString()}'),
+        DataError(
+          message: 'Unexpected error: ${e.toString()}',
+          type: DataErrorType.unknown,
+        ),
       );
     }
   }
@@ -297,7 +302,38 @@ class ApiClient {
       return _handleDioError<T>(e);
     } catch (e) {
       return DataFailed<T>(
-        DataError(null, 'Unexpected error: ${e.toString()}'),
+        DataError(
+          message: 'Unexpected error: ${e.toString()}',
+          type: DataErrorType.unknown,
+        ),
+      );
+    }
+  }
+
+  /// PATCH request with proper error handling
+  Future<DataState<T>> patch<T>(
+    String path, {
+    Map<String, dynamic>? data,
+    Map<String, dynamic>? queryParameters,
+    Map<String, String>? headers,
+  }) async {
+    try {
+      final response = await _dio.patch(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: Options(headers: headers),
+      );
+
+      return DataSuccess<T>(response.data);
+    } on DioException catch (e) {
+      return _handleDioError<T>(e);
+    } catch (e) {
+      return DataFailed<T>(
+        DataError(
+          message: 'Unexpected error: ${e.toString()}',
+          type: DataErrorType.unknown,
+        ),
       );
     }
   }
@@ -322,7 +358,10 @@ class ApiClient {
       return _handleDioError<T>(e);
     } catch (e) {
       return DataFailed<T>(
-        DataError(null, 'Unexpected error: ${e.toString()}'),
+        DataError(
+          message: 'Unexpected error: ${e.toString()}',
+          type: DataErrorType.unknown,
+        ),
       );
     }
   }
@@ -352,7 +391,10 @@ class ApiClient {
       return _handleDioError<T>(e);
     } catch (e) {
       return DataFailed<T>(
-        DataError(null, 'Upload error: ${e.toString()}'),
+        DataError(
+          message: 'Upload error: ${e.toString()}',
+          type: DataErrorType.unknown,
+        ),
       );
     }
   }
@@ -401,7 +443,11 @@ class ApiClient {
     }
 
     return DataFailed<T>(
-      DataError(statusCode, errorMessage),
+      DataError(
+        message: errorMessage,
+        type: DataErrorType.server,
+        statusCode: statusCode,
+      ),
     );
   }
 

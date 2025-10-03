@@ -6,8 +6,10 @@ class DriverDocument extends Equatable {
     required this.id,
     required this.type,
     required this.status,
-    this.fileUrl,
+    this.frontImageUrl,
+    this.backImageUrl,
     this.fileName,
+    this.fileSize,
     this.uploadedAt,
     this.verifiedAt,
     this.rejectedReason,
@@ -17,8 +19,10 @@ class DriverDocument extends Equatable {
   final String id;
   final DocumentType type;
   final DocumentStatus status;
-  final String? fileUrl;
+  final String? frontImageUrl;
+  final String? backImageUrl;
   final String? fileName;
+  final int? fileSize;
   final DateTime? uploadedAt;
   final DateTime? verifiedAt;
   final String? rejectedReason;
@@ -29,8 +33,10 @@ class DriverDocument extends Equatable {
       id: json['id'] as String,
       type: DocumentType.fromString(json['type'] as String),
       status: DocumentStatus.fromString(json['status'] as String),
-      fileUrl: json['fileUrl'] as String?,
+      frontImageUrl: json['frontImageUrl'] as String?,
+      backImageUrl: json['backImageUrl'] as String?,
       fileName: json['fileName'] as String?,
+      fileSize: json['fileSize'] as int?,
       uploadedAt: json['uploadedAt'] != null 
           ? DateTime.parse(json['uploadedAt'] as String) 
           : null,
@@ -47,8 +53,10 @@ class DriverDocument extends Equatable {
       'id': id,
       'type': type.value,
       'status': status.value,
-      'fileUrl': fileUrl,
+      'frontImageUrl': frontImageUrl,
+      'backImageUrl': backImageUrl,
       'fileName': fileName,
+      'fileSize': fileSize,
       'uploadedAt': uploadedAt?.toIso8601String(),
       'verifiedAt': verifiedAt?.toIso8601String(),
       'rejectedReason': rejectedReason,
@@ -60,8 +68,10 @@ class DriverDocument extends Equatable {
     String? id,
     DocumentType? type,
     DocumentStatus? status,
-    String? fileUrl,
+    String? frontImageUrl,
+    String? backImageUrl,
     String? fileName,
+    int? fileSize,
     DateTime? uploadedAt,
     DateTime? verifiedAt,
     String? rejectedReason,
@@ -71,8 +81,10 @@ class DriverDocument extends Equatable {
       id: id ?? this.id,
       type: type ?? this.type,
       status: status ?? this.status,
-      fileUrl: fileUrl ?? this.fileUrl,
+      frontImageUrl: frontImageUrl ?? this.frontImageUrl,
+      backImageUrl: backImageUrl ?? this.backImageUrl,
       fileName: fileName ?? this.fileName,
+      fileSize: fileSize ?? this.fileSize,
       uploadedAt: uploadedAt ?? this.uploadedAt,
       verifiedAt: verifiedAt ?? this.verifiedAt,
       rejectedReason: rejectedReason ?? this.rejectedReason,
@@ -85,8 +97,10 @@ class DriverDocument extends Equatable {
         id,
         type,
         status,
-        fileUrl,
+        frontImageUrl,
+        backImageUrl,
         fileName,
+        fileSize,
         uploadedAt,
         verifiedAt,
         rejectedReason,
@@ -99,8 +113,10 @@ class DriverDocument extends Equatable {
         'id: $id, '
         'type: $type, '
         'status: $status, '
-        'fileUrl: $fileUrl, '
+        'frontImageUrl: $frontImageUrl, '
+        'backImageUrl: $backImageUrl, '
         'fileName: $fileName, '
+        'fileSize: $fileSize, '
         'uploadedAt: $uploadedAt, '
         'verifiedAt: $verifiedAt, '
         'rejectedReason: $rejectedReason'
@@ -128,6 +144,41 @@ enum DocumentType {
       (type) => type.value == value,
       orElse: () => throw ArgumentError('Unknown document type: $value'),
     );
+  }
+
+  /// Returns whether this document type is required for driver verification
+  bool get isRequired {
+    return this == DocumentType.drivingLicense ||
+           this == DocumentType.aadhaar ||
+           this == DocumentType.pan ||
+           this == DocumentType.rcBook ||
+           this == DocumentType.insurance;
+  }
+
+  /// Returns whether this document requires both front and back images
+  bool get requiresBothSides {
+    return this == DocumentType.drivingLicense || 
+           this == DocumentType.aadhaar;
+  }
+
+  /// Returns the description for this document type
+  String get description {
+    switch (this) {
+      case DocumentType.drivingLicense:
+        return 'Upload a clear photo of your driving license';
+      case DocumentType.rcBook:
+        return 'Upload a clear photo of your vehicle registration certificate';
+      case DocumentType.insurance:
+        return 'Upload a clear photo of your vehicle insurance document';
+      case DocumentType.profilePicture:
+        return 'Upload a clear photo of yourself';
+      case DocumentType.aadhaar:
+        return 'Upload a clear photo of your Aadhaar card';
+      case DocumentType.pan:
+        return 'Upload a clear photo of your PAN card';
+      case DocumentType.addressProof:
+        return 'Upload a clear photo of your address proof document';
+    }
   }
 }
 

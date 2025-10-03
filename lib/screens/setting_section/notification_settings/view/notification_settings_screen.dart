@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:notifications_repo/notifications_repo.dart' as notification_repo;
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../../widgets/colors.dart';
+
+import 'package:driver/widgets/colors.dart';
+import 'package:driver/locator.dart';
+import 'package:notifications_repo/notifications_repo.dart';
+
 import '../bloc/notification_settings_bloc.dart';
 
 class NotificationSettingsScreen extends StatelessWidget {
@@ -10,23 +12,9 @@ class NotificationSettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<SharedPreferences>(
-      future: SharedPreferences.getInstance(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-        
-        final prefs = snapshot.data!;
-        final notificationsRepo = notification_repo.NotificationsRepo(prefs: prefs);
-        
-        return BlocProvider(
-          create: (_) => NotificationBloc(notificationsRepo: notificationsRepo)..add(const NotificationsLoaded()),
-          child: const NotificationSettingsView(),
-        );
-      },
+    return BlocProvider(
+      create: (_) => NotificationBloc(notificationsRepo: sl<NotificationsRepo>())..add(const NotificationsLoaded()),
+      child: const NotificationSettingsView(),
     );
   }
 }

@@ -1,5 +1,3 @@
-library shared_repo;
-
 export 'src/shared_repo.dart';
 export 'src/models/settings.dart';
 export 'src/models/driver_profile.dart';

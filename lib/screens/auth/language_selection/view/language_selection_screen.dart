@@ -19,8 +19,8 @@ class LanguageSelectionScreen extends StatelessWidget {
 
     return BlocProvider(
       create: (context) => LanguageSelectionBloc(
-        authRepo: lc<AuthRepo>(),
-        profileRepo: lc<ProfileRepo>(),
+        authRepo: sl<AuthRepo>(),
+        profileRepo: sl<ProfileRepo>(),
         user: user,
         profile: profile,
       ),
@@ -90,8 +90,8 @@ class _HeaderSection extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withOpacity(0.1),
-            AppColors.cyan.withOpacity(0.05),
+            AppColors.primary.withValues(alpha: 0.1),
+            AppColors.cyan.withValues(alpha: 0.05),
           ],
         ),
       ),
@@ -100,7 +100,7 @@ class _HeaderSection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.cyan.withOpacity(0.1),
+              color: AppColors.cyan.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(
@@ -149,7 +149,7 @@ class _LanguageSelectionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
+            color: AppColors.primary.withValues(alpha: 0.08),
             blurRadius: 32,
             offset: const Offset(0, 12),
             spreadRadius: 0,
@@ -211,7 +211,7 @@ class _LanguageOption extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected 
-              ? AppColors.cyan.withOpacity(0.1) 
+              ? AppColors.cyan.withValues(alpha: 0.1) 
               : AppColors.backgroundSecondary,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
@@ -227,7 +227,7 @@ class _LanguageOption extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isSelected 
                     ? AppColors.cyan 
-                    : AppColors.textTertiary.withOpacity(0.1),
+                    : AppColors.textTertiary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Center(
@@ -302,7 +302,7 @@ class _ContinueButton extends StatelessWidget {
             boxShadow: hasSelection && !isLoading
                 ? [
                     BoxShadow(
-                      color: AppColors.cyan.withOpacity(0.3),
+                      color: AppColors.cyan.withValues(alpha: 0.3),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),

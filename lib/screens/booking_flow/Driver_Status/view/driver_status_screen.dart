@@ -21,13 +21,13 @@ class RideScreen extends StatelessWidget {
       providers: [
         BlocProvider(
           create: (context) => DriverStatusBloc(
-            driverStatusRepo: lc<DriverStatusRepo>(),
-            socketService: lc<SocketService>(),
+            driverStatusRepo: sl<DriverStatusRepo>(),
+            socketService: sl<SocketService>(),
           )..add(const DriverStatusInitialized()),
         ),
         BlocProvider(
           create: (context) => RideMatchingBloc(
-            bookingRepo: lc<TripRepo>(),
+            bookingRepo: sl<TripRepo>(),
           )..add(const RideMatchingInitialized()),
         ),
       ],

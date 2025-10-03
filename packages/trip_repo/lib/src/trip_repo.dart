@@ -3,7 +3,6 @@ import 'package:localstorage/localstorage.dart';
 import 'package:equatable/equatable.dart';
 import 'models/trip.dart';
 import 'models/trip_response.dart';
-import 'models/booking.dart';
 import 'models/booking_response.dart';
 
 /// Trip repository for managing complete ride lifecycle (booking + trip + payments)
@@ -434,13 +433,35 @@ class TripRepo {
   /// Accept a booking (DEPRECATED - use acceptTrip instead)
   @Deprecated('Use acceptTrip() instead')
   Future<BookingResponse> acceptBooking(String bookingId) async {
-    return await acceptTrip(bookingId);
+    try {
+      final tripResponse = await acceptTrip(bookingId);
+      return BookingResponse(
+        success: tripResponse.success,
+        message: tripResponse.message,
+      );
+    } catch (e) {
+      return BookingResponse(
+        success: false,
+        message: 'Failed to accept booking: ${e.toString()}',
+      );
+    }
   }
 
   /// Reject a booking (DEPRECATED - use rejectTrip instead)
   @Deprecated('Use rejectTrip() instead')
   Future<BookingResponse> rejectBooking(String bookingId, {String? reason}) async {
-    return await rejectTrip(bookingId, reason: reason);
+    try {
+      final tripResponse = await rejectTrip(bookingId, reason: reason);
+      return BookingResponse(
+        success: tripResponse.success,
+        message: tripResponse.message,
+      );
+    } catch (e) {
+      return BookingResponse(
+        success: false,
+        message: 'Failed to reject booking: ${e.toString()}',
+      );
+    }
   }
 
   /// Start a booking (transition from booking to trip)
@@ -606,30 +627,6 @@ class TripRepo {
         message: 'Network error: ${e.toString()}',
       );
     }
-  }
-}
-
-/// Trip status enum for modern trip lifecycle
-enum TripStatus {
-  pending('PENDING', 'Pending'),
-  accepted('ACCEPTED', 'Accepted'),
-  driverArrived('DRIVER_ARRIVED', 'Driver Arrived'),
-  pickedUp('PICKED_UP', 'Picked Up'),
-  inProgress('IN_PROGRESS', 'In Progress'),
-  completed('COMPLETED', 'Completed'),
-  cancelled('CANCELLED', 'Cancelled'),
-  rejected('REJECTED', 'Rejected');
-
-  const TripStatus(this.value, this.displayName);
-
-  final String value;
-  final String displayName;
-
-  static TripStatus fromString(String value) {
-    return TripStatus.values.firstWhere(
-      (status) => status.value == value,
-      orElse: () => throw ArgumentError('Unknown trip status: $value'),
-    );
   }
 }
 

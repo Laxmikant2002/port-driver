@@ -15,7 +15,7 @@ class DocumentsRepo {
   final ApiClient apiClient;
   final Localstorage localStorage;
 
-  /// Upload a document
+  /// Upload a document (front or back image)
   Future<DocumentResponse> uploadDocument(DocumentUploadRequest request) async {
     try {
       final file = File(request.filePath);
@@ -35,6 +35,7 @@ class DocumentsRepo {
           'fileName': request.fileName,
           'fileSize': request.fileSize,
           'metadata': request.metadata,
+          'isBackImage': request.isBackImage,
         },
       );
 
@@ -53,6 +54,60 @@ class DocumentsRepo {
       return DocumentResponse(
         success: false,
         message: 'Unexpected error occurred',
+      );
+    } catch (e) {
+      return DocumentResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Upload both front and back images for a document
+  Future<DocumentResponse> uploadDocumentWithBothSides({
+    required DocumentType type,
+    required String frontImagePath,
+    required String backImagePath,
+    String? fileName,
+    int? fileSize,
+    Map<String, dynamic>? metadata,
+  }) async {
+    try {
+      // Upload front image
+      final frontRequest = DocumentUploadRequest(
+        type: type,
+        filePath: frontImagePath,
+        fileName: fileName,
+        fileSize: fileSize,
+        metadata: metadata,
+        isBackImage: false,
+      );
+
+      final frontResponse = await uploadDocument(frontRequest);
+      if (!frontResponse.success) {
+        return frontResponse;
+      }
+
+      // Upload back image
+      final backRequest = DocumentUploadRequest(
+        type: type,
+        filePath: backImagePath,
+        fileName: fileName,
+        fileSize: fileSize,
+        metadata: metadata,
+        isBackImage: true,
+      );
+
+      final backResponse = await uploadDocument(backRequest);
+      if (!backResponse.success) {
+        return backResponse;
+      }
+
+      // Return success response
+      return DocumentResponse(
+        success: true,
+        message: 'Both front and back images uploaded successfully',
+        document: frontResponse.document,
       );
     } catch (e) {
       return DocumentResponse(

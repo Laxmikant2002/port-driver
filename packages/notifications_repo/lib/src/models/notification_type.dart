@@ -29,10 +29,28 @@ enum NotificationType {
   promotion,
   emergency,
   maintenance,
-  support,
+  support;
+
+  static NotificationType fromString(String value) {
+    return NotificationType.values.firstWhere(
+      (type) => type.name == value,
+      orElse: () => NotificationType.system,
+    );
+  }
 }
 
 extension NotificationTypeExtension on NotificationType {
+  String get value {
+    return name;
+  }
+
+  static NotificationType fromString(String value) {
+    return NotificationType.values.firstWhere(
+      (type) => type.name == value,
+      orElse: () => NotificationType.system,
+    );
+  }
+
   String get displayName {
     switch (this) {
       // Booking Related

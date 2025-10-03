@@ -15,7 +15,7 @@ abstract class DataState<T> extends Equatable {
   bool get isFailure => this is DataFailed<T>;
   
   /// Returns true if the state represents a loading operation
-  bool get isLoading => this is DataLoading<T>;
+  bool get isLoadingState => this is DataLoading<T>;
   
   /// Returns true if the state has data
   bool get hasData => data != null;
@@ -53,7 +53,7 @@ class DataFailed<T> extends DataState<T> {
 
 /// Comprehensive error model with structured information
 class DataError extends Equatable {
-  const DataError({
+  DataError({
     required this.message,
     required this.type,
     this.statusCode,

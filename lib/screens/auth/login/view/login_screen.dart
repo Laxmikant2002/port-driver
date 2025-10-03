@@ -14,7 +14,7 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => LoginBloc(
-        authRepo: lc<AuthRepo>(),
+        authRepo: sl<AuthRepo>(),
       ),
       child: const _LoginView(),
     );
@@ -95,8 +95,8 @@ class _LoginViewState extends State<_LoginView>
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        AppColors.primary.withOpacity(0.1),
-                        AppColors.cyan.withOpacity(0.05),
+                        AppColors.primary.withValues(alpha: 0.1),
+                        AppColors.cyan.withValues(alpha: 0.05),
                       ],
                     ),
                   ),
@@ -268,7 +268,7 @@ class _ContinueButton extends StatelessWidget {
                 ? null 
                 : [
                     BoxShadow(
-                      color: AppColors.cyan.withOpacity(0.3),
+                      color: AppColors.cyan.withValues(alpha: 0.3),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),

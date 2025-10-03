@@ -20,8 +20,8 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => DriverStatusBloc(
-        driverStatusRepo: lc<DriverStatusRepo>(),
-        socketService: lc<SocketService>(),
+        driverStatusRepo: sl<DriverStatusRepo>(),
+        socketService: sl<SocketService>(),
       )..add(const DriverStatusInitialized()),
       child: const _DashboardView(),
     );
@@ -432,9 +432,9 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
             height: DashboardConstants.pulseIndicatorSize * _pulseAnimation.value,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               border: Border.all(
-                color: AppColors.primary.withOpacity(0.3),
+                color: AppColors.primary.withValues(alpha: 0.3),
                 width: 2,
               ),
             ),
@@ -819,7 +819,7 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(

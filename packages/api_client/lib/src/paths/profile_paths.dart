@@ -1,4 +1,4 @@
-import 'package:api_client/src/paths/base_paths.dart';
+import 'base_paths.dart';
 
 class ProfilePaths extends BasePaths {
   // Profile Management

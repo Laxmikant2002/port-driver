@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:api_client/api_client.dart';
 import 'package:localstorage/localstorage.dart';
 import 'models/settings.dart';
@@ -210,7 +211,7 @@ class SharedRepo {
     try {
       final response = await apiClient.uploadFile<Map<String, dynamic>>(
         SharedPaths.uploadFile,
-        file: filePath,
+        file: File(filePath),
         fieldName: fieldName,
       );
 

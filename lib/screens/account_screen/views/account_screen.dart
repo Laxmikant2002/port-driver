@@ -11,6 +11,7 @@ class AccountScreen extends StatelessWidget {
   static List<Map<String, dynamic>> getButtonsData(bool isDocumentVerified) {
     return [
       {'text': "Profile", 'icon': Icons.person_outline, 'route': AccountRoutes.profile},
+      {'text': "Earnings & Rewards", 'icon': Icons.account_balance_wallet, 'route': AccountRoutes.unifiedEarningsRewards},
       {'text': "Activity", 'icon': Icons.history_rounded, 'route': AccountRoutes.tripHistory},
       {'text': 'Ratings', 'icon': Icons.star_outline, 'route': AccountRoutes.ratings},
       {
@@ -104,8 +105,8 @@ class AccountScreen extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  AppColors.primary.withOpacity(0.1),
-                  AppColors.cyan.withOpacity(0.05),
+                  AppColors.primary.withValues(alpha: 0.1),
+                  AppColors.cyan.withValues(alpha: 0.05),
                 ],
               ),
             ),
@@ -115,7 +116,7 @@ class AccountScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.cyan.withOpacity(0.1),
+                    color: AppColors.cyan.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Icon(
@@ -245,7 +246,7 @@ class AccountScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.cyan.withOpacity(0.3),
+                        color: AppColors.cyan.withValues(alpha: 0.3),
                         blurRadius: 16,
                         offset: const Offset(0, 6),
                       ),
@@ -291,7 +292,7 @@ class AccountScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.08),
+                        color: AppColors.primary.withValues(alpha: 0.08),
                         blurRadius: 32,
                         offset: const Offset(0, 12),
                         spreadRadius: 0,
@@ -311,7 +312,7 @@ class AccountScreen extends StatelessWidget {
                             leading: Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: AppColors.cyan.withOpacity(0.1),
+                                color: AppColors.cyan.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
@@ -342,7 +343,7 @@ class AccountScreen extends StatelessWidget {
                           if (!isLast)
                             Divider(
                               height: 1,
-                              color: AppColors.border.withOpacity(0.3),
+                              color: AppColors.border.withValues(alpha: 0.3),
                               indent: 70,
                               endIndent: 24,
                             ),
@@ -371,10 +372,10 @@ class AccountScreen extends StatelessWidget {
           width: double.infinity,
           height: 56,
           decoration: BoxDecoration(
-            color: AppColors.error.withOpacity(0.1),
+            color: AppColors.error.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: AppColors.error.withOpacity(0.3),
+              color: AppColors.error.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
