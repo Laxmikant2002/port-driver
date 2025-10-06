@@ -7,6 +7,7 @@ import 'package:profile_repo/profile_repo.dart';
 
 import 'package:driver/locator.dart';
 import 'package:driver/models/document_upload.dart' as local_models;
+import 'package:driver/app/bloc/cubit/locale.dart';
 import 'package:driver/screens/auth/auth_check_screen.dart';
 import 'package:driver/screens/auth/language_selection/bloc/language_selection_bloc.dart';
 import 'package:driver/screens/auth/language_selection/view/language_selection_screen.dart';
@@ -69,24 +70,10 @@ class AuthRoutes {
       },
       
       languageSelection: (context) {
-        final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-        if (args == null) {
-          return const Scaffold(
-            body: Center(
-              child: Text('Invalid arguments for language selection'),
-            ),
-          );
-        }
-        final user = args['user'] as AuthUser;
-        final profile = args['profile'] as DriverProfile?;
-        
         return BlocProvider(
           create: (context) => LanguageSelectionBloc(
-            authRepo: sl<AuthRepo>(),
-            profileRepo: sl<ProfileRepo>(),
-            user: user,
-            profile: profile,
-          ),
+            localeCubit: context.read<LocaleCubit>(),
+          )..add(const LanguageSelectionInitialized()),
           child: const LanguageSelectionScreen(),
         );
       },

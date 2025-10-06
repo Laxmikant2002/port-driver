@@ -1,4 +1,4 @@
-import 'package:driver/screens/booking_flow/Driver_Status/bloc/driver_status_bloc.dart';
+import 'package:driver/app/bloc/driver_status_bloc.dart';
 import 'package:driver/widgets/colors.dart';
 import 'package:driver_status/driver_status.dart';
 import 'package:flutter/material.dart';

@@ -7,6 +7,8 @@ import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.dart';
 import 'app_localizations_es.dart';
+import 'app_localizations_hi.dart';
+import 'app_localizations_mr.dart';
 
 // ignore_for_file: type=lint
 
@@ -95,7 +97,9 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('es')
+    Locale('es'),
+    Locale('hi'),
+    Locale('mr')
   ];
 
   /// Text shown in the AppBar of the Counter Page
@@ -121,6 +125,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Login'**
   String get login;
+
+  /// Welcome message
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome'**
+  String get welcome;
+
+  /// Instructions for entering phone number
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your mobile number'**
+  String get enterPhoneNumber;
+
+  /// Button to send OTP
+  ///
+  /// In en, this message translates to:
+  /// **'Send OTP'**
+  String get sendOtp;
+
+  /// Button to verify OTP
+  ///
+  /// In en, this message translates to:
+  /// **'Verify OTP'**
+  String get verifyOtp;
+
+  /// Button to resend OTP
+  ///
+  /// In en, this message translates to:
+  /// **'Resend OTP'**
+  String get resendOtp;
+
+  /// Label for language selection
+  ///
+  /// In en, this message translates to:
+  /// **'Select Language'**
+  String get selectLanguage;
+
+  /// Name of English language
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get english;
+
+  /// Name of Marathi language
+  ///
+  /// In en, this message translates to:
+  /// **'Marathi'**
+  String get marathi;
+
+  /// Name of Hindi language
+  ///
+  /// In en, this message translates to:
+  /// **'Hindi'**
+  String get hindi;
+
+  /// No description provided for @continueButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueButton;
+
+  /// Label for driver name
+  ///
+  /// In en, this message translates to:
+  /// **'Driver Name'**
+  String get driverName;
+
+  /// Label for vehicle type
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle Type'**
+  String get vehicleType;
+
+  /// Label for work area
+  ///
+  /// In en, this message translates to:
+  /// **'Work Area'**
+  String get workArea;
+
+  /// Button to go online
+  ///
+  /// In en, this message translates to:
+  /// **'Go Online'**
+  String get goOnline;
+
+  /// Button to go offline
+  ///
+  /// In en, this message translates to:
+  /// **'Go Offline'**
+  String get goOffline;
+
+  /// Button to accept trip
+  ///
+  /// In en, this message translates to:
+  /// **'Accept Trip'**
+  String get acceptTrip;
+
+  /// Button to reject trip
+  ///
+  /// In en, this message translates to:
+  /// **'Reject Trip'**
+  String get rejectTrip;
+
+  /// Label for today's earnings
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Earnings'**
+  String get earningsToday;
+
+  /// Label for trips completed
+  ///
+  /// In en, this message translates to:
+  /// **'Trips Completed'**
+  String get tripsCompleted;
+
+  /// Label for profile
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// Label for settings
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// Button to logout
+  ///
+  /// In en, this message translates to:
+  /// **'Logout'**
+  String get logout;
 }
 
 class _AppLocalizationsDelegate
@@ -134,7 +270,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'es'].contains(locale.languageCode);
+      <String>['en', 'es', 'hi', 'mr'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -147,6 +283,10 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsEn();
     case 'es':
       return AppLocalizationsEs();
+    case 'hi':
+      return AppLocalizationsHi();
+    case 'mr':
+      return AppLocalizationsMr();
   }
 
   throw FlutterError(

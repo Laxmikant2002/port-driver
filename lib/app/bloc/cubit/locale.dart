@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 part 'locale_cubit_state.dart';
 
 const englishLocale = Locale('en', 'US');
-const spanishLocale = Locale('es', 'ES');
+const hindiLocale = Locale('hi', 'IN');
+const marathiLocale = Locale('mr', 'IN');
 
 class LocaleCubit extends Cubit<Locale> {
   LocaleCubit() : super(englishLocale) {
@@ -18,8 +19,27 @@ class LocaleCubit extends Cubit<Locale> {
     // _saveLocale('en');
   }
 
-  void selectSpanishUsLocale() {
-    emit(spanishLocale);
-    // _saveLocale('es');
+  void selectHindiLocale() {
+    emit(hindiLocale);
+    // _saveLocale('hi');
+  }
+
+  void selectMarathiLocale() {
+    emit(marathiLocale);
+    // _saveLocale('mr');
+  }
+
+  void selectLocale(String languageCode) {
+    switch (languageCode) {
+      case 'hi':
+        selectHindiLocale();
+        break;
+      case 'mr':
+        selectMarathiLocale();
+        break;
+      default:
+        selectEnglishLocale();
+        break;
+    }
   }
 }

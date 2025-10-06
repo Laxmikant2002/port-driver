@@ -22,6 +22,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_repo/shared_repo.dart';
 import 'package:trip_repo/trip_repo.dart';
 import 'package:vehicle_repo/vehicle_repo.dart';
+import 'package:rewards_repo/rewards_repo.dart';
+import 'package:driver/services/realtime/realtime_service.dart';
+import 'package:driver/app/bloc/trip_bloc.dart';
+import 'package:driver/app/bloc/driver_status_bloc.dart';
 
 /// Service Locator instance for dependency injection
 final sl = GetIt.instance;
@@ -165,10 +169,22 @@ Future<void> initializeDependencies() async {
       apiClient: sl<ApiClient>(),
       localStorage: sl<Localstorage>(),
     ));
-    // ..registerLazySingleton<RewardsRepo>(() => RewardsRepo(
-    //   apiClient: sl<ApiClient>(),
-    //   localStorage: sl<Localstorage>(),
-    // )); // Removed - rewards_repo package not available
+
+  // Register modern real-time services
+  sl
+    ..registerLazySingleton<RealtimeService>(() => RealtimeService())
+    ..registerLazySingleton<TripBloc>(() => TripBloc(
+      tripRepo: sl<TripRepo>(),
+      realtimeService: sl<RealtimeService>(),
+    ))
+    ..registerLazySingleton<DriverStatusBloc>(() => DriverStatusBloc(
+      driverStatusRepo: sl<DriverStatusRepo>(),
+      realtimeService: sl<RealtimeService>(),
+    ))
+    ..registerLazySingleton<RewardsRepo>(() => RewardsRepo(
+      apiClient: sl<ApiClient>(),
+      localStorage: sl<Localstorage>(),
+    ));
   
   // Initialize notification service
   // await sl<NotificationService>().initialize(); // Removed - using notifications_repo

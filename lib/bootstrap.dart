@@ -5,6 +5,7 @@ import 'package:bloc/bloc.dart';
 import 'package:flutter/widgets.dart';
 import 'package:driver/locator.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
 class AppBlocObserver extends BlocObserver {
@@ -32,19 +33,24 @@ class AppBlocObserver extends BlocObserver {
 }
 
 Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
-  // Enhanced error handling
+  // Enhanced error handling with Firebase Crashlytics
   FlutterError.onError = (details) {
     log('Flutter Error: ${details.exceptionAsString()}', stackTrace: details.stack);
     
-    // In production, you might want to send this to a crash reporting service
+    // Send to Firebase Crashlytics in production
     if (kReleaseMode) {
-      // TODO: Send to crash reporting service (e.g., Firebase Crashlytics)
+      FirebaseCrashlytics.instance.recordFlutterFatalError(details);
     }
   };
 
-  // Handle platform errors
+  // Handle platform errors with Firebase Crashlytics
   PlatformDispatcher.instance.onError = (error, stack) {
     log('Platform Error: $error', stackTrace: stack);
+    
+    // Send to Firebase Crashlytics in production
+    if (kReleaseMode) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    }
     return true;
   };
 
@@ -55,6 +61,11 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   
   // Initialize Firebase
   await Firebase.initializeApp();
+  
+  // Initialize Firebase Crashlytics
+  if (kReleaseMode) {
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  }
   
   // Initialize dependencies with proper error handling
   try {

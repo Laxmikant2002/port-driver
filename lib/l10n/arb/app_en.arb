@@ -15,5 +15,93 @@
     "login": "Login",
     "@login": {
         "description": "Label for the login button"
+    },
+    "welcome": "Welcome",
+    "@welcome": {
+        "description": "Welcome message"
+    },
+    "enterPhoneNumber": "Enter your mobile number",
+    "@enterPhoneNumber": {
+        "description": "Instructions for entering phone number"
+    },
+    "sendOtp": "Send OTP",
+    "@sendOtp": {
+        "description": "Button to send OTP"
+    },
+    "verifyOtp": "Verify OTP",
+    "@verifyOtp": {
+        "description": "Button to verify OTP"
+    },
+    "resendOtp": "Resend OTP",
+    "@resendOtp": {
+        "description": "Button to resend OTP"
+    },
+    "selectLanguage": "Select Language",
+    "@selectLanguage": {
+        "description": "Label for language selection"
+    },
+    "english": "English",
+    "@english": {
+        "description": "Name of English language"
+    },
+    "marathi": "Marathi",
+    "@marathi": {
+        "description": "Name of Marathi language"
+    },
+    "hindi": "Hindi",
+    "@hindi": {
+        "description": "Name of Hindi language"
+    },
+    "continueButton": "Continue",
+    "@continue": {
+        "description": "Button to continue"
+    },
+    "driverName": "Driver Name",
+    "@driverName": {
+        "description": "Label for driver name"
+    },
+    "vehicleType": "Vehicle Type",
+    "@vehicleType": {
+        "description": "Label for vehicle type"
+    },
+    "workArea": "Work Area",
+    "@workArea": {
+        "description": "Label for work area"
+    },
+    "goOnline": "Go Online",
+    "@goOnline": {
+        "description": "Button to go online"
+    },
+    "goOffline": "Go Offline",
+    "@goOffline": {
+        "description": "Button to go offline"
+    },
+    "acceptTrip": "Accept Trip",
+    "@acceptTrip": {
+        "description": "Button to accept trip"
+    },
+    "rejectTrip": "Reject Trip",
+    "@rejectTrip": {
+        "description": "Button to reject trip"
+    },
+    "earningsToday": "Today's Earnings",
+    "@earningsToday": {
+        "description": "Label for today's earnings"
+    },
+    "tripsCompleted": "Trips Completed",
+    "@tripsCompleted": {
+        "description": "Label for trips completed"
+    },
+    "profile": "Profile",
+    "@profile": {
+        "description": "Label for profile"
+    },
+    "settings": "Settings",
+    "@settings": {
+        "description": "Label for settings"
+    },
+    "logout": "Logout",
+    "@logout": {
+        "description": "Button to logout"
     }
 }

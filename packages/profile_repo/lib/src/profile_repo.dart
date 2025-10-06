@@ -63,6 +63,12 @@ class ProfileResponse {
         message: json['message'] as String?,
         data: json['data'] != null ? DriverProfile.fromJson(json['data'] as Map<String, dynamic>) : null,
       );
+
+  Map<String, dynamic> toJson() => {
+        'success': success,
+        'message': message,
+        'data': data?.toJson(),
+      };
 }
 
 /// Driver status enum for route decision making

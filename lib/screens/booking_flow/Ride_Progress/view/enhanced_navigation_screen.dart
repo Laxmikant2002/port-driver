@@ -483,12 +483,36 @@ class _EnhancedNavigationScreenState extends State<EnhancedNavigationScreen>
 
   /// Open external navigation using BookingFlowCoordinator
   Future<void> _openExternalNavigation(BuildContext context, dynamic destination) async {
-    // TODO: Convert dynamic destination to BookingLocation
-    // For now, show a placeholder message
-    _showErrorWithRetry(
-      context,
-      AppError.unknown('External navigation not yet implemented'),
-    );
+    try {
+      // Convert dynamic destination to BookingLocation
+      BookingLocation? bookingLocation;
+      if (destination is Map<String, dynamic>) {
+        bookingLocation = BookingLocation(
+          latitude: (destination['latitude'] as num).toDouble(),
+          longitude: (destination['longitude'] as num).toDouble(),
+          address: destination['address'] as String? ?? 'Unknown Location',
+        );
+      } else if (destination is BookingLocation) {
+        bookingLocation = destination;
+      }
+      
+      if (bookingLocation != null) {
+        await BookingFlowCoordinator.openExternalNavigation(
+          context,
+          bookingLocation,
+        );
+      } else {
+        _showErrorWithRetry(
+          context,
+          AppError.unknown('Invalid destination format'),
+        );
+      }
+    } catch (e) {
+      _showErrorWithRetry(
+        context,
+        AppError.unknown('Failed to open external navigation: $e'),
+      );
+    }
   }
 
   /// Show error with retry option using enhanced error handling

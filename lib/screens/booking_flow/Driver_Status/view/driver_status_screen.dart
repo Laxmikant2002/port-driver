@@ -4,9 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trip_repo/trip_repo.dart';
 import 'package:driver/locator.dart';
 import 'package:driver/services/network/socket_service.dart';
+import 'package:driver/services/realtime/realtime_service.dart';
 import 'package:driver_status/driver_status.dart';
 
-import '../bloc/driver_status_bloc.dart';
+import 'package:driver/app/bloc/driver_status_bloc.dart';
 import '../../Ride_Matching/bloc/ride_matching_bloc.dart';
 import 'modern_driver_dashboard.dart';
 
@@ -22,7 +23,7 @@ class RideScreen extends StatelessWidget {
         BlocProvider(
           create: (context) => DriverStatusBloc(
             driverStatusRepo: sl<DriverStatusRepo>(),
-            socketService: sl<SocketService>(),
+            realtimeService: sl<RealtimeService>(),
           )..add(const DriverStatusInitialized()),
         ),
         BlocProvider(

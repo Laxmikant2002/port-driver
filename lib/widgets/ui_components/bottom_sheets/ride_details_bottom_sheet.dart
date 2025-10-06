@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:driver/widgets/colors.dart';
 import 'package:driver/screens/booking_flow/Ride_Progress/bloc/booking_bloc.dart';
 import 'package:trip_repo/trip_repo.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RideDetailsBottomSheet extends StatelessWidget {
   const RideDetailsBottomSheet({super.key});
@@ -176,8 +177,7 @@ class RideDetailsBottomSheet extends StatelessWidget {
               ),
               IconButton(
                 onPressed: () {
-                  // TODO: Implement call functionality
-                  _showCallDialog();
+                  _makePhoneCall();
                 },
                 icon: Icon(
                   Icons.phone,
@@ -399,9 +399,21 @@ class RideDetailsBottomSheet extends StatelessWidget {
     );
   }
 
-  void _showCallDialog() {
-    // TODO: Implement call functionality
-    // This would typically open the phone dialer with the customer's number
+  void _makePhoneCall() async {
+    if (widget.booking.customerPhone != null) {
+      final Uri phoneUri = Uri(scheme: 'tel', path: widget.booking.customerPhone!);
+      if (await canLaunchUrl(phoneUri)) {
+        await launchUrl(phoneUri);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch phone dialer')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Customer phone number not available')),
+      );
+    }
   }
 
   void _showCompleteDialog(BuildContext context) {

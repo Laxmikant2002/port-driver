@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:auth_repo/auth_repo.dart';
 import 'package:driver/app/bloc/auth_bloc.dart';
-import 'package:driver/screens/auth/login/login.dart';
-import 'package:driver/screens/dashboard/view/main_navigation_screen.dart';
 import 'package:driver/widgets/colors.dart';
-import 'package:driver/locator.dart';
 
 /// Screen that checks authentication status on app startup
 /// This is the initial screen that determines whether to show login or dashboard

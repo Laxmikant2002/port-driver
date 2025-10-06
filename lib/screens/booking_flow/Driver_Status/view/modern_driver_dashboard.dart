@@ -3,9 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:driver/widgets/colors.dart';
-import 'package:driver/screens/booking_flow/Driver_Status/bloc/driver_status_bloc.dart';
+import 'package:driver/app/bloc/driver_status_bloc.dart';
 import 'package:driver_status/driver_status.dart';
 import 'package:driver/widgets/ui_components/bottom_sheets/incoming_delivery_request_sheet.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Modern Driver Dashboard with sliding_up_panel implementation
 class ModernDriverDashboard extends StatefulWidget {
@@ -221,8 +222,28 @@ class _ModernDriverDashboardState extends State<ModernDriverDashboard>
   }
 
   Set<Polyline> _buildPolylines(DriverStatusState state) {
-    // TODO: Implement route polylines for active deliveries
-    return <Polyline>{};
+    final polylines = <Polyline>{};
+    
+    // Add route polyline for active booking
+    if (state.currentBooking != null) {
+      final booking = state.currentBooking!;
+      final points = <LatLng>[
+        LatLng(booking.pickupLocation.latitude, booking.pickupLocation.longitude),
+        LatLng(booking.dropoffLocation.latitude, booking.dropoffLocation.longitude),
+      ];
+      
+      polylines.add(
+        Polyline(
+          polylineId: const PolylineId('route'),
+          points: points,
+          color: AppColors.primary,
+          width: 4,
+          patterns: [PatternItem.dash(20), PatternItem.gap(10)],
+        ),
+      );
+    }
+    
+    return polylines;
   }
 
   /// 2. Top Status Bar
@@ -337,7 +358,7 @@ class _ModernDriverDashboardState extends State<ModernDriverDashboard>
             // Notification bell
             IconButton(
               onPressed: () {
-                // TODO: Show notifications
+                Navigator.pushNamed(context, '/notifications');
               },
               icon: Icon(
                 Icons.notifications_active,
@@ -690,7 +711,7 @@ class _ModernDriverDashboardState extends State<ModernDriverDashboard>
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () {
-                    // TODO: Call customer
+                    _makePhoneCall();
                   },
                   icon: Icon(Icons.phone, size: 16),
                   label: Text('Call'),
@@ -704,7 +725,7 @@ class _ModernDriverDashboardState extends State<ModernDriverDashboard>
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    // TODO: Open navigation
+                    _openNavigation();
                   },
                   icon: Icon(Icons.navigation, size: 16),
                   label: Text('Navigate'),
@@ -1040,4 +1061,48 @@ class DeliveryHistory {
     required this.distance,
     required this.completedAt,
   });
+}
+
+// Add helper methods to the main class
+extension _ModernDriverDashboardMethods on _ModernDriverDashboardState {
+  void _makePhoneCall() async {
+    // Get customer phone from current booking
+    final state = context.read<DriverStatusBloc>().state;
+    if (state.currentBooking?.customerPhone != null) {
+      final Uri phoneUri = Uri(scheme: 'tel', path: state.currentBooking!.customerPhone!);
+      if (await canLaunchUrl(phoneUri)) {
+        await launchUrl(phoneUri);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch phone dialer')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Customer phone number not available')),
+      );
+    }
+  }
+
+  void _openNavigation() async {
+    final state = context.read<DriverStatusBloc>().state;
+    if (state.currentBooking?.dropoffLocation != null) {
+      final destination = state.currentBooking!.dropoffLocation;
+      final Uri navigationUri = Uri.parse(
+        'https://www.google.com/maps/dir/?api=1&destination=${destination.latitude},${destination.longitude}'
+      );
+      
+      if (await canLaunchUrl(navigationUri)) {
+        await launchUrl(navigationUri, mode: LaunchMode.externalApplication);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch navigation')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Destination not available')),
+      );
+    }
+  }
 }

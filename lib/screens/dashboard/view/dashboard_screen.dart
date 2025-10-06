@@ -8,7 +8,7 @@ import 'package:driver/locator.dart';
 import 'package:driver/services/location/location_service.dart';
 import 'package:driver/services/network/socket_service.dart';
 import 'package:driver_status/driver_status.dart';
-import 'package:driver/screens/booking_flow/Driver_Status/bloc/driver_status_bloc.dart';
+import 'package:driver/app/bloc/driver_status_bloc.dart';
 import 'package:driver/screens/dashboard/constants/dashboard_constants.dart';
 
 /// Modern Uber-inspired dashboard screen for Electric Loading Gadi driver app

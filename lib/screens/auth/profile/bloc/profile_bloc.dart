@@ -11,6 +11,7 @@ part 'profile_event.dart';
 part 'profile_state.dart';
 
 /// BLoC responsible for managing profile creation/update state and business logic
+/// Handles both onboarding (new user) and account management (existing user) flows
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   ProfileBloc({
     required this.authRepo,
@@ -18,6 +19,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     required this.user,
     this.existingProfile,
     this.isNewUser = true,
+    this.isAccountManagement = false, // New flag to distinguish context
   }) : super(const ProfileState()) {
     on<ProfileInitialized>(_onInitialized);
     on<ProfileNameChanged>(_onNameChanged);
@@ -32,6 +34,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final AuthUser user;
   final DriverProfile? existingProfile;
   final bool isNewUser;
+  final bool isAccountManagement;
 
   /// Handles profile initialization
   void _onInitialized(ProfileInitialized event, Emitter<ProfileState> emit) {
@@ -136,18 +139,26 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       }
 
       if (response.success) {
-        // Determine next step in onboarding
-        final nextStep = RouteFlowService.getNextOnboardingStep(
-          currentStep: '/profile-creation',
-          completedSteps: ['profile'],
-          missingRequirements: <String>[],
-        );
+        if (isAccountManagement) {
+          // In account management mode, just emit success
+          emit(state.copyWith(
+            status: FormzSubmissionStatus.success,
+            updatedProfile: response.data,
+          ));
+        } else {
+          // In onboarding mode, determine next step
+          final nextStep = RouteFlowService.getNextOnboardingStep(
+            currentStep: '/profile-creation',
+            completedSteps: ['profile'],
+            missingRequirements: <String>[],
+          );
 
-        emit(state.copyWith(
-          status: FormzSubmissionStatus.success,
-          routeDecision: nextStep,
-          updatedProfile: response.data,
-        ));
+          emit(state.copyWith(
+            status: FormzSubmissionStatus.success,
+            routeDecision: nextStep,
+            updatedProfile: response.data,
+          ));
+        }
       } else {
         emit(state.copyWith(
           status: FormzSubmissionStatus.failure,

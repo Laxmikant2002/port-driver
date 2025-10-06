@@ -11,7 +11,7 @@ import 'package:driver/screens/account/documents/bloc/documents_bloc.dart';
 import 'package:driver/screens/account/documents/views/document_detail_screen.dart';
 import 'package:driver/screens/account/documents/views/documents_list_screen.dart';
 import 'package:driver/screens/account/help_support/views/help_support_screen.dart';
-import 'package:driver/screens/account/profile/view/profile_screen.dart' as account_profile;
+// import 'package:driver/screens/account/profile/view/profile_screen.dart' as account_profile;
 import 'package:driver/screens/account/unified_earnings_rewards/unified_earnings_rewards.dart';
 import 'package:driver/screens/account/trip_history/trip_history_screen.dart';
 import 'package:driver/screens/account_status/account_inactive_screen.dart';
@@ -90,7 +90,7 @@ class AccountRoutes {
   static Map<String, WidgetBuilder> getRoutes() {
     return {
       // Profile routes (onboarding routes are now in AuthRoutes)
-      profile: (context) => const account_profile.ProfileScreen(phoneNumber: '+1234567890'),
+      // profile: (context) => const account_profile.ProfileScreen(phoneNumber: '+1234567890'),
 
       // Document routes
       accountDocuments: (context) {
