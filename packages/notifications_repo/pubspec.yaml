@@ -10,7 +10,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  shared_preferences: ^2.3.3
+  api_client:
+    path: ../api_client
+  localstorage:
+    path: ../localstorage
+  equatable: ^2.0.5
 
 dev_dependencies:
   flutter_test:

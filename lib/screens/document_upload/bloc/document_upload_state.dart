@@ -1,14 +1,15 @@
 part of 'document_upload_bloc.dart';
 
 /// {@template document_upload_state}
-/// State for the document upload flow.
+/// State for the document upload flow with modern error handling.
 /// {@endtemplate}
 final class DocumentUploadState extends Equatable {
   /// {@macro document_upload_state}
   const DocumentUploadState({
     this.status = FormzSubmissionStatus.initial,
     this.documents = const [],
-    this.errorMessage,
+    this.error,
+    this.isRetrying = false,
   });
 
   /// The current submission status.
@@ -17,8 +18,11 @@ final class DocumentUploadState extends Equatable {
   /// List of documents to be uploaded.
   final List<DocumentUpload> documents;
 
-  /// Error message if any.
-  final String? errorMessage;
+  /// Current error if any.
+  final DocumentUploadError? error;
+
+  /// Whether a retry operation is in progress.
+  final bool isRetrying;
 
   /// Returns true if the form is valid and ready for submission.
   bool get isValid {
@@ -36,7 +40,12 @@ final class DocumentUploadState extends Equatable {
   bool get isFailure => status == FormzSubmissionStatus.failure;
 
   /// Returns true if there's an error.
-  bool get hasError => isFailure && errorMessage != null;
+  bool get hasError => error != null;
+
+  /// Returns user-friendly error message.
+  String? get errorMessage => error != null 
+      ? DocumentUploadErrorHandler.getUserFriendlyMessage(error!) 
+      : null;
 
   /// Returns the total number of documents.
   int get totalDocuments => documents.length;
@@ -133,25 +142,28 @@ final class DocumentUploadState extends Equatable {
   DocumentUploadState copyWith({
     FormzSubmissionStatus? status,
     List<DocumentUpload>? documents,
-    String? errorMessage,
+    DocumentUploadError? error,
+    bool? isRetrying,
     bool clearError = false,
   }) {
     return DocumentUploadState(
       status: status ?? this.status,
       documents: documents ?? this.documents,
-      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      error: clearError ? null : (error ?? this.error),
+      isRetrying: isRetrying ?? this.isRetrying,
     );
   }
 
   @override
-  List<Object?> get props => [status, documents, errorMessage];
+  List<Object?> get props => [status, documents, error, isRetrying];
 
   @override
   String toString() {
     return 'DocumentUploadState('
         'status: $status, '
         'documents: ${documents.length}, '
-        'errorMessage: $errorMessage'
+        'error: $error, '
+        'isRetrying: $isRetrying'
         ')';
   }
 }

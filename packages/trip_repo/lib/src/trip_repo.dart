@@ -3,8 +3,9 @@ import 'package:localstorage/localstorage.dart';
 import 'package:equatable/equatable.dart';
 import 'models/trip.dart';
 import 'models/trip_response.dart';
+import 'models/booking_response.dart';
 
-/// Trip repository for managing trip lifecycle and payments
+/// Trip repository for managing complete ride lifecycle (booking + trip + payments)
 class TripRepo {
   const TripRepo({
     required this.apiClient,
@@ -14,11 +15,11 @@ class TripRepo {
   final ApiClient apiClient;
   final Localstorage localStorage;
 
-  /// Start a trip
-  Future<TripResponse> startTrip(String tripId) async {
+  /// Accept a trip request
+  Future<TripResponse> acceptTrip(String tripId) async {
     try {
       final response = await apiClient.post<Map<String, dynamic>>(
-        '/rides/start',
+        TripPaths.acceptTrip,
         data: {'tripId': tripId},
       );
 
@@ -30,7 +31,7 @@ class TripRepo {
       if (response is DataFailed) {
         return TripResponse(
           success: false,
-          message: response.error?.getErrorMessage() ?? 'Failed to start trip',
+          message: response.error?.getErrorMessage() ?? 'Failed to accept trip',
         );
       }
 
@@ -46,11 +47,79 @@ class TripRepo {
     }
   }
 
-  /// End a trip
-  Future<TripResponse> endTrip(String tripId) async {
+  /// Reject a trip request
+  Future<TripResponse> rejectTrip(String tripId, {String? reason}) async {
     try {
       final response = await apiClient.post<Map<String, dynamic>>(
-        '/rides/end',
+        TripPaths.rejectTrip,
+        data: {'tripId': tripId, 'reason': reason},
+      );
+
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return TripResponse.fromJson(data);
+      }
+
+      if (response is DataFailed) {
+        return TripResponse(
+          success: false,
+          message: response.error?.getErrorMessage() ?? 'Failed to reject trip',
+        );
+      }
+
+      return TripResponse(
+        success: false,
+        message: 'Unexpected error occurred',
+      );
+    } catch (e) {
+      return TripResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Update trip status (PICKED_UP, IN_PROGRESS, COMPLETED, etc.)
+  Future<TripResponse> updateTripStatus(String tripId, TripStatus status) async {
+    try {
+      final response = await apiClient.patch<Map<String, dynamic>>(
+        TripPaths.updateTripStatus,
+        data: {
+          'tripId': tripId,
+          'status': status.value,
+          'timestamp': DateTime.now().toIso8601String(),
+        },
+      );
+
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return TripResponse.fromJson(data);
+      }
+
+      if (response is DataFailed) {
+        return TripResponse(
+          success: false,
+          message: response.error?.getErrorMessage() ?? 'Failed to update trip status',
+        );
+      }
+
+      return TripResponse(
+        success: false,
+        message: 'Unexpected error occurred',
+      );
+    } catch (e) {
+      return TripResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Complete a trip
+  Future<TripResponse> completeTrip(String tripId) async {
+    try {
+      final response = await apiClient.patch<Map<String, dynamic>>(
+        TripPaths.completeTrip,
         data: {'tripId': tripId},
       );
 
@@ -62,7 +131,75 @@ class TripRepo {
       if (response is DataFailed) {
         return TripResponse(
           success: false,
-          message: response.error?.getErrorMessage() ?? 'Failed to end trip',
+          message: response.error?.getErrorMessage() ?? 'Failed to complete trip',
+        );
+      }
+
+      return TripResponse(
+        success: false,
+        message: 'Unexpected error occurred',
+      );
+    } catch (e) {
+      return TripResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Update trip location (for real-time tracking)
+  Future<TripResponse> updateTripLocation(String tripId, double lat, double lng) async {
+    try {
+      final response = await apiClient.post<Map<String, dynamic>>(
+        TripPaths.updateTripLocation,
+        data: {
+          'tripId': tripId,
+          'lat': lat,
+          'lng': lng,
+          'timestamp': DateTime.now().toIso8601String(),
+        },
+      );
+
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return TripResponse.fromJson(data);
+      }
+
+      if (response is DataFailed) {
+        return TripResponse(
+          success: false,
+          message: response.error?.getErrorMessage() ?? 'Failed to update trip location',
+        );
+      }
+
+      return TripResponse(
+        success: false,
+        message: 'Unexpected error occurred',
+      );
+    } catch (e) {
+      return TripResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Get trip earnings
+  Future<TripResponse> getTripEarnings(String tripId) async {
+    try {
+      final response = await apiClient.get<Map<String, dynamic>>(
+        '${TripPaths.getTripEarnings}/$tripId',
+      );
+
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return TripResponse.fromJson(data);
+      }
+
+      if (response is DataFailed) {
+        return TripResponse(
+          success: false,
+          message: response.error?.getErrorMessage() ?? 'Failed to fetch trip earnings',
         );
       }
 
@@ -87,7 +224,7 @@ class TripRepo {
   }) async {
     try {
       final response = await apiClient.post<Map<String, dynamic>>(
-        '/rides/payment',
+        TripPaths.confirmPayment,
         data: {
           'tripId': tripId,
           'paymentMethod': paymentMethod.value,
@@ -128,7 +265,7 @@ class TripRepo {
   }) async {
     try {
       final response = await apiClient.post<Map<String, dynamic>>(
-        '/rides/rate',
+        TripPaths.ratePassenger,
         data: {
           'tripId': tripId,
           'rating': rating,
@@ -163,7 +300,9 @@ class TripRepo {
   /// Get trip details
   Future<TripResponse> getTrip(String tripId) async {
     try {
-      final response = await apiClient.get<Map<String, dynamic>>('/rides/$tripId');
+      final response = await apiClient.get<Map<String, dynamic>>(
+        '${TripPaths.getTripDetails}/$tripId',
+      );
 
       if (response is DataSuccess) {
         final data = response.data!;
@@ -189,10 +328,12 @@ class TripRepo {
     }
   }
 
-  /// Get active trips for driver
-  Future<TripResponse> getActiveTrips() async {
+  /// Get active trip for driver
+  Future<TripResponse> getActiveTrip() async {
     try {
-      final response = await apiClient.get<Map<String, dynamic>>('/rides/active');
+      final response = await apiClient.get<Map<String, dynamic>>(
+        TripPaths.getActiveTrip,
+      );
 
       if (response is DataSuccess) {
         final data = response.data!;
@@ -202,7 +343,7 @@ class TripRepo {
       if (response is DataFailed) {
         return TripResponse(
           success: false,
-          message: response.error?.getErrorMessage() ?? 'Failed to fetch active trips',
+          message: response.error?.getErrorMessage() ?? 'Failed to fetch active trip',
         );
       }
 
@@ -225,7 +366,7 @@ class TripRepo {
   }) async {
     try {
       final response = await apiClient.get<Map<String, dynamic>>(
-        '/rides/history',
+        TripPaths.getTripHistory,
         queryParameters: {
           'page': page,
           'limit': limit,
@@ -250,6 +391,238 @@ class TripRepo {
       );
     } catch (e) {
       return TripResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+      );
+    }
+  }
+
+  // ============ LEGACY BOOKING METHODS (DEPRECATED) ============
+  // These methods are kept for backward compatibility but should use trip methods instead
+
+  /// Get available bookings for driver (DEPRECATED - use getActiveTrip instead)
+  @Deprecated('Use getActiveTrip() instead')
+  Future<BookingResponse> getAvailableBookings() async {
+    try {
+      final response = await apiClient.get<Map<String, dynamic>>(TripPaths.getAvailableBookings);
+
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return BookingResponse.fromJson(data);
+      }
+
+      if (response is DataFailed) {
+        return BookingResponse(
+          success: false,
+          message: response.error?.getErrorMessage() ?? 'Failed to fetch available bookings',
+        );
+      }
+
+      return BookingResponse(
+        success: false,
+        message: 'Unexpected error occurred',
+      );
+    } catch (e) {
+      return BookingResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Accept a booking (DEPRECATED - use acceptTrip instead)
+  @Deprecated('Use acceptTrip() instead')
+  Future<BookingResponse> acceptBooking(String bookingId) async {
+    try {
+      final tripResponse = await acceptTrip(bookingId);
+      return BookingResponse(
+        success: tripResponse.success,
+        message: tripResponse.message,
+      );
+    } catch (e) {
+      return BookingResponse(
+        success: false,
+        message: 'Failed to accept booking: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Reject a booking (DEPRECATED - use rejectTrip instead)
+  @Deprecated('Use rejectTrip() instead')
+  Future<BookingResponse> rejectBooking(String bookingId, {String? reason}) async {
+    try {
+      final tripResponse = await rejectTrip(bookingId, reason: reason);
+      return BookingResponse(
+        success: tripResponse.success,
+        message: tripResponse.message,
+      );
+    } catch (e) {
+      return BookingResponse(
+        success: false,
+        message: 'Failed to reject booking: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Start a booking (transition from booking to trip)
+  Future<BookingResponse> startBooking(String bookingId) async {
+    try {
+      final response = await apiClient.post<Map<String, dynamic>>(
+        TripPaths.startBooking,
+        data: {'bookingId': bookingId},
+      );
+
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return BookingResponse.fromJson(data);
+      }
+
+      if (response is DataFailed) {
+        return BookingResponse(
+          success: false,
+          message: response.error?.getErrorMessage() ?? 'Failed to start booking',
+        );
+      }
+
+      return BookingResponse(
+        success: false,
+        message: 'Unexpected error occurred',
+      );
+    } catch (e) {
+      return BookingResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Complete a booking
+  Future<BookingResponse> completeBooking(String bookingId) async {
+    try {
+      final response = await apiClient.post<Map<String, dynamic>>(
+        TripPaths.completeBooking,
+        data: {'bookingId': bookingId},
+      );
+
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return BookingResponse.fromJson(data);
+      }
+
+      if (response is DataFailed) {
+        return BookingResponse(
+          success: false,
+          message: response.error?.getErrorMessage() ?? 'Failed to complete booking',
+        );
+      }
+
+      return BookingResponse(
+        success: false,
+        message: 'Unexpected error occurred',
+      );
+    } catch (e) {
+      return BookingResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Get booking details
+  Future<BookingResponse> getBooking(String bookingId) async {
+    try {
+      final response = await apiClient.get<Map<String, dynamic>>('${TripPaths.getTripDetails}/$bookingId');
+
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return BookingResponse.fromJson(data);
+      }
+
+      if (response is DataFailed) {
+        return BookingResponse(
+          success: false,
+          message: response.error?.getErrorMessage() ?? 'Failed to fetch booking details',
+        );
+      }
+
+      return BookingResponse(
+        success: false,
+        message: 'Unexpected error occurred',
+      );
+    } catch (e) {
+      return BookingResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Mark cash trip as collected by driver
+  Future<BookingResponse> markCashCollected(String tripId, double amount) async {
+    try {
+      final response = await apiClient.post<Map<String, dynamic>>(
+        TripPaths.markCashCollected,
+        data: {
+          'tripId': tripId,
+          'amount': amount,
+          'collectedAt': DateTime.now().toIso8601String(),
+        },
+      );
+
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return BookingResponse.fromJson(data);
+      }
+
+      if (response is DataFailed) {
+        return BookingResponse(
+          success: false,
+          message: response.error?.getErrorMessage() ?? 'Failed to mark cash collected',
+        );
+      }
+
+      return BookingResponse(
+        success: false,
+        message: 'Unexpected error occurred',
+      );
+    } catch (e) {
+      return BookingResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Get driver's cash trips
+  Future<BookingResponse> getCashTrips({DateTime? date}) async {
+    try {
+      final queryParams = <String, String>{};
+      if (date != null) queryParams['date'] = date.toIso8601String();
+
+      final uri = queryParams.isNotEmpty 
+          ? '${TripPaths.getCashTrips}?${Uri(queryParameters: queryParams).query}'
+          : TripPaths.getCashTrips;
+          
+      final response = await apiClient.get<Map<String, dynamic>>(uri);
+
+      if (response is DataSuccess) {
+        final data = response.data!;
+        return BookingResponse.fromJson(data);
+      }
+
+      if (response is DataFailed) {
+        return BookingResponse(
+          success: false,
+          message: response.error?.getErrorMessage() ?? 'Failed to fetch cash trips',
+        );
+      }
+
+      return BookingResponse(
+        success: false,
+        message: 'Unexpected error occurred',
+      );
+    } catch (e) {
+      return BookingResponse(
         success: false,
         message: 'Network error: ${e.toString()}',
       );

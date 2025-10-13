@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:driver/widgets/colors.dart';
-import 'package:driver/screens/booking_flow/Driver_Status/bloc/driver_status_bloc.dart';
+import 'package:driver/app/bloc/driver_status_bloc.dart';
 import 'package:driver_status/driver_status.dart';
 
 class DriverStatusBottomSheet extends StatelessWidget {
@@ -221,7 +221,7 @@ class DriverStatusBottomSheet extends StatelessWidget {
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  // TODO: Navigate to work area selection
+                  Navigator.pushNamed(context, '/work-area-selection');
                 },
                 child: Text(
                   state.hasWorkArea ? 'Change' : 'Set',
@@ -335,7 +335,7 @@ class DriverStatusBottomSheet extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: () {
                 Navigator.pop(context);
-                // TODO: Navigate to earnings screen
+                Navigator.pushNamed(context, '/earnings');
               },
               icon: Icon(
                 Icons.trending_up,
@@ -363,7 +363,7 @@ class DriverStatusBottomSheet extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: () {
                 Navigator.pop(context);
-                // TODO: Navigate to trip history
+                Navigator.pushNamed(context, '/trip-history');
               },
               icon: Icon(
                 Icons.history,

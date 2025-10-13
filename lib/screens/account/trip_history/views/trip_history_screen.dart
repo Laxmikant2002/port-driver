@@ -1,27 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:history_repo/history_repo.dart';
+import 'package:trip_repo/trip_repo.dart' as trip_repo;
+import 'package:driver/models/booking.dart' as local_models;
 import '../../../../widgets/colors.dart';
 import '../bloc/trip_history_bloc.dart';
-import '../data/sample_trip_data.dart';
+import 'package:driver/services/trip_history/trip_history_service.dart';
+import 'package:driver/locator.dart';
 
 class TripHistoryScreen extends StatelessWidget {
-  final HistoryRepo historyRepo;
-  final String driverId;
-  
-  const TripHistoryScreen({
-    Key? key,
-    required this.historyRepo,
-    required this.driverId,
-  }) : super(key: key);
+  const TripHistoryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => TripHistoryBloc(
-        historyRepo: historyRepo,
-        driverId: driverId,
-      )..add(const TripHistoryLoaded()),
+        tripHistoryService: sl<TripHistoryService>(),
+      )..add(const TripHistoryInitialized()),
       child: const TripHistoryView(),
     );
   }
@@ -35,8 +29,16 @@ class TripHistoryView extends StatefulWidget {
 }
 
 class _TripHistoryViewState extends State<TripHistoryView> {
-  String _selectedDateFilter = 'Day';
+  String _selectedDateFilter = 'All';
   String _selectedStatusFilter = 'All';
+  String _selectedPaymentFilter = 'All';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +57,13 @@ class _TripHistoryViewState extends State<TripHistoryView> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
+                  action: SnackBarAction(
+                    label: 'Retry',
+                    textColor: Colors.white,
+                    onPressed: () {
+                      context.read<TripHistoryBloc>().add(const TripHistoryRefreshed());
+                    },
+                  ),
                 ),
               );
           }
@@ -63,6 +72,7 @@ class _TripHistoryViewState extends State<TripHistoryView> {
           child: Column(
             children: [
               _buildHeader(),
+              _buildSearchBar(),
               _buildFilterSection(),
               Expanded(
                 child: _buildTripList(),
@@ -113,7 +123,7 @@ class _TripHistoryViewState extends State<TripHistoryView> {
                 BlocBuilder<TripHistoryBloc, TripHistoryState>(
                   builder: (context, state) {
                     return Text(
-                      '${state.currentRides.length} trips',
+                      '${state.filteredTrips.length} trips',
                       style: TextStyle(
                         fontSize: 14,
                         color: AppColors.textSecondary,
@@ -124,7 +134,67 @@ class _TripHistoryViewState extends State<TripHistoryView> {
               ],
             ),
           ),
+          IconButton(
+            onPressed: () {
+              context.read<TripHistoryBloc>().add(const TripHistoryRefreshed());
+            },
+            icon: const Icon(
+              Icons.refresh_rounded,
+              color: AppColors.textPrimary,
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.border.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Search trips...',
+          hintStyle: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 14,
+          ),
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            color: AppColors.textSecondary,
+            size: 20,
+          ),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: Icon(
+                    Icons.clear_rounded,
+                    color: AppColors.textSecondary,
+                    size: 20,
+                  ),
+                  onPressed: () {
+                    _searchController.clear();
+                    context.read<TripHistoryBloc>().add(
+                      const TripHistorySearchPerformed(''),
+                    );
+                  },
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        onChanged: (value) {
+          context.read<TripHistoryBloc>().add(
+            TripHistorySearchPerformed(value),
+          );
+        },
       ),
     );
   }
@@ -136,8 +206,8 @@ class _TripHistoryViewState extends State<TripHistoryView> {
         children: [
           Expanded(
             child: _buildFilterDropdown(
-              'Day',
-              ['Day', 'Week', 'Month'],
+              'Period',
+              ['All', 'Today', 'Week', 'Month'],
               _selectedDateFilter,
               (value) {
                 setState(() {
@@ -151,8 +221,8 @@ class _TripHistoryViewState extends State<TripHistoryView> {
           const SizedBox(width: 12),
           Expanded(
             child: _buildFilterDropdown(
-              'All',
-              ['All', 'Cash', 'Online', 'Mixed', 'Completed', 'Cancelled'],
+              'Status',
+              ['All', 'Completed', 'Cancelled', 'Pending'],
               _selectedStatusFilter,
               (value) {
                 setState(() {
@@ -161,6 +231,21 @@ class _TripHistoryViewState extends State<TripHistoryView> {
                 _applyFilters();
               },
               Icons.filter_list_rounded,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildFilterDropdown(
+              'Payment',
+              ['All', 'Cash', 'Online', 'Card'],
+              _selectedPaymentFilter,
+              (value) {
+                setState(() {
+                  _selectedPaymentFilter = value!;
+                });
+                _applyFilters();
+              },
+              Icons.payment_rounded,
             ),
           ),
         ],
@@ -203,7 +288,7 @@ class _TripHistoryViewState extends State<TripHistoryView> {
                   Text(
                     value,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 12,
                       color: AppColors.textPrimary,
                     ),
                   ),
@@ -228,18 +313,49 @@ class _TripHistoryViewState extends State<TripHistoryView> {
           );
         }
 
-        final trips = state.currentRides;
+        final trips = state.filteredTrips;
         
         if (trips.isEmpty) {
           return _buildEmptyState();
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          itemCount: trips.length,
-          itemBuilder: (context, index) {
-            return _buildTripCard(trips[index]);
+        return RefreshIndicator(
+          onRefresh: () async {
+            context.read<TripHistoryBloc>().add(const TripHistoryRefreshed());
           },
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            itemCount: trips.length + (state.hasReachedMax ? 0 : 1),
+            itemBuilder: (context, index) {
+              if (index == trips.length) {
+                // Load more indicator
+                if (state.isLoadingMore) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  );
+                } else {
+                  return Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Center(
+                      child: TextButton(
+                        onPressed: () {
+                          context.read<TripHistoryBloc>().add(const TripHistoryLoadMore());
+                        },
+                        child: const Text('Load More'),
+                      ),
+                    ),
+                  );
+                }
+              }
+              
+              return _buildTripCard(trips[index]);
+            },
+          ),
         );
       },
     );
@@ -265,7 +381,7 @@ class _TripHistoryViewState extends State<TripHistoryView> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No Trips Yet',
+            'No Trips Found',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -287,7 +403,7 @@ class _TripHistoryViewState extends State<TripHistoryView> {
     );
   }
 
-  Widget _buildTripCard(Ride trip) {
+  Widget _buildTripCard(local_models.Booking trip) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -320,14 +436,14 @@ class _TripHistoryViewState extends State<TripHistoryView> {
             const SizedBox(height: 16),
             _buildEarningsInfo(trip),
             const SizedBox(height: 16),
-            _buildDetailsButton(),
+            _buildActionButtons(trip),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTripHeader(Ride trip) {
+  Widget _buildTripHeader(local_models.Booking trip) {
     return Row(
       children: [
         Container(
@@ -347,7 +463,7 @@ class _TripHistoryViewState extends State<TripHistoryView> {
         ),
         const Spacer(),
         Text(
-          '₹${trip.fare.toStringAsFixed(0)}',
+          '₹${trip.amount.toStringAsFixed(0)}',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -358,7 +474,7 @@ class _TripHistoryViewState extends State<TripHistoryView> {
     );
   }
 
-  Widget _buildRouteInfo(Ride trip) {
+  Widget _buildRouteInfo(local_models.Booking trip) {
     return Row(
       children: [
         Column(
@@ -392,7 +508,7 @@ class _TripHistoryViewState extends State<TripHistoryView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                trip.startLocation.address,
+                trip.pickupAddress,
                 style: TextStyle(
                   fontSize: 14,
                   color: AppColors.textPrimary,
@@ -403,7 +519,7 @@ class _TripHistoryViewState extends State<TripHistoryView> {
               ),
               const SizedBox(height: 8),
               Text(
-                trip.endLocation.address,
+                trip.dropoffAddress,
                 style: TextStyle(
                   fontSize: 14,
                   color: AppColors.textPrimary,
@@ -419,7 +535,7 @@ class _TripHistoryViewState extends State<TripHistoryView> {
     );
   }
 
-  Widget _buildTripDetails(Ride trip) {
+  Widget _buildTripDetails(local_models.Booking trip) {
     return Row(
       children: [
         Icon(
@@ -429,7 +545,7 @@ class _TripHistoryViewState extends State<TripHistoryView> {
         ),
         const SizedBox(width: 4),
         Text(
-          trip.tripDate ?? _formatDate(trip.createdAt),
+          _formatDate(trip.createdAt),
           style: TextStyle(
             fontSize: 12,
             color: AppColors.textSecondary,
@@ -443,7 +559,7 @@ class _TripHistoryViewState extends State<TripHistoryView> {
         ),
         const SizedBox(width: 4),
         Text(
-          trip.tripTime ?? _formatTime(trip.createdAt),
+          _formatTime(trip.createdAt),
           style: TextStyle(
             fontSize: 12,
             color: AppColors.textSecondary,
@@ -453,15 +569,15 @@ class _TripHistoryViewState extends State<TripHistoryView> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: AppColors.success.withOpacity(0.1),
+            color: _getStatusColor(trip.status).withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
-            'Completed',
+            _getStatusText(trip.status),
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,
-              color: AppColors.success,
+              color: _getStatusColor(trip.status),
             ),
           ),
         ),
@@ -469,7 +585,7 @@ class _TripHistoryViewState extends State<TripHistoryView> {
     );
   }
 
-  Widget _buildPaymentInfo(Ride trip) {
+  Widget _buildPaymentInfo(local_models.Booking trip) {
     return Row(
       children: [
         Icon(
@@ -479,7 +595,7 @@ class _TripHistoryViewState extends State<TripHistoryView> {
         ),
         const SizedBox(width: 4),
         Text(
-          '${trip.distance.toStringAsFixed(1)} km',
+          '${trip.distanceKm.toStringAsFixed(1)} km',
           style: TextStyle(
             fontSize: 12,
             color: AppColors.textSecondary,
@@ -493,7 +609,7 @@ class _TripHistoryViewState extends State<TripHistoryView> {
         ),
         const SizedBox(width: 4),
         Text(
-          '${trip.duration} min',
+          '${trip.durationMinutes} min',
           style: TextStyle(
             fontSize: 12,
             color: AppColors.textSecondary,
@@ -503,24 +619,24 @@ class _TripHistoryViewState extends State<TripHistoryView> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: _getPaymentMethodColor(trip.paymentMethod).withOpacity(0.1),
+            color: _getPaymentMethodColor(trip.paymentMode).withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                _getPaymentMethodIcon(trip.paymentMethod),
+                _getPaymentMethodIcon(trip.paymentMode),
                 size: 12,
-                color: _getPaymentMethodColor(trip.paymentMethod),
+                color: _getPaymentMethodColor(trip.paymentMode),
               ),
               const SizedBox(width: 4),
               Text(
-                _getPaymentMethodText(trip.paymentMethod),
+                _getPaymentMethodText(trip.paymentMode),
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: _getPaymentMethodColor(trip.paymentMethod),
+                  color: _getPaymentMethodColor(trip.paymentMode),
                 ),
               ),
             ],
@@ -530,13 +646,11 @@ class _TripHistoryViewState extends State<TripHistoryView> {
     );
   }
 
-  Widget _buildEarningsInfo(Ride trip) {
-    final earnedAmount = trip.earnedAmount ?? (trip.fare * 0.85); // 85% of fare as earnings
-    
+  Widget _buildEarningsInfo(local_models.Booking trip) {
     return Row(
       children: [
         Text(
-          '₹${trip.fare.toStringAsFixed(0)}',
+          '₹${trip.amount.toStringAsFixed(0)}',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -545,7 +659,7 @@ class _TripHistoryViewState extends State<TripHistoryView> {
         ),
         const Spacer(),
         Text(
-          'Earned: ₹${earnedAmount.toStringAsFixed(0)}',
+          'Earned: ₹${trip.netEarnings.toStringAsFixed(0)}',
           style: TextStyle(
             fontSize: 12,
             color: AppColors.success,
@@ -556,106 +670,118 @@ class _TripHistoryViewState extends State<TripHistoryView> {
     );
   }
 
-  Widget _buildDetailsButton() {
-    return Center(
-      child: GestureDetector(
-        onTap: () {
-          // Navigate to trip details
-        },
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Tap for full details',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
+  Widget _buildActionButtons(local_models.Booking trip) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () {
+              context.read<TripHistoryBloc>().add(
+                TripDetailsRequested(trip.id),
+              );
+            },
+            icon: const Icon(Icons.info_outline_rounded, size: 16),
+            label: const Text('Details'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.textPrimary,
+              side: BorderSide(color: AppColors.border),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
-            const SizedBox(width: 4),
-            Icon(
-              Icons.credit_card_rounded,
-              size: 12,
-              color: AppColors.textSecondary,
-            ),
-          ],
+          ),
         ),
-      ),
+        const SizedBox(width: 12),
+        if (trip.paymentMode == local_models.PaymentMode.cash &&
+            trip.paymentStatus == local_models.PaymentStatus.pending)
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: () {
+                context.read<TripHistoryBloc>().add(
+                  TripCashCollected(trip.id, trip.amount),
+                );
+              },
+              icon: const Icon(Icons.money_rounded, size: 16),
+              label: const Text('Mark Collected'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.success,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
-  Color _getStatusColor(RideStatus status) {
+  Color _getStatusColor(local_models.BookingStatus status) {
     switch (status) {
-      case RideStatus.completed:
+      case local_models.BookingStatus.completed:
         return AppColors.success;
-      case RideStatus.cancelled:
+      case local_models.BookingStatus.cancelled:
         return AppColors.error;
-      case RideStatus.started:
+      case local_models.BookingStatus.started:
         return AppColors.warning;
-      case RideStatus.accepted:
+      case local_models.BookingStatus.accepted:
         return AppColors.cyan;
-      case RideStatus.requested:
+      case local_models.BookingStatus.pending:
         return AppColors.textSecondary;
     }
   }
 
-  String _getStatusText(RideStatus status) {
+  String _getStatusText(local_models.BookingStatus status) {
     switch (status) {
-      case RideStatus.completed:
+      case local_models.BookingStatus.completed:
         return 'Completed';
-      case RideStatus.cancelled:
+      case local_models.BookingStatus.cancelled:
         return 'Cancelled';
-      case RideStatus.started:
+      case local_models.BookingStatus.started:
         return 'In Progress';
-      case RideStatus.accepted:
+      case local_models.BookingStatus.accepted:
         return 'Accepted';
-      case RideStatus.requested:
-        return 'Requested';
+      case local_models.BookingStatus.pending:
+        return 'Pending';
     }
   }
 
-  Color _getPaymentMethodColor(PaymentMethod? method) {
+  Color _getPaymentMethodColor(local_models.PaymentMode method) {
     switch (method) {
-      case PaymentMethod.cash:
+      case local_models.PaymentMode.cash:
         return AppColors.warning;
-      case PaymentMethod.online:
+      case local_models.PaymentMode.online:
         return AppColors.primary;
-      case PaymentMethod.card:
+      case local_models.PaymentMode.card:
         return AppColors.cyan;
-      case PaymentMethod.wallet:
+      case local_models.PaymentMode.wallet:
         return AppColors.success;
-      case null:
-        return AppColors.textSecondary;
     }
   }
 
-  IconData _getPaymentMethodIcon(PaymentMethod? method) {
+  IconData _getPaymentMethodIcon(local_models.PaymentMode method) {
     switch (method) {
-      case PaymentMethod.cash:
+      case local_models.PaymentMode.cash:
         return Icons.money_rounded;
-      case PaymentMethod.online:
+      case local_models.PaymentMode.online:
         return Icons.payment_rounded;
-      case PaymentMethod.card:
+      case local_models.PaymentMode.card:
         return Icons.credit_card_rounded;
-      case PaymentMethod.wallet:
+      case local_models.PaymentMode.wallet:
         return Icons.account_balance_wallet_rounded;
-      case null:
-        return Icons.payment_rounded;
     }
   }
 
-  String _getPaymentMethodText(PaymentMethod? method) {
+  String _getPaymentMethodText(local_models.PaymentMode method) {
     switch (method) {
-      case PaymentMethod.cash:
+      case local_models.PaymentMode.cash:
         return 'Cash';
-      case PaymentMethod.online:
+      case local_models.PaymentMode.online:
         return 'Online';
-      case PaymentMethod.card:
+      case local_models.PaymentMode.card:
         return 'Card';
-      case PaymentMethod.wallet:
+      case local_models.PaymentMode.wallet:
         return 'Wallet';
-      case null:
-        return 'Unknown';
     }
   }
 
@@ -679,33 +805,64 @@ class _TripHistoryViewState extends State<TripHistoryView> {
   }
 
   void _applyFilters() {
-    // Apply date and status filters
-    context.read<TripHistoryBloc>().add(
-      RidesFiltered(
-        status: _selectedStatusFilter == 'All' ? null : 
-                _selectedStatusFilter == 'Completed' ? RideStatus.completed :
-                _selectedStatusFilter == 'Cancelled' ? RideStatus.cancelled : null,
-        startDate: _getDateRangeStart(),
-        endDate: _getDateRangeEnd(),
-      ),
-    );
-  }
+    trip_repo.BookingStatus? status;
+    local_models.PaymentMode? paymentMode;
+    DateTime? startDate;
+    DateTime? endDate;
 
-  DateTime? _getDateRangeStart() {
+    // Convert status filter
+    switch (_selectedStatusFilter) {
+      case 'Completed':
+        status = trip_repo.BookingStatus.completed;
+        break;
+      case 'Cancelled':
+        status = trip_repo.BookingStatus.cancelled;
+        break;
+      case 'Pending':
+        status = trip_repo.BookingStatus.pending;
+        break;
+    }
+
+    // Convert payment filter
+    switch (_selectedPaymentFilter) {
+      case 'Cash':
+        paymentMode = local_models.PaymentMode.cash;
+        break;
+      case 'Online':
+        paymentMode = local_models.PaymentMode.online;
+        break;
+      case 'Card':
+        paymentMode = local_models.PaymentMode.card;
+        break;
+      case 'Wallet':
+        paymentMode = local_models.PaymentMode.wallet;
+        break;
+    }
+
+    // Convert date filter
     final now = DateTime.now();
     switch (_selectedDateFilter) {
-      case 'Day':
-        return DateTime(now.year, now.month, now.day);
+      case 'Today':
+        startDate = DateTime(now.year, now.month, now.day);
+        endDate = now;
+        break;
       case 'Week':
-        return now.subtract(const Duration(days: 7));
+        startDate = now.subtract(const Duration(days: 7));
+        endDate = now;
+        break;
       case 'Month':
-        return DateTime(now.year, now.month - 1, now.day);
-      default:
-        return null;
+        startDate = DateTime(now.year, now.month - 1, now.day);
+        endDate = now;
+        break;
     }
-  }
 
-  DateTime? _getDateRangeEnd() {
-    return DateTime.now();
+    context.read<TripHistoryBloc>().add(
+      TripHistoryFilterChanged(
+        status: status,
+        startDate: startDate,
+        endDate: endDate,
+        paymentMode: paymentMode,
+      ),
+    );
   }
 }

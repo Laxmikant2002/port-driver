@@ -5,6 +5,7 @@ import '../../../widgets/colors.dart';
 import '../bloc/document_upload_bloc.dart';
 import '../../../models/document_upload.dart' hide DocumentStatus, DocumentType;
 import '../../../models/document_upload.dart' as local_models show DocumentStatus, DocumentType;
+import '../../../core/error/document_upload_error.dart';
 
 /// {@template document_review_screen}
 /// Screen for reviewing uploaded documents and submitting for verification.
@@ -84,6 +85,17 @@ class DocumentReviewView extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
+                action: state.error is UploadFailedError && (state.error as UploadFailedError).retryable
+                    ? SnackBarAction(
+                        label: 'Retry',
+                        textColor: Colors.white,
+                        onPressed: () {
+                          context.read<DocumentUploadBloc>().add(
+                            const DocumentUploadSubmitted(),
+                          );
+                        },
+                      )
+                    : null,
               ),
             );
           }

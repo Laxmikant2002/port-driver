@@ -1,5 +1,5 @@
 name: trip_repo
-description: "A new Flutter package project."
+description: "Comprehensive trip repository managing complete ride lifecycle (booking + trip + payments)."
 version: 0.0.1
 homepage:
 

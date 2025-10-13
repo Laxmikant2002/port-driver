@@ -15,7 +15,7 @@ class DocumentsRepo {
   final ApiClient apiClient;
   final Localstorage localStorage;
 
-  /// Upload a document
+  /// Upload a document (front or back image)
   Future<DocumentResponse> uploadDocument(DocumentUploadRequest request) async {
     try {
       final file = File(request.filePath);
@@ -27,10 +27,16 @@ class DocumentsRepo {
       }
 
       final response = await apiClient.uploadFile<Map<String, dynamic>>(
-        '/documents/upload',
+        DocumentsPaths.uploadDocument,
         file: file,
-        fieldName: 'document',
-        additionalFields: request.toJson(),
+        fieldName: 'file',
+        additionalFields: {
+          'documentType': request.type.value,
+          'fileName': request.fileName,
+          'fileSize': request.fileSize,
+          'metadata': request.metadata,
+          'isBackImage': request.isBackImage,
+        },
       );
 
       if (response is DataSuccess) {
@@ -57,10 +63,64 @@ class DocumentsRepo {
     }
   }
 
+  /// Upload both front and back images for a document
+  Future<DocumentResponse> uploadDocumentWithBothSides({
+    required DocumentType type,
+    required String frontImagePath,
+    required String backImagePath,
+    String? fileName,
+    int? fileSize,
+    Map<String, dynamic>? metadata,
+  }) async {
+    try {
+      // Upload front image
+      final frontRequest = DocumentUploadRequest(
+        type: type,
+        filePath: frontImagePath,
+        fileName: fileName,
+        fileSize: fileSize,
+        metadata: metadata,
+        isBackImage: false,
+      );
+
+      final frontResponse = await uploadDocument(frontRequest);
+      if (!frontResponse.success) {
+        return frontResponse;
+      }
+
+      // Upload back image
+      final backRequest = DocumentUploadRequest(
+        type: type,
+        filePath: backImagePath,
+        fileName: fileName,
+        fileSize: fileSize,
+        metadata: metadata,
+        isBackImage: true,
+      );
+
+      final backResponse = await uploadDocument(backRequest);
+      if (!backResponse.success) {
+        return backResponse;
+      }
+
+      // Return success response
+      return DocumentResponse(
+        success: true,
+        message: 'Both front and back images uploaded successfully',
+        document: frontResponse.document,
+      );
+    } catch (e) {
+      return DocumentResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+      );
+    }
+  }
+
   /// Get all documents for the current driver
   Future<DocumentResponse> getDocuments() async {
     try {
-      final response = await apiClient.get<Map<String, dynamic>>('/documents');
+      final response = await apiClient.get<Map<String, dynamic>>(DocumentsPaths.getDocuments);
 
       if (response is DataSuccess) {
         final data = response.data!;
@@ -89,7 +149,7 @@ class DocumentsRepo {
   /// Get a specific document by ID
   Future<DocumentResponse> getDocument(String documentId) async {
     try {
-      final response = await apiClient.get<Map<String, dynamic>>('/documents/$documentId');
+      final response = await apiClient.get<Map<String, dynamic>>('${DocumentsPaths.getDocument}/$documentId');
 
       if (response is DataSuccess) {
         final data = response.data!;
@@ -118,7 +178,7 @@ class DocumentsRepo {
   /// Delete a document
   Future<DocumentResponse> deleteDocument(String documentId) async {
     try {
-      final response = await apiClient.delete<Map<String, dynamic>>('/documents/$documentId');
+      final response = await apiClient.delete<Map<String, dynamic>>('${DocumentsPaths.deleteDocument}/$documentId');
 
       if (response is DataSuccess) {
         final data = response.data!;
@@ -148,7 +208,7 @@ class DocumentsRepo {
   Future<DocumentResponse> getDocumentsByType(DocumentType type) async {
     try {
       final response = await apiClient.get<Map<String, dynamic>>(
-        '/documents',
+        DocumentsPaths.getDocuments,
         queryParameters: {'type': type.value},
       );
 
@@ -176,6 +236,21 @@ class DocumentsRepo {
     }
   }
 
+  /// Get verification status
+  Future<Map<String, dynamic>?> getVerificationStatus() async {
+    try {
+      final response = await apiClient.get<Map<String, dynamic>>(DocumentsPaths.getVerificationStatus);
+
+      if (response is DataSuccess) {
+        return response.data!;
+      }
+
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   /// Check if all required documents are uploaded and verified
   Future<bool> areAllDocumentsVerified() async {
     try {
@@ -186,8 +261,8 @@ class DocumentsRepo {
 
       final requiredTypes = [
         DocumentType.drivingLicense,
-        DocumentType.insurance,
         DocumentType.aadhaar,
+        DocumentType.pan,
       ];
 
       for (final type in requiredTypes) {
@@ -224,6 +299,25 @@ class DocumentsRepo {
       return statusMap;
     } catch (e) {
       return {};
+    }
+  }
+
+  /// Get required document types
+  Future<List<DocumentType>> getRequiredDocumentTypes() async {
+    try {
+      final response = await apiClient.get<Map<String, dynamic>>(DocumentsPaths.getRequiredDocuments);
+
+      if (response is DataSuccess) {
+        final data = response.data!;
+        final types = (data['requiredTypes'] as List<dynamic>)
+            .map((e) => DocumentType.fromString(e as String))
+            .toList();
+        return types;
+      }
+
+      return [DocumentType.drivingLicense, DocumentType.aadhaar, DocumentType.pan];
+    } catch (e) {
+      return [DocumentType.drivingLicense, DocumentType.aadhaar, DocumentType.pan];
     }
   }
 }

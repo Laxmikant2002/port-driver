@@ -1,0 +1,107 @@
+{
+  "@@locale": "mr",
+  "counterAppBarTitle": "काउंटर",
+  "@counterAppBarTitle": {
+    "description": "काउंटर पेजच्या एपबारमध्ये दाखवलेला टेक्स्ट"
+  },
+  "email": "ईमेल",
+  "@email": {
+    "description": "ईमेल इनपुट फील्डसाठी लेबल"
+  },
+  "password": "पासवर्ड",
+  "@password": {
+    "description": "पासवर्ड इनपुट फील्डसाठी लेबल"
+  },
+  "login": "लॉग इन",
+  "@login": {
+    "description": "लॉग इन बटनसाठी लेबल"
+  },
+  "welcome": "स्वागत आहे",
+  "@welcome": {
+    "description": "स्वागत संदेश"
+  },
+  "enterPhoneNumber": "तुमचा मोबाइल नंबर प्रविष्ट करा",
+  "@enterPhoneNumber": {
+    "description": "फोन नंबर प्रविष्ट करण्यासाठी सूचना"
+  },
+  "sendOtp": "OTP पाठवा",
+  "@sendOtp": {
+    "description": "OTP पाठवण्यासाठी बटन"
+  },
+  "verifyOtp": "OTP सत्यापित करा",
+  "@verifyOtp": {
+    "description": "OTP सत्यापित करण्यासाठी बटन"
+  },
+  "resendOtp": "OTP पुन्हा पाठवा",
+  "@resendOtp": {
+    "description": "OTP पुन्हा पाठवण्यासाठी बटन"
+  },
+  "selectLanguage": "भाषा निवडा",
+  "@selectLanguage": {
+    "description": "भाषा निवडीसाठी लेबल"
+  },
+  "english": "इंग्रजी",
+  "@english": {
+    "description": "इंग्रजी भाषेचे नाव"
+  },
+  "marathi": "मराठी",
+  "@marathi": {
+    "description": "मराठी भाषेचे नाव"
+  },
+  "hindi": "हिंदी",
+  "@hindi": {
+    "description": "हिंदी भाषेचे नाव"
+  },
+  "continueButton": "सुरू ठेवा",
+  "@continue": {
+    "description": "सुरू ठेवण्यासाठी बटन"
+  },
+  "driverName": "चालकाचे नाव",
+  "@driverName": {
+    "description": "चालकाच्या नावासाठी लेबल"
+  },
+  "vehicleType": "वाहन प्रकार",
+  "@vehicleType": {
+    "description": "वाहन प्रकारासाठी लेबल"
+  },
+  "workArea": "कार्य क्षेत्र",
+  "@workArea": {
+    "description": "कार्य क्षेत्रासाठी लेबल"
+  },
+  "goOnline": "ऑनलाइन जा",
+  "@goOnline": {
+    "description": "ऑनलाइन जाण्यासाठी बटन"
+  },
+  "goOffline": "ऑफलाइन जा",
+  "@goOffline": {
+    "description": "ऑफलाइन जाण्यासाठी बटन"
+  },
+  "acceptTrip": "प्रवास स्वीकारा",
+  "@acceptTrip": {
+    "description": "प्रवास स्वीकारण्यासाठी बटन"
+  },
+  "rejectTrip": "प्रवास नकारा",
+  "@rejectTrip": {
+    "description": "प्रवास नकारण्यासाठी बटन"
+  },
+  "earningsToday": "आजची कमाई",
+  "@earningsToday": {
+    "description": "आजच्या कमाईसाठी लेबल"
+  },
+  "tripsCompleted": "पूर्ण केलेले प्रवास",
+  "@tripsCompleted": {
+    "description": "पूर्ण केलेल्या प्रवासांसाठी लेबल"
+  },
+  "profile": "प्रोफाइल",
+  "@profile": {
+    "description": "प्रोफाइलसाठी लेबल"
+  },
+  "settings": "सेटिंग्ज",
+  "@settings": {
+    "description": "सेटिंग्जसाठी लेबल"
+  },
+  "logout": "लॉग आउट",
+  "@logout": {
+    "description": "लॉग आउटसाठी बटन"
+  }
+}

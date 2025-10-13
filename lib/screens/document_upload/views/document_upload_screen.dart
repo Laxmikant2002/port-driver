@@ -1,11 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import '../../../widgets/colors.dart';
-import '../bloc/document_upload_bloc.dart';
-import '../../../models/document_upload.dart' hide DocumentStatus, DocumentType;
-import '../../../models/document_upload.dart' as local_models show DocumentStatus, DocumentType;
+
+import 'package:driver/models/document_upload.dart' as local_models;
+import 'package:driver/widgets/colors.dart';
+import 'package:driver/core/error/document_upload_error.dart';
+
+import 'package:driver/screens/document_upload/bloc/document_upload_bloc.dart';
 
 /// {@template document_upload_screen}
 /// Screen for uploading individual documents with camera/file picker.
@@ -41,7 +44,6 @@ class DocumentUploadView extends StatefulWidget {
 }
 
 class _DocumentUploadViewState extends State<DocumentUploadView> {
-  final ImagePicker _imagePicker = ImagePicker();
   XFile? _frontImage;
   XFile? _backImage;
 
@@ -53,7 +55,7 @@ class _DocumentUploadViewState extends State<DocumentUploadView> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(
+          icon: const Icon(
             Icons.arrow_back_ios,
             color: AppColors.textPrimary,
           ),
@@ -92,6 +94,15 @@ class _DocumentUploadViewState extends State<DocumentUploadView> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
+                action: state.error is UploadFailedError && (state.error as UploadFailedError).retryable
+                    ? SnackBarAction(
+                        label: 'Retry',
+                        textColor: Colors.white,
+                        onPressed: () {
+                          // Retry upload logic would go here
+                        },
+                      )
+                    : null,
               ),
             );
           }
@@ -141,7 +152,7 @@ class _DocumentInfoSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
+            color: AppColors.primary.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 8),
             spreadRadius: 0,
@@ -154,7 +165,7 @@ class _DocumentInfoSection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.cyan.withOpacity(0.1),
+              color: AppColors.cyan.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(
@@ -190,7 +201,7 @@ class _DocumentInfoSection extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: AppColors.warning.withOpacity(0.1),
+                color: AppColors.warning.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -251,8 +262,8 @@ class _UploadSection extends StatelessWidget {
   final local_models.DocumentType documentType;
   final XFile? frontImage;
   final XFile? backImage;
-  final Function(XFile) onFrontImageSelected;
-  final Function(XFile) onBackImageSelected;
+  final void Function(XFile) onFrontImageSelected;
+  final void Function(XFile) onBackImageSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -263,7 +274,7 @@ class _UploadSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
+            color: AppColors.primary.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 8),
             spreadRadius: 0,
@@ -322,7 +333,7 @@ class _ImageUploadCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final XFile? image;
-  final Function(XFile) onImageSelected;
+  final void Function(XFile) onImageSelected;
   final bool isRequired;
 
   @override
@@ -355,7 +366,7 @@ class _ImageUploadCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.1),
+                    color: AppColors.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -446,7 +457,7 @@ class _ImageUploadCard extends StatelessWidget {
 
   Future<void> _showImagePicker(
     BuildContext context,
-    Function(XFile) onImageSelected, {
+    void Function(XFile) onImageSelected, {
     bool fromGallery = false,
   }) async {
     try {
@@ -459,13 +470,56 @@ class _ImageUploadCard extends StatelessWidget {
       );
 
       if (image != null) {
+        // Validate file before selection
+        final error = DocumentUploadErrorHandler.validateFile(image.path, image.name);
+        if (error != null) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(DocumentUploadErrorHandler.getUserFriendlyMessage(error)),
+                backgroundColor: AppColors.error,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            );
+          }
+          return;
+        }
+
+        // Check file size
+        final file = File(image.path);
+        final fileSize = await file.length();
+        if (fileSize > DocumentUploadErrorHandler.maxFileSize) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(DocumentUploadErrorHandler.getUserFriendlyMessage(
+                  FileSizeError(
+                    actualSize: fileSize,
+                    maxSize: DocumentUploadErrorHandler.maxFileSize,
+                  ),
+                )),
+                backgroundColor: AppColors.error,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            );
+          }
+          return;
+        }
+
         onImageSelected(image);
       }
     } catch (e) {
       if (context.mounted) {
+        final error = DocumentUploadErrorHandler.handleException(e);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to pick image: ${e.toString()}'),
+            content: Text(DocumentUploadErrorHandler.getUserFriendlyMessage(error)),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -552,7 +606,7 @@ class _DocumentUploadButton extends StatelessWidget {
             boxShadow: canUpload && !isUploading
                 ? [
                     BoxShadow(
-                      color: AppColors.cyan.withOpacity(0.3),
+                      color: AppColors.cyan.withValues(alpha: 0.3),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -625,18 +679,8 @@ class _DocumentUploadButton extends StatelessWidget {
   void _uploadDocument(BuildContext context) {
     final bloc = context.read<DocumentUploadBloc>();
     
-    // Upload front image
-    if (frontImage != null) {
-      bloc.add(DocumentUploadStarted(
-        type: documentType,
-        filePath: frontImage!.path,
-        fileName: frontImage!.name,
-        fileSize: File(frontImage!.path).lengthSync(),
-      ));
-    }
-
-    // Upload back image if required
-    if (backImage != null && documentType.requiresBothSides) {
+    if (documentType.requiresBothSides && frontImage != null && backImage != null) {
+      // Upload both front and back images
       bloc.add(DocumentUploadCompleted(
         type: documentType,
         frontImagePath: frontImage!.path,
@@ -645,6 +689,7 @@ class _DocumentUploadButton extends StatelessWidget {
         fileSize: File(frontImage!.path).lengthSync(),
       ));
     } else if (frontImage != null) {
+      // Upload single image
       bloc.add(DocumentUploadCompleted(
         type: documentType,
         frontImagePath: frontImage!.path,

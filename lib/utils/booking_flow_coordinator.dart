@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/booking_location.dart';
 import '../utils/result.dart';
@@ -179,10 +180,13 @@ class BookingFlowCoordinator {
   ) async {
     try {
       final url = _buildNavigationUrl(destination);
-      // TODO: Implement url_launcher
-      // await launchUrl(Uri.parse(url));
-      print('Would navigate to: $url'); // Temporary logging
-      return true;
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        return true;
+      } else {
+        return false;
+      }
     } catch (e) {
       return false;
     }
@@ -386,7 +390,40 @@ class IncomingRideRequestSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(); // TODO: Implement
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'New Ride Request',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 16),
+          Text('From: ${request.pickupLocation.address}'),
+          Text('To: ${request.dropoffLocation.address}'),
+          Text('Fare: \$${request.estimatedFare.toStringAsFixed(2)}'),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Decline'),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Accept'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 

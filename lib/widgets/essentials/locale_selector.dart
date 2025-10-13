@@ -12,7 +12,8 @@ class LocaleSelector extends StatefulWidget {
 class _LocaleSelectorState extends State<LocaleSelector> {
   final List<Map<String, String>> languageOptions = [
     {'displayName': 'English', 'value': 'en'},
-    {'displayName': 'Spanish', 'value': 'es'},
+    {'displayName': 'हिंदी', 'value': 'hi'},
+    {'displayName': 'मराठी', 'value': 'mr'},
   ];
 
   String? selectedLanguage;
@@ -22,7 +23,7 @@ class _LocaleSelectorState extends State<LocaleSelector> {
     super.initState();
     // Get the initial locale from LocaleCubit and set the selected language
     final locale = context.read<LocaleCubit>().state;
-    selectedLanguage = locale.languageCode == 'es' ? 'es' : 'en';
+    selectedLanguage = locale.languageCode;
   }
 
   @override
@@ -53,11 +54,7 @@ class _LocaleSelectorState extends State<LocaleSelector> {
                 setState(() {
                   selectedLanguage = newValue;
                 });
-                if (newValue == 'es') {
-                  context.read<LocaleCubit>().selectSpanishUsLocale();
-                } else {
-                  context.read<LocaleCubit>().selectEnglishLocale();
-                }
+                context.read<LocaleCubit>().selectLocale(newValue!);
               },
               items: languageOptions.map((language) {
                 return DropdownMenuItem<String>(

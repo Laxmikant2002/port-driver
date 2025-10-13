@@ -1,39 +1,38 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:equatable/equatable.dart';
-import 'package:history_repo/history_repo.dart';
-import '../data/sample_trip_data.dart';
+import 'package:trip_repo/trip_repo.dart' as trip_repo;
+import 'package:finance_repo/finance_repo.dart';
+import 'package:driver/models/booking.dart' as local_models;
+import 'package:driver/services/trip_history/trip_history_service.dart';
 
 part 'trip_history_event.dart';
 part 'trip_history_state.dart';
 
 class TripHistoryBloc extends Bloc<TripHistoryEvent, TripHistoryState> {
   TripHistoryBloc({
-    required this.historyRepo,
-    required this.driverId,
+    required this.tripHistoryService,
   }) : super(const TripHistoryState()) {
-    on<TripHistoryLoaded>(_onTripHistoryLoaded);
+    on<TripHistoryInitialized>(_onTripHistoryInitialized);
     on<TripHistoryRefreshed>(_onTripHistoryRefreshed);
-    on<RidesFiltered>(_onRidesFiltered);
+    on<TripHistoryLoadMore>(_onTripHistoryLoadMore);
+    on<TripHistoryFilterChanged>(_onTripHistoryFilterChanged);
     on<TripDetailsRequested>(_onTripDetailsRequested);
-    on<DateRangeChanged>(_onDateRangeChanged);
-    on<StatusFilterChanged>(_onStatusFilterChanged);
-    on<StatisticsRequested>(_onStatisticsRequested);
-    on<TripHistoryLoadedWithSampleData>(_onTripHistoryLoadedWithSampleData);
+    on<TripStatisticsRequested>(_onTripStatisticsRequested);
+    on<TripCashCollected>(_onTripCashCollected);
+    on<TripHistorySearchPerformed>(_onTripHistorySearchPerformed);
   }
 
-  final HistoryRepo historyRepo;
-  final String driverId;
+  final TripHistoryService tripHistoryService;
 
-  Future<void> _onTripHistoryLoaded(
-    TripHistoryLoaded event,
+  Future<void> _onTripHistoryInitialized(
+    TripHistoryInitialized event,
     Emitter<TripHistoryState> emit,
   ) async {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     
     try {
-      final response = await historyRepo.getRideHistory(
-        driverId: driverId,
+      final tripHistoryData = await tripHistoryService.getTripHistory(
         limit: event.limit,
         offset: event.offset,
         status: event.status,
@@ -41,35 +40,15 @@ class TripHistoryBloc extends Bloc<TripHistoryEvent, TripHistoryState> {
         endDate: event.endDate,
       );
       
-      if (response.success && response.rides != null) {
-        await historyRepo.cacheRideHistory(response.rides!);
-        
-        emit(state.copyWith(
-          allRides: response.rides!,
-          filteredRides: response.rides!,
-          status: FormzSubmissionStatus.success,
-          clearError: true,
-        ));
-      } else {
-        // Fallback to cached data
-        final cachedRides = await historyRepo.getCachedRideHistory();
-        
-        emit(state.copyWith(
-          allRides: cachedRides,
-          filteredRides: cachedRides,
-          status: FormzSubmissionStatus.success,
-          clearError: true,
-        ));
-      }
-    } catch (error) {
-      // Fallback to cached data
-      final cachedRides = await historyRepo.getCachedRideHistory();
-      
       emit(state.copyWith(
-        allRides: cachedRides,
-        filteredRides: cachedRides,
+        tripHistoryData: tripHistoryData,
+        status: FormzSubmissionStatus.success,
+        clearError: true,
+      ));
+    } catch (error) {
+      emit(state.copyWith(
         status: FormzSubmissionStatus.failure,
-        errorMessage: 'Network error: ${error.toString()}',
+        errorMessage: 'Failed to load trip history: ${error.toString()}',
       ));
     }
   }
@@ -81,43 +60,111 @@ class TripHistoryBloc extends Bloc<TripHistoryEvent, TripHistoryState> {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     
     try {
-      // Refresh trip history data to get latest information
-      add(const TripHistoryLoaded());
+      final currentFilter = state.currentFilter;
+      final tripHistoryData = await tripHistoryService.getTripHistory(
+        limit: 20,
+        offset: 0,
+        status: currentFilter?.status,
+        startDate: currentFilter?.startDate,
+        endDate: currentFilter?.endDate,
+      );
+      
+      emit(state.copyWith(
+        tripHistoryData: tripHistoryData,
+        status: FormzSubmissionStatus.success,
+        clearError: true,
+        hasReachedMax: false,
+      ));
     } catch (error) {
       emit(state.copyWith(
         status: FormzSubmissionStatus.failure,
-        errorMessage: 'Refresh error: ${error.toString()}',
+        errorMessage: 'Failed to refresh trip history: ${error.toString()}',
       ));
     }
   }
 
-  void _onRidesFiltered(
-    RidesFiltered event,
+  Future<void> _onTripHistoryLoadMore(
+    TripHistoryLoadMore event,
     Emitter<TripHistoryState> emit,
-  ) {
-    List<Ride> filteredRides = state.allRides;
+  ) async {
+    if (state.isLoadingMore || state.hasReachedMax) return;
     
-    // Apply filters
-    if (event.status != null) {
-      filteredRides = filteredRides.where((r) => r.status == event.status).toList();
-    }
+    emit(state.copyWith(isLoadingMore: true));
     
-    if (event.startDate != null) {
-      filteredRides = filteredRides.where((r) => r.createdAt.isAfter(event.startDate!)).toList();
+    try {
+      final currentData = state.tripHistoryData;
+      if (currentData == null) return;
+      
+      final currentFilter = state.currentFilter;
+      final newData = await tripHistoryService.getTripHistory(
+        limit: 20,
+        offset: currentData.bookings.length,
+        status: currentFilter?.status,
+        startDate: currentFilter?.startDate,
+        endDate: currentFilter?.endDate,
+      );
+      
+      // Combine existing and new data
+      final combinedBookings = [...currentData.bookings, ...newData.bookings];
+      final combinedTransactions = [...currentData.transactions, ...newData.transactions];
+      
+      final updatedData = TripHistoryData(
+        bookings: combinedBookings,
+        transactions: combinedTransactions,
+        statistics: newData.statistics,
+        hasMore: newData.hasMore,
+        totalCount: newData.totalCount,
+      );
+      
+      emit(state.copyWith(
+        tripHistoryData: updatedData,
+        isLoadingMore: false,
+        hasReachedMax: !newData.hasMore,
+        clearError: true,
+      ));
+    } catch (error) {
+      emit(state.copyWith(
+        isLoadingMore: false,
+        errorMessage: 'Failed to load more trips: ${error.toString()}',
+      ));
     }
-    
-    if (event.endDate != null) {
-      filteredRides = filteredRides.where((r) => r.createdAt.isBefore(event.endDate!)).toList();
-    }
+  }
 
-    emit(state.copyWith(
-      filteredRides: filteredRides,
-      selectedStatus: event.status,
-      selectedStartDate: event.startDate,
-      selectedEndDate: event.endDate,
-      status: FormzSubmissionStatus.success,
-      clearError: true,
-    ));
+  Future<void> _onTripHistoryFilterChanged(
+    TripHistoryFilterChanged event,
+    Emitter<TripHistoryState> emit,
+  ) async {
+    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
+    
+    try {
+      final filter = TripHistoryFilter(
+        status: event.status,
+        startDate: event.startDate,
+        endDate: event.endDate,
+        paymentMode: event.paymentMode,
+      );
+      
+      final tripHistoryData = await tripHistoryService.getTripHistory(
+        limit: 20,
+        offset: 0,
+        status: event.status,
+        startDate: event.startDate,
+        endDate: event.endDate,
+      );
+      
+      emit(state.copyWith(
+        tripHistoryData: tripHistoryData,
+        currentFilter: filter,
+        status: FormzSubmissionStatus.success,
+        clearError: true,
+        hasReachedMax: false,
+      ));
+    } catch (error) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: 'Failed to apply filters: ${error.toString()}',
+      ));
+    }
   }
 
   Future<void> _onTripDetailsRequested(
@@ -127,109 +174,78 @@ class TripHistoryBloc extends Bloc<TripHistoryEvent, TripHistoryState> {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     
     try {
-      final response = await historyRepo.getRide(
-        driverId: driverId,
-        rideId: event.rideId,
-      );
+      final tripDetails = await tripHistoryService.getTripDetails(event.tripId);
       
-      if (response.success && response.singleRide != null) {
-        emit(state.copyWith(
-          selectedRide: response.singleRide,
-          status: FormzSubmissionStatus.success,
-          clearError: true,
-        ));
-      } else {
-        emit(state.copyWith(
-          status: FormzSubmissionStatus.failure,
-          errorMessage: response.message ?? 'Failed to fetch trip details',
-        ));
-      }
+      emit(state.copyWith(
+        selectedTrip: tripDetails,
+        status: FormzSubmissionStatus.success,
+        clearError: true,
+      ));
     } catch (error) {
       emit(state.copyWith(
         status: FormzSubmissionStatus.failure,
-        errorMessage: 'Trip details error: ${error.toString()}',
+        errorMessage: 'Failed to fetch trip details: ${error.toString()}',
       ));
     }
   }
 
-  void _onDateRangeChanged(
-    DateRangeChanged event,
-    Emitter<TripHistoryState> emit,
-  ) {
-    emit(state.copyWith(
-      selectedStartDate: event.startDate,
-      selectedEndDate: event.endDate,
-      status: FormzSubmissionStatus.initial,
-      clearError: true,
-    ));
-  }
-
-  void _onStatusFilterChanged(
-    StatusFilterChanged event,
-    Emitter<TripHistoryState> emit,
-  ) {
-    emit(state.copyWith(
-      selectedStatus: event.status,
-      status: FormzSubmissionStatus.initial,
-      clearError: true,
-    ));
-  }
-
-  Future<void> _onStatisticsRequested(
-    StatisticsRequested event,
+  Future<void> _onTripStatisticsRequested(
+    TripStatisticsRequested event,
     Emitter<TripHistoryState> emit,
   ) async {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     
     try {
-      final response = await historyRepo.getRideStatistics(
-        driverId: driverId,
+      final statistics = await tripHistoryService.getTripStatistics(
         startDate: event.startDate,
         endDate: event.endDate,
         period: event.period,
       );
       
-      if (response.success && response.statistics != null) {
-        await historyRepo.cacheRideStatistics(response.statistics!);
-        
-        emit(state.copyWith(
-          statistics: response.statistics,
-          status: FormzSubmissionStatus.success,
-          clearError: true,
-        ));
-      } else {
-        // Fallback to cached statistics
-        final cachedStatistics = await historyRepo.getCachedRideStatistics();
-        
-        emit(state.copyWith(
-          statistics: cachedStatistics,
-          status: FormzSubmissionStatus.success,
-          clearError: true,
-        ));
-      }
-    } catch (error) {
-      // Fallback to cached statistics
-      final cachedStatistics = await historyRepo.getCachedRideStatistics();
-      
       emit(state.copyWith(
-        statistics: cachedStatistics,
+        statistics: statistics,
+        status: FormzSubmissionStatus.success,
+        clearError: true,
+      ));
+    } catch (error) {
+      emit(state.copyWith(
         status: FormzSubmissionStatus.failure,
-        errorMessage: 'Statistics error: ${error.toString()}',
+        errorMessage: 'Failed to fetch statistics: ${error.toString()}',
       ));
     }
   }
 
-  void _onTripHistoryLoadedWithSampleData(
-    TripHistoryLoadedWithSampleData event,
+  Future<void> _onTripCashCollected(
+    TripCashCollected event,
+    Emitter<TripHistoryState> emit,
+  ) async {
+    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
+    
+    try {
+      // Mark cash as collected in trip_repo
+      await tripHistoryService.tripRepo.markCashCollected(event.tripId, event.amount);
+      
+      // Refresh the trip history to get updated data
+      add(const TripHistoryRefreshed());
+      
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.success,
+        clearError: true,
+      ));
+    } catch (error) {
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: 'Failed to mark cash as collected: ${error.toString()}',
+      ));
+    }
+  }
+
+  void _onTripHistorySearchPerformed(
+    TripHistorySearchPerformed event,
     Emitter<TripHistoryState> emit,
   ) {
-    final sampleTrips = SampleTripData.getSampleTrips(driverId: driverId);
-    final sampleStatistics = SampleTripData.getSampleStatistics();
-    
     emit(state.copyWith(
-      allRides: sampleTrips,
-      filteredRides: sampleTrips,
-      statistics: sampleStatistics,
+      searchQuery: event.query,
       status: FormzSubmissionStatus.success,
       clearError: true,
     ));

@@ -59,6 +59,7 @@ class RouteConstants {
   static const String earnings = '/earnings';
   static const String transactionHistory = '/transaction-history';
   static const String earningsSummary = '/earnings-summary';
+  static const String unifiedEarningsRewards = '/unified-earnings-rewards';
 
   // Rewards routes
   static const String rewards = '/rewards';
@@ -75,6 +76,7 @@ class RouteConstants {
   static const String privacyPolicy = '/privacy-policy';
 
   // Notification routes
+  static const String notifications = '/notifications';
   static const String notificationSettings = '/notification-settings';
   static const String bookingNotifications = '/booking-notifications';
   static const String earningsNotifications = '/earnings-notifications';

@@ -21,8 +21,6 @@ dependencies:
     path: ./packages/localstorage
   notifications_repo:
     path: ./packages/notifications_repo
-  booking_repo:
-    path: ./packages/booking_repo
   driver_status:
     path: ./packages/driver_status
   finance_repo:
@@ -31,20 +29,21 @@ dependencies:
     path: ./packages/history_repo
   shared_repo:
     path: ./packages/shared_repo
-  # ui_components:
-  #   path: ./packages/ui_components
+  vehicle_repo:
+    path: ./packages/vehicle_repo
   rewards_repo:
     path: ./packages/rewards_repo
   
   firebase_core: ^4.1.1
   firebase_messaging: ^16.0.2
+  firebase_crashlytics: ^5.0.2
   flutter_local_notifications: ^19.4.2
   timezone: ^0.10.1
-  bloc: ^9.0.0
+  bloc: ^8.1.4
   equatable: ^2.0.7
   flutter:
     sdk: flutter
-  flutter_bloc: ^9.1.1
+  flutter_bloc: ^8.1.6
   flutter_localizations:
     sdk: flutter
   flutter_svg: ^2.2.1
@@ -53,6 +52,11 @@ dependencies:
   pinput: ^5.0.2
   shared_preferences: ^2.5.3
   formz: ^0.8.0
+  
+  # Modern dependencies for enhanced functionality
+  dio: ^5.7.0
+  dio_cache_interceptor: ^4.0.4
+  connectivity_plus: ^6.1.0
   #new
   geolocator: ^14.0.2
   google_maps_flutter: ^2.13.1
@@ -69,8 +73,13 @@ dependencies:
   file_picker: ^10.3.3
   url_launcher: ^6.2.5
   
+  # Document processing dependencies
+  image: ^4.1.7
+  path_provider: ^2.1.4
+  path: ^1.9.0
+  
 dev_dependencies:
-  bloc_test: ^10.0.0
+  bloc_test: ^9.1.7
   flutter_test:
     sdk: flutter
   mocktail: ^1.0.4

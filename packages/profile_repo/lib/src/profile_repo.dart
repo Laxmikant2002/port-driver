@@ -1,5 +1,4 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:api_client/api_client.dart';
 import 'package:profile_repo/src/models/driver_profile.dart';
 
 /// Profile update data model for driver profile updates
@@ -64,6 +63,12 @@ class ProfileResponse {
         message: json['message'] as String?,
         data: json['data'] != null ? DriverProfile.fromJson(json['data'] as Map<String, dynamic>) : null,
       );
+
+  Map<String, dynamic> toJson() => {
+        'success': success,
+        'message': message,
+        'data': data?.toJson(),
+      };
 }
 
 /// Driver status enum for route decision making
@@ -132,24 +137,20 @@ class DriverStatusResponse {
 /// Profile repository for handling profile-related API calls
 class ProfileRepo {
   const ProfileRepo({
-    required this.baseUrl,
-    required this.client,
+    required this.apiClient,
   });
 
-  final String baseUrl;
-  final http.Client client;
+  final ApiClient apiClient;
 
   /// Check driver status for route decision making
   Future<DriverStatusResponse> checkDriverStatus(String phoneNumber) async {
     try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/driver/status/$phoneNumber'),
-        headers: {'Content-Type': 'application/json'},
+      final response = await apiClient.get(
+        '${ProfilePaths.checkDriverStatus}/$phoneNumber',
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return DriverStatusResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return DriverStatusResponse.fromJson(response.data);
       } else {
         return DriverStatusResponse(
           success: false,
@@ -169,14 +170,12 @@ class ProfileRepo {
   /// Get driver profile data
   Future<ProfileResponse> getDriverProfile(String driverId) async {
     try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/driver/profile/$driverId'),
-        headers: {'Content-Type': 'application/json'},
+      final response = await apiClient.get(
+        '${ProfilePaths.getProfile}/$driverId',
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return ProfileResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return ProfileResponse.fromJson(response.data);
       } else {
         return ProfileResponse(
           success: false,
@@ -194,15 +193,13 @@ class ProfileRepo {
   /// Update driver profile data
   Future<ProfileResponse> updateDriverProfile(String driverId, ProfileUpdateData profileData) async {
     try {
-      final response = await client.put(
-        Uri.parse('$baseUrl/driver/profile/$driverId'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(profileData.toJson()),
+      final response = await apiClient.put(
+        '${ProfilePaths.updateProfile}/$driverId',
+        data: profileData.toJson(),
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return ProfileResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return ProfileResponse.fromJson(response.data);
       } else {
         return ProfileResponse(
           success: false,
@@ -220,18 +217,16 @@ class ProfileRepo {
   /// Create new driver profile during onboarding
   Future<ProfileResponse> createDriverProfile(String phoneNumber, ProfileUpdateData profileData) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/driver/profile'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
+      final response = await apiClient.post(
+        ProfilePaths.createProfile,
+        data: {
           'phoneNumber': phoneNumber,
           ...profileData.toJson(),
-        }),
+        },
       );
 
-      if (response.statusCode == 201) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return ProfileResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return ProfileResponse.fromJson(response.data);
       } else {
         return ProfileResponse(
           success: false,
@@ -249,21 +244,23 @@ class ProfileRepo {
   /// Upload profile image
   Future<ProfileResponse> uploadProfileImage(String driverId, String imagePath) async {
     try {
-      // TODO: Implement image upload logic
-      // This would typically involve creating a multipart request
-      // and uploading the image file to a storage service
-      
-      // For now, return a mock response
-      await Future.delayed(const Duration(seconds: 2));
-      
-      return ProfileResponse(
-        success: true,
-        message: 'Profile image uploaded successfully',
+      final response = await apiClient.post(
+        '${ProfilePaths.uploadProfileImage}/$driverId',
+        data: {'imagePath': imagePath},
       );
+
+      if (response is DataSuccess) {
+        return ProfileResponse.fromJson(response.data);
+      } else {
+        return ProfileResponse(
+          success: false,
+          message: 'Failed to upload profile image',
+        );
+      }
     } catch (e) {
       return ProfileResponse(
         success: false,
-        message: 'Failed to upload profile image: ${e.toString()}',
+        message: 'Network error: ${e.toString()}',
       );
     }
   }
@@ -271,14 +268,12 @@ class ProfileRepo {
   /// Delete profile image
   Future<ProfileResponse> deleteProfileImage(String driverId) async {
     try {
-      final response = await client.delete(
-        Uri.parse('$baseUrl/driver/profile/$driverId/image'),
-        headers: {'Content-Type': 'application/json'},
+      final response = await apiClient.delete(
+        '${ProfilePaths.deleteProfileImage}/$driverId',
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return ProfileResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return ProfileResponse.fromJson(response.data);
       } else {
         return ProfileResponse(
           success: false,
@@ -293,17 +288,32 @@ class ProfileRepo {
     }
   }
 
-  /// Get available vehicles for driver assignment
-  Future<List<VehicleInfo>> getAvailableVehicles() async {
+  /// Get assigned vehicle for driver
+  Future<Map<String, dynamic>?> getAssignedVehicle(String driverId) async {
     try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/driver/vehicles/available'),
-        headers: {'Content-Type': 'application/json'},
+      final response = await apiClient.get(
+        '${ProfilePaths.getAssignedVehicle}/$driverId',
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        final vehicles = (json['vehicles'] as List<dynamic>)
+      if (response is DataSuccess) {
+        return response.data;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Get available vehicles for driver assignment (Admin endpoint)
+  Future<List<VehicleInfo>> getAvailableVehicles() async {
+    try {
+      final response = await apiClient.get(
+        ProfilePaths.getAvailableVehicles,
+      );
+
+      if (response is DataSuccess) {
+        final vehicles = (response.data['vehicles'] as List<dynamic>)
             .map((e) => VehicleInfo.fromJson(e as Map<String, dynamic>))
             .toList();
         return vehicles;
@@ -315,18 +325,16 @@ class ProfileRepo {
     }
   }
 
-  /// Assign vehicle to driver
+  /// Assign vehicle to driver (Admin endpoint)
   Future<ProfileResponse> assignVehicle(String driverId, String vehicleId) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/driver/$driverId/vehicle'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'vehicleId': vehicleId}),
+      final response = await apiClient.post(
+        '${ProfilePaths.assignVehicle}/$driverId',
+        data: {'vehicleId': vehicleId},
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return ProfileResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return ProfileResponse.fromJson(response.data);
       } else {
         return ProfileResponse(
           success: false,
@@ -344,15 +352,13 @@ class ProfileRepo {
   /// Set work location for driver
   Future<ProfileResponse> setWorkLocation(String driverId, WorkLocation location) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/driver/$driverId/location'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(location.toJson()),
+      final response = await apiClient.post(
+        '${ProfilePaths.setWorkLocation}/$driverId',
+        data: location.toJson(),
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return ProfileResponse.fromJson(json);
+      if (response is DataSuccess) {
+        return ProfileResponse.fromJson(response.data);
       } else {
         return ProfileResponse(
           success: false,
@@ -364,6 +370,122 @@ class ProfileRepo {
         success: false,
         message: 'Network error: ${e.toString()}',
       );
+    }
+  }
+
+  /// Update work location for driver
+  Future<ProfileResponse> updateWorkLocation(String driverId, WorkLocation location) async {
+    try {
+      final response = await apiClient.put(
+        '${ProfilePaths.updateWorkLocation}/$driverId',
+        data: location.toJson(),
+      );
+
+      if (response is DataSuccess) {
+        return ProfileResponse.fromJson(response.data);
+      } else {
+        return ProfileResponse(
+          success: false,
+          message: 'Failed to update work location',
+        );
+      }
+    } catch (e) {
+      return ProfileResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Get work location for driver
+  Future<WorkLocation?> getWorkLocation(String driverId) async {
+    try {
+      final response = await apiClient.get(
+        '${ProfilePaths.getWorkLocation}/$driverId',
+      );
+
+      if (response is DataSuccess) {
+        return WorkLocation.fromJson(response.data);
+      } else {
+        return null;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Update profile preferences
+  Future<ProfileResponse> updatePreferences(String driverId, Map<String, dynamic> preferences) async {
+    try {
+      final response = await apiClient.put(
+        '${ProfilePaths.updatePreferences}/$driverId',
+        data: preferences,
+      );
+
+      if (response is DataSuccess) {
+        return ProfileResponse.fromJson(response.data);
+      } else {
+        return ProfileResponse(
+          success: false,
+          message: 'Failed to update preferences',
+        );
+      }
+    } catch (e) {
+      return ProfileResponse(
+        success: false,
+        message: 'Network error: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Get profile preferences
+  Future<Map<String, dynamic>?> getPreferences(String driverId) async {
+    try {
+      final response = await apiClient.get(
+        '${ProfilePaths.getPreferences}/$driverId',
+      );
+
+      if (response is DataSuccess) {
+        return response.data;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Get profile statistics
+  Future<Map<String, dynamic>?> getProfileStats(String driverId) async {
+    try {
+      final response = await apiClient.get(
+        '${ProfilePaths.getProfileStats}/$driverId',
+      );
+
+      if (response is DataSuccess) {
+        return response.data;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Get profile activity
+  Future<List<Map<String, dynamic>>> getProfileActivity(String driverId) async {
+    try {
+      final response = await apiClient.get(
+        '${ProfilePaths.getProfileActivity}/$driverId',
+      );
+
+      if (response is DataSuccess) {
+        return List<Map<String, dynamic>>.from(response.data['activities'] ?? []);
+      } else {
+        return [];
+      }
+    } catch (e) {
+      return [];
     }
   }
 }

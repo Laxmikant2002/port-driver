@@ -6,10 +6,14 @@ import 'package:documents_repo/src/models/document.dart' as documents_repo;
 import 'package:documents_repo/src/models/document_upload_request.dart' as documents_repo;
 import 'package:driver/models/document_upload.dart' hide DocumentStatus, DocumentType;
 import 'package:driver/models/document_upload.dart' as local_models show DocumentStatus, DocumentType;
+import 'package:driver/core/error/document_upload_error.dart';
 
 part 'document_upload_event.dart';
 part 'document_upload_state.dart';
 
+/// {@template document_upload_bloc}
+/// BLoC for managing document upload flow with modern state management.
+/// {@endtemplate}
 class DocumentUploadBloc extends Bloc<DocumentUploadEvent, DocumentUploadState> {
   /// {@macro document_upload_bloc}
   DocumentUploadBloc({
@@ -104,12 +108,14 @@ class DocumentUploadBloc extends Bloc<DocumentUploadEvent, DocumentUploadState> 
     DocumentUploadFailed event,
     Emitter<DocumentUploadState> emit,
   ) {
+    final error = DocumentUploadErrorHandler.handleException(event.error);
+    
     final updatedDocuments = state.documents.map((doc) {
       if (doc.type == event.type) {
         return doc.copyWith(
           status: local_models.DocumentStatus.pending,
           uploadProgress: 0.0,
-          rejectionReason: event.error,
+          rejectionReason: error.message,
         );
       }
       return doc;
@@ -118,7 +124,7 @@ class DocumentUploadBloc extends Bloc<DocumentUploadEvent, DocumentUploadState> 
     emit(state.copyWith(
       documents: updatedDocuments,
       status: FormzSubmissionStatus.failure,
-      errorMessage: event.error,
+      error: error,
     ));
   }
 
@@ -140,7 +146,8 @@ class DocumentUploadBloc extends Bloc<DocumentUploadEvent, DocumentUploadState> 
     emit(state.copyWith(
       documents: updatedDocuments,
       status: FormzSubmissionStatus.inProgress,
-      errorMessage: null,
+      error: null,
+      isRetrying: true,
     ));
   }
 
@@ -174,44 +181,55 @@ class DocumentUploadBloc extends Bloc<DocumentUploadEvent, DocumentUploadState> 
     DocumentUploadSubmitted event,
     Emitter<DocumentUploadState> emit,
   ) async {
-    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
+    emit(state.copyWith(status: FormzSubmissionStatus.inProgress, error: null));
 
     try {
       // Submit all uploaded documents for verification
       final uploadedDocs = state.documents.where((doc) => doc.isUploaded).toList();
       
       for (final doc in uploadedDocs) {
-        if (doc.frontImagePath != null) {
+        if (doc.type.requiresBothSides && doc.frontImagePath != null && doc.backImagePath != null) {
+          // Upload both front and back images
+          final response = await documentsRepo.uploadDocumentWithBothSides(
+            type: _convertToRepoDocumentType(doc.type),
+            frontImagePath: doc.frontImagePath!,
+            backImagePath: doc.backImagePath!,
+            fileName: doc.fileName,
+            fileSize: doc.fileSize,
+            metadata: {'uploadedAt': doc.uploadedAt?.toIso8601String()},
+          );
+          
+          if (!response.success) {
+            final error = UploadFailedError(
+              message: response.message ?? 'Failed to upload ${doc.title}',
+              retryable: true,
+            );
+            emit(state.copyWith(
+              status: FormzSubmissionStatus.failure,
+              error: error,
+            ));
+            return;
+          }
+        } else if (doc.frontImagePath != null) {
+          // Upload single image
           final request = documents_repo.DocumentUploadRequest(
             type: _convertToRepoDocumentType(doc.type),
             filePath: doc.frontImagePath!,
             fileName: doc.fileName,
-            metadata: {'fileSize': doc.fileSize},
+            fileSize: doc.fileSize,
+            metadata: {'uploadedAt': doc.uploadedAt?.toIso8601String()},
+            isBackImage: false,
           );
 
           final response = await documentsRepo.uploadDocument(request);
           if (!response.success) {
+            final error = UploadFailedError(
+              message: response.message ?? 'Failed to upload ${doc.title}',
+              retryable: true,
+            );
             emit(state.copyWith(
               status: FormzSubmissionStatus.failure,
-              errorMessage: response.message ?? 'Failed to upload ${doc.title}',
-            ));
-            return;
-          }
-        }
-
-        if (doc.backImagePath != null && doc.type.requiresBothSides) {
-          final request = documents_repo.DocumentUploadRequest(
-            type: _convertToRepoDocumentType(doc.type),
-            filePath: doc.backImagePath!,
-            fileName: doc.fileName,
-            metadata: {'fileSize': doc.fileSize},
-          );
-
-          final response = await documentsRepo.uploadDocument(request);
-          if (!response.success) {
-            emit(state.copyWith(
-              status: FormzSubmissionStatus.failure,
-              errorMessage: response.message ?? 'Failed to upload ${doc.title}',
+              error: error,
             ));
             return;
           }
@@ -220,9 +238,10 @@ class DocumentUploadBloc extends Bloc<DocumentUploadEvent, DocumentUploadState> 
 
       emit(state.copyWith(status: FormzSubmissionStatus.success));
     } catch (e) {
+      final error = DocumentUploadErrorHandler.handleException(e);
       emit(state.copyWith(
         status: FormzSubmissionStatus.failure,
-        errorMessage: 'Network error: ${e.toString()}',
+        error: error,
       ));
     }
   }
@@ -250,12 +269,13 @@ class DocumentUploadBloc extends Bloc<DocumentUploadEvent, DocumentUploadState> 
           }
         }).toList();
 
-        emit(state.copyWith(documents: updatedDocuments));
+        emit(state.copyWith(documents: updatedDocuments, error: null));
       }
     } catch (e) {
+      final error = DocumentUploadErrorHandler.handleException(e);
       emit(state.copyWith(
         status: FormzSubmissionStatus.failure,
-        errorMessage: 'Failed to refresh status: ${e.toString()}',
+        error: error,
       ));
     }
   }

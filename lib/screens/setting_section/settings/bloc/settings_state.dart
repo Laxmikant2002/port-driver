@@ -3,17 +3,13 @@ part of 'settings_bloc.dart';
 /// Settings state containing all user preferences
 final class SettingsState extends Equatable {
   const SettingsState({
+    this.settings,
     this.status = FormzSubmissionStatus.initial,
-    this.language = 'English',
-    this.notificationsEnabled = true,
-    this.locationServicesEnabled = true,
     this.errorMessage,
   });
 
+  final Settings? settings;
   final FormzSubmissionStatus status;
-  final String language;
-  final bool notificationsEnabled;
-  final bool locationServicesEnabled;
   final String? errorMessage;
 
   /// Returns true if settings are currently being loaded
@@ -31,13 +27,11 @@ final class SettingsState extends Equatable {
   /// Returns true if the form is currently being submitted
   bool get isSubmitting => status == FormzSubmissionStatus.inProgress;
 
-  /// Returns true if any setting has been modified
-  bool get hasChanges => language != 'English' || 
-                        !notificationsEnabled || 
-                        !locationServicesEnabled;
+  /// Returns current language
+  String get language => settings?.language.currentLanguage ?? 'English';
 
   /// Returns available languages
-  List<String> get availableLanguages => [
+  List<String> get availableLanguages => settings?.language.availableLanguages ?? [
     'English',
     'Hindi',
     'Tamil',
@@ -50,40 +44,41 @@ final class SettingsState extends Equatable {
     'Punjabi',
   ];
 
+  /// Returns notification settings
+  NotificationSettings get notificationSettings => settings?.notifications ?? const NotificationSettings();
+
+  /// Returns privacy settings
+  PrivacySettings get privacySettings => settings?.privacy ?? const PrivacySettings();
+
+  /// Returns appearance settings
+  AppearanceSettings get appearanceSettings => settings?.appearance ?? const AppearanceSettings();
+
 
   SettingsState copyWith({
+    Settings? settings,
     FormzSubmissionStatus? status,
-    String? language,
-    bool? notificationsEnabled,
-    bool? locationServicesEnabled,
     String? errorMessage,
     bool clearError = false,
   }) {
     return SettingsState(
+      settings: settings ?? this.settings,
       status: status ?? this.status,
-      language: language ?? this.language,
-      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
-      locationServicesEnabled: locationServicesEnabled ?? this.locationServicesEnabled,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }
 
   @override
   List<Object?> get props => [
+        settings,
         status,
-        language,
-        notificationsEnabled,
-        locationServicesEnabled,
         errorMessage,
       ];
 
   @override
   String toString() {
     return 'SettingsState('
+        'settings: $settings, '
         'status: $status, '
-        'language: $language, '
-        'notificationsEnabled: $notificationsEnabled, '
-        'locationServicesEnabled: $locationServicesEnabled, '
         'errorMessage: $errorMessage'
         ')';
   }

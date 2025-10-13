@@ -32,28 +32,41 @@ final class LanguageChanged extends SettingsEvent {
 
 /// Event triggered when notification settings are changed
 final class NotificationSettingsChanged extends SettingsEvent {
-  const NotificationSettingsChanged(this.enabled);
+  const NotificationSettingsChanged(this.notificationSettings);
 
-  final bool enabled;
-
-  @override
-  List<Object> get props => [enabled];
+  final NotificationSettings notificationSettings;
 
   @override
-  String toString() => 'NotificationSettingsChanged(enabled: $enabled)';
+  List<Object> get props => [notificationSettings];
+
+  @override
+  String toString() => 'NotificationSettingsChanged(notificationSettings: $notificationSettings)';
 }
 
-/// Event triggered when location services are toggled
-final class LocationServicesToggled extends SettingsEvent {
-  const LocationServicesToggled(this.enabled);
+/// Event triggered when privacy settings are changed
+final class PrivacySettingsChanged extends SettingsEvent {
+  const PrivacySettingsChanged(this.privacySettings);
 
-  final bool enabled;
-
-  @override
-  List<Object> get props => [enabled];
+  final PrivacySettings privacySettings;
 
   @override
-  String toString() => 'LocationServicesToggled(enabled: $enabled)';
+  List<Object> get props => [privacySettings];
+
+  @override
+  String toString() => 'PrivacySettingsChanged(privacySettings: $privacySettings)';
+}
+
+/// Event triggered when appearance settings are changed
+final class AppearanceSettingsChanged extends SettingsEvent {
+  const AppearanceSettingsChanged(this.appearanceSettings);
+
+  final AppearanceSettings appearanceSettings;
+
+  @override
+  List<Object> get props => [appearanceSettings];
+
+  @override
+  String toString() => 'AppearanceSettingsChanged(appearanceSettings: $appearanceSettings)';
 }
 
 

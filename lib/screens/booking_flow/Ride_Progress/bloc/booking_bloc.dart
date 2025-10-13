@@ -1,4 +1,4 @@
-import 'package:booking_repo/booking_repo.dart';
+import 'package:trip_repo/trip_repo.dart';
 import 'package:driver/widgets/colors.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +21,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
     on<BookingSubmitted>(_onSubmitted);
   }
 
-  final BookingRepo bookingRepo;
+  final TripRepo bookingRepo;
 
   Future<void> _onInitialized(
     BookingInitialized event,

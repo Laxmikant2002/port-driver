@@ -1,28 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:driver/screens/account/profile/view/profile_screen.dart' as AccountProfile;
-import 'package:driver/screens/document_upload/views/document_upload_screen.dart';
+
+import 'package:auth_repo/auth_repo.dart';
+import 'package:documents_repo/documents_repo.dart';
+import 'package:history_repo/history_repo.dart';
+
+import 'package:driver/locator.dart';
+import 'package:driver/models/document_upload.dart' as local_models;
+import 'package:driver/screens/account/documents/bloc/documents_bloc.dart';
+import 'package:driver/screens/account/documents/views/document_detail_screen.dart';
+import 'package:driver/screens/account/documents/views/documents_list_screen.dart';
+import 'package:driver/screens/account/help_support/views/help_support_screen.dart';
+// import 'package:driver/screens/account/profile/view/profile_screen.dart' as account_profile;
+import 'package:driver/screens/account/unified_earnings_rewards/unified_earnings_rewards.dart';
+import 'package:driver/screens/account/trip_history/trip_history_screen.dart';
+import 'package:driver/screens/account_status/account_inactive_screen.dart';
+import 'package:driver/screens/account_status/account_suspended_screen.dart';
+import 'package:driver/screens/document_upload/bloc/document_upload_bloc.dart';
 import 'package:driver/screens/document_upload/views/document_intro_screen.dart';
 import 'package:driver/screens/document_upload/views/document_review_screen.dart';
-import 'package:driver/screens/account/documents/views/documents_list_screen.dart';
-import 'package:driver/screens/account/documents/views/document_detail_screen.dart';
-import 'package:driver/screens/account/documents/bloc/documents_bloc.dart';
-import 'package:driver/screens/document_upload/bloc/document_upload_bloc.dart';
-import 'package:driver/screens/account/help_support/views/help_support_screen.dart';
-import 'package:driver/screens/account/trip_history/views/trip_history_screen.dart';
+import 'package:driver/screens/document_upload/views/document_upload_screen.dart';
+import 'package:driver/screens/setting_section/faq/view/faq_screen.dart';
+import 'package:driver/screens/notifications/notifications.dart';
+import 'package:driver/screens/setting_section/privacy/view/privacy_screen.dart';
 import 'package:driver/screens/setting_section/settings/view/settings_screen.dart';
 import 'package:driver/screens/setting_section/settings/views/about.dart';
-import 'package:driver/screens/setting_section/notification_settings/view/notification_settings_screen.dart';
-import 'package:driver/screens/setting_section/privacy/view/privacy_screen.dart';
 import 'package:driver/screens/setting_section/support/view/support_screen.dart';
-import 'package:driver/screens/setting_section/faq/view/faq_screen.dart';
-import 'package:driver/screens/account_status/account_suspended_screen.dart';
-import 'package:driver/screens/account_status/account_inactive_screen.dart';
-import 'package:driver/models/document_upload.dart' as local_models;
-import 'package:driver/locator.dart';
-import 'package:history_repo/history_repo.dart';
-import 'package:documents_repo/documents_repo.dart';
-import 'package:auth_repo/auth_repo.dart';
+
 import 'route_constants.dart';
 
 /// Account management routes for profile, documents, history, settings, and support
@@ -48,6 +52,7 @@ class AccountRoutes {
   static const String earnings = RouteConstants.earnings;
   static const String transactionHistory = RouteConstants.transactionHistory;
   static const String earningsSummary = RouteConstants.earningsSummary;
+  static const String unifiedEarningsRewards = RouteConstants.unifiedEarningsRewards;
 
   // Rewards routes
   static const String rewards = RouteConstants.rewards;
@@ -65,6 +70,7 @@ class AccountRoutes {
   static const String languageSelection = RouteConstants.languageSelection;
 
   // Notification routes
+  static const String notifications = RouteConstants.notifications;
   static const String notificationSettings = RouteConstants.notificationSettings;
   static const String bookingNotifications = RouteConstants.bookingNotifications;
   static const String earningsNotifications = RouteConstants.earningsNotifications;
@@ -84,19 +90,19 @@ class AccountRoutes {
   static Map<String, WidgetBuilder> getRoutes() {
     return {
       // Profile routes (onboarding routes are now in AuthRoutes)
-      profile: (context) => const AccountProfile.ProfileScreen(phoneNumber: '+1234567890'),
+      // profile: (context) => const account_profile.ProfileScreen(phoneNumber: '+1234567890'),
 
       // Document routes
       accountDocuments: (context) {
         return BlocProvider(
-          create: (_) => DocumentsBloc(documentsRepo: lc<DocumentsRepo>())
+          create: (_) => DocumentsBloc(documentsRepo: sl<DocumentsRepo>())
             ..add(const DocumentsLoaded()),
           child: const DocumentsListScreen(),
         );
       },
       documentsList: (context) {
         return BlocProvider(
-          create: (_) => DocumentsBloc(documentsRepo: lc<DocumentsRepo>())
+          create: (_) => DocumentsBloc(documentsRepo: sl<DocumentsRepo>())
             ..add(const DocumentsLoaded()),
           child: const DocumentsListScreen(),
         );
@@ -111,14 +117,14 @@ class AccountRoutes {
           );
         }
         return BlocProvider(
-          create: (_) => DocumentsBloc(documentsRepo: lc<DocumentsRepo>())
+          create: (_) => DocumentsBloc(documentsRepo: sl<DocumentsRepo>())
             ..add(const DocumentsLoaded()),
           child: DocumentDetailScreen(documentId: documentId),
         );
       },
       documentIntro: (context) {
         return BlocProvider(
-          create: (_) => DocumentsBloc(documentsRepo: lc<DocumentsRepo>()),
+          create: (_) => DocumentsBloc(documentsRepo: sl<DocumentsRepo>()),
           child: const DocumentIntroScreen(),
         );
       },
@@ -132,14 +138,14 @@ class AccountRoutes {
           );
         }
         return BlocProvider(
-          create: (_) => DocumentUploadBloc(documentsRepo: lc<DocumentsRepo>())
+          create: (_) => DocumentUploadBloc(documentsRepo: sl<DocumentsRepo>())
             ..add(const DocumentUploadInitialized()),
           child: DocumentUploadScreen(documentType: documentType),
         );
       },
       documentReview: (context) {
         return BlocProvider(
-          create: (_) => DocumentsBloc(documentsRepo: lc<DocumentsRepo>()),
+          create: (_) => DocumentsBloc(documentsRepo: sl<DocumentsRepo>()),
           child: const DocumentReviewScreen(),
         );
       },
@@ -153,14 +159,7 @@ class AccountRoutes {
         );
       },
       tripHistory: (context) {
-        final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-        final driverId = args?['driverId'] as String? ?? 
-                        lc<AuthRepo>().currentUser?.id ?? '';
-        
-        return TripHistoryScreen(
-          historyRepo: lc<HistoryRepo>(),
-          driverId: driverId,
-        );
+        return const TripHistoryScreen();
       },
       ratings: (context) {
         return const Scaffold(
@@ -170,65 +169,18 @@ class AccountRoutes {
         );
       },
 
-      // Finance routes
-      wallet: (context) {
-        return const Scaffold(
-          body: Center(
-            child: Text('Wallet Screen - Implementation needed'),
-          ),
-        );
-      },
-      earnings: (context) {
-        return const Scaffold(
-          body: Center(
-            child: Text('Earnings - Full screen implementation needed'),
-          ),
-        );
-      },
-      transactionHistory: (context) {
-        return const Scaffold(
-          body: Center(
-            child: Text('Transaction History - Full screen implementation needed'),
-          ),
-        );
-      },
-      earningsSummary: (context) {
-        return const Scaffold(
-          body: Center(
-            child: Text('Earnings Summary - Full screen implementation needed'),
-          ),
-        );
-      },
+      // Finance routes - Now using unified earnings and rewards system
+      wallet: (context) => const UnifiedEarningsRewardsScreen(),
+      earnings: (context) => const UnifiedEarningsRewardsScreen(),
+      transactionHistory: (context) => const UnifiedEarningsRewardsScreen(),
+      earningsSummary: (context) => const UnifiedEarningsRewardsScreen(),
+      unifiedEarningsRewards: (context) => const UnifiedEarningsRewardsScreen(),
 
-      // Rewards routes
-      rewards: (context) {
-        return const Scaffold(
-          body: Center(
-            child: Text('Rewards Screen - Implementation needed with rewardsRepo'),
-          ),
-        );
-      },
-      achievements: (context) {
-        return const Scaffold(
-          body: Center(
-            child: Text('Achievements Screen - Implementation needed with rewardsRepo'),
-          ),
-        );
-      },
-      challenges: (context) {
-        return const Scaffold(
-          body: Center(
-            child: Text('Challenges Screen - Implementation needed with rewardsRepo'),
-          ),
-        );
-      },
-      leaderboard: (context) {
-        return const Scaffold(
-          body: Center(
-            child: Text('Leaderboard - Full screen implementation needed'),
-          ),
-        );
-      },
+      // Rewards routes - Now using unified earnings and rewards system
+      rewards: (context) => const UnifiedEarningsRewardsScreen(),
+      achievements: (context) => const UnifiedEarningsRewardsScreen(),
+      challenges: (context) => const UnifiedEarningsRewardsScreen(),
+      leaderboard: (context) => const UnifiedEarningsRewardsScreen(),
 
       // Settings routes
       settings: (context) => const SettingsScreen(),
@@ -251,6 +203,7 @@ class AccountRoutes {
       },
 
       // Notification routes
+      notifications: (context) => const NotificationScreen(),
       notificationSettings: (context) => const NotificationSettingsScreen(),
       bookingNotifications: (context) {
         return const Scaffold(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:driver/widgets/colors.dart';
 import 'package:driver/screens/dashboard/view/dashboard_screen.dart';
 import 'package:driver/screens/dashboard/constants/dashboard_constants.dart';
-import 'package:driver/screens/account/earnings/earnings_screen.dart';
+import 'package:driver/screens/account/unified_earnings_rewards/unified_earnings_rewards.dart';
 import 'package:driver/screens/account/documents/documents_management_screen.dart';
 import 'package:driver/screens/account/settings/settings_screen.dart';
 
@@ -255,7 +255,7 @@ class AccountScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute<void>(
-                          builder: (context) => const EarningsScreen(),
+                          builder: (context) => const UnifiedEarningsRewardsScreen(),
                         ),
                       );
                     },

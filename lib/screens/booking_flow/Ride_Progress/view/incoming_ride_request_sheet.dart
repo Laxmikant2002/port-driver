@@ -1,4 +1,4 @@
-import 'package:booking_repo/booking_repo.dart';
+import 'package:trip_repo/trip_repo.dart';
 import 'package:driver/locator.dart';
 import 'package:driver/screens/booking_flow/Ride_Progress/bloc/booking_bloc.dart';
 import 'package:driver/screens/booking_flow/Ride_Progress/view/ride_detail_screen.dart';
@@ -18,7 +18,7 @@ class IncomingRideRequestSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => BookingBloc(
-        bookingRepo: lc<BookingRepo>(),
+        bookingRepo: lc<TripRepo>(),
       )..add(RideRequestReceived(booking)),
       child: const IncomingRideRequestView(),
     );

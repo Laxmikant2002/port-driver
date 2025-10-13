@@ -42,6 +42,9 @@ class AuthRepo {
   /// Get current OTP token
   String? get otpToken => localStorage.getString(LocalKeys.otpToken);
 
+  /// Get current refresh token
+  String? get refreshToken => localStorage.getString(LocalKeys.refreshToken);
+
   /// Check if phone number exists in the system
   Future<AuthResponse> checkPhone(String phone) async {
     try {
@@ -137,14 +140,20 @@ class AuthRepo {
         final authResponse = AuthResponse.fromJson(data);
         
         if (authResponse.success && authResponse.user != null) {
-          // Store access token and user data
+          // Store access token, refresh token, and user data
           if (authResponse.accessToken != null) {
             localStorage.saveString(LocalKeys.accessToken, authResponse.accessToken!);
           }
+          if (authResponse.refreshToken != null) {
+            localStorage.saveString(LocalKeys.refreshToken, authResponse.refreshToken!);
+          }
           localStorage.saveString(LocalKeys.userJson, jsonEncode(authResponse.user!.toJson()));
           
-          // Update API client with new token
-          apiClient.updateAuthToken(authResponse.accessToken);
+          // Update API client with new tokens
+          apiClient.updateTokens(
+            authToken: authResponse.accessToken,
+            refreshToken: authResponse.refreshToken,
+          );
         }
         
         return authResponse;
@@ -206,7 +215,7 @@ class AuthRepo {
   }
 
   /// Refresh access token
-  Future<AuthResponse> refreshToken() async {
+  Future<AuthResponse> refreshAccessToken() async {
     final refreshToken = localStorage.getString(LocalKeys.refreshToken);
     if (refreshToken == null) {
       return AuthResponse(

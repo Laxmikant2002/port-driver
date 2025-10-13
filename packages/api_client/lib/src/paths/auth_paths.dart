@@ -1,4 +1,4 @@
-import 'package:api_client/src/paths/base_paths.dart';
+import 'base_paths.dart';
 
 class AuthPaths extends BasePaths {
   static final String login = "${BasePaths.baseUrl}/driver/login";

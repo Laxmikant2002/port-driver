@@ -20,8 +20,8 @@ class ProfileScreen extends StatelessWidget {
 
     return BlocProvider(
       create: (context) => ProfileBloc(
-        authRepo: lc<AuthRepo>(),
-        profileRepo: lc<ProfileRepo>(),
+        authRepo: sl<AuthRepo>(),
+        profileRepo: sl<ProfileRepo>(),
         user: user,
         existingProfile: existingProfile,
         isNewUser: isNewUser,
@@ -71,9 +71,6 @@ class _ProfileScreen extends StatelessWidget {
                 const _ProfileForm(),
                 const SizedBox(height: 24),
                 const _ContinueButton(),
-                const SizedBox(height: 16),
-                // Temporary testing button - remove when backend is connected
-                const _TestingButton(),
                 const SizedBox(height: 24),
               ],
             ),
@@ -96,8 +93,8 @@ class _HeaderSection extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withOpacity(0.1),
-            AppColors.cyan.withOpacity(0.05),
+            AppColors.primary.withValues(alpha: 0.1),
+            AppColors.cyan.withValues(alpha: 0.05),
           ],
         ),
       ),
@@ -107,7 +104,7 @@ class _HeaderSection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.cyan.withOpacity(0.1),
+              color: AppColors.cyan.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(
@@ -157,7 +154,7 @@ class _ProfileForm extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
+            color: AppColors.primary.withValues(alpha: 0.08),
             blurRadius: 32,
             offset: const Offset(0, 12),
             spreadRadius: 0,
@@ -521,7 +518,7 @@ class _GenderOption extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.cyan.withOpacity(0.1) : AppColors.backgroundSecondary,
+          color: isSelected ? AppColors.cyan.withValues(alpha: 0.1) : AppColors.backgroundSecondary,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? AppColors.cyan : AppColors.border,
@@ -568,7 +565,7 @@ class _ContinueButton extends StatelessWidget {
             boxShadow: isValid && !isLoading
                 ? [
                     BoxShadow(
-                      color: AppColors.cyan.withOpacity(0.3),
+                      color: AppColors.cyan.withValues(alpha: 0.3),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -637,63 +634,5 @@ class _ContinueButton extends StatelessWidget {
       },
     );
   }
-}
-
-// Temporary testing button - Remove when backend is connected
-class _TestingButton extends StatelessWidget {
-  const _TestingButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      width: double.infinity,
-      height: 48,
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
-      ),
-      child: TextButton.icon(
-        onPressed: () {
-          // Navigate directly to language selection screen with dummy data
-          Navigator.pushReplacementNamed(
-            context, 
-            '/language-selection',
-            arguments: {
-              'user': AuthUser(
-                id: 'test-user-id',
-                phone: '9876543210',
-                name: 'Test User',
-                email: 'test@example.com',
-                isVerified: true,
-                isNewUser: false,
-                profileComplete: true,
-                documentVerified: false,
-              ),
-              'profile': null,
-            },
-          );
-        },
-        icon: const Icon(
-          Icons.bug_report_outlined,
-          color: Colors.grey,
-          size: 18,
-        ),
-        label: const Text(
-          'Skip to Language Selection (Testing Only)',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey,
-          ),
-        ),
-        style: TextButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-    );
-  }
-}
+} 
+ 

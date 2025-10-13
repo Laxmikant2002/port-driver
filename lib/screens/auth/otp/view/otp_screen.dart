@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:auth_repo/auth_repo.dart';
-import 'package:formz/formz.dart';
 import 'package:profile_repo/profile_repo.dart';
 import 'package:driver/locator.dart';
 import '../../../../widgets/colors.dart';
-import 'package:driver/routes/account_routes.dart';
-import 'package:driver/routes/main_routes.dart';
 
 import '../bloc/otp_bloc.dart';
 import 'otp_field.dart';
@@ -18,16 +15,13 @@ class OtpScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final phone = ModalRoute.of(context)!.settings.arguments as String;
 
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (context) => OtpBloc(
-            authRepo: lc<AuthRepo>(),
-            profileRepo: lc<ProfileRepo>(),
-            phone: phone,
-          ),
-        ),
-      ],
+    return BlocProvider(
+      create: (context) => OtpBloc(
+        authRepo: sl<AuthRepo>(),
+        profileRepo: sl<ProfileRepo>(),
+        phone: phone,
+        authBloc: null, // Will be provided by parent widget if needed
+      ),
       child: const _OtpScreen(),
     );
   }
@@ -86,9 +80,6 @@ class _OtpScreen extends StatelessWidget {
                 const _OtpCard(),
                 const SizedBox(height: 32),
                 _ChangeNumberLink(),
-                const SizedBox(height: 16),
-                // Testing bypass button (remove for production)
-                const _BypassButton(),
                 const SizedBox(height: 24),
               ],
             ),
@@ -123,7 +114,7 @@ class _VerifyButton extends StatelessWidget {
                 ? null 
                 : [
                     BoxShadow(
-                      color: AppColors.cyan.withOpacity(0.3),
+                      color: AppColors.cyan.withValues(alpha: 0.3),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -202,8 +193,8 @@ class _HeaderSection extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withOpacity(0.1),
-            AppColors.cyan.withOpacity(0.05),
+            AppColors.primary.withValues(alpha: 0.1),
+            AppColors.cyan.withValues(alpha: 0.05),
           ],
         ),
       ),
@@ -213,7 +204,7 @@ class _HeaderSection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.cyan.withOpacity(0.1),
+              color: AppColors.cyan.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(
@@ -263,13 +254,13 @@ class _OtpCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
+            color: AppColors.primary.withValues(alpha: 0.08),
             blurRadius: 32,
             offset: const Offset(0, 12),
             spreadRadius: 0,
           ),
           BoxShadow(
-            color: AppColors.border.withOpacity(0.04),
+            color: AppColors.border.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
             spreadRadius: 0,
@@ -387,56 +378,5 @@ Widget _ChangeNumberLink() {
       ),
     ),
   );
-}
-
-class _BypassButton extends StatelessWidget {
-  const _BypassButton();
-
-  @override
-  Widget build(BuildContext context) {
-    final phone = ModalRoute.of(context)!.settings.arguments as String;
-    
-    return SizedBox(
-      width: double.infinity,
-      height: 48,
-      child: ElevatedButton(
-        onPressed: () {
-          // Navigate directly to profile screen with dummy user data
-          Navigator.pushReplacementNamed(
-            context, 
-            '/profile-creation',
-            arguments: {
-              'user': AuthUser(
-                id: 'test-user-id',
-                phone: phone,
-                name: 'Test User',
-                email: 'test@example.com',
-                isVerified: true,
-                isNewUser: true,
-                profileComplete: false,
-                documentVerified: false,
-              ),
-              'isNewUser': true,
-              'profile': null,
-            },
-          );
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.warning,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 0,
-        ),
-        child: const Text(
-          'BYPASS OTP (TESTING)',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    );
-  }
-}
+} 
+ 

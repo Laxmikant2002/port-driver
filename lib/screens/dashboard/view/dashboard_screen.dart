@@ -5,10 +5,10 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:driver/widgets/colors.dart';
 import 'package:driver/locator.dart';
-import 'package:driver/services/location_service.dart';
-import 'package:driver/services/socket_service.dart';
+import 'package:driver/services/location/location_service.dart';
+import 'package:driver/services/network/socket_service.dart';
 import 'package:driver_status/driver_status.dart';
-import 'package:driver/screens/booking_flow/Driver_Status/bloc/driver_status_bloc.dart';
+import 'package:driver/app/bloc/driver_status_bloc.dart';
 import 'package:driver/screens/dashboard/constants/dashboard_constants.dart';
 
 /// Modern Uber-inspired dashboard screen for Electric Loading Gadi driver app
@@ -20,8 +20,8 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => DriverStatusBloc(
-        driverStatusRepo: lc<DriverStatusRepo>(),
-        socketService: lc<SocketService>(),
+        driverStatusRepo: sl<DriverStatusRepo>(),
+        socketService: sl<SocketService>(),
       )..add(const DriverStatusInitialized()),
       child: const _DashboardView(),
     );
@@ -87,8 +87,8 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
 
   Future<void> _initializeLocation() async {
     try {
-      final initialized = await _locationService.initialize();
-      if (initialized && mounted) {
+      await _locationService.initialize();
+      if (_locationService.isInitialized && mounted) {
         setState(() {
           _currentLocation = _locationService.currentLocation ?? const LatLng(
             DashboardConstants.nandedLat,
@@ -432,9 +432,9 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
             height: DashboardConstants.pulseIndicatorSize * _pulseAnimation.value,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               border: Border.all(
-                color: AppColors.primary.withOpacity(0.3),
+                color: AppColors.primary.withValues(alpha: 0.3),
                 width: 2,
               ),
             ),
@@ -819,7 +819,7 @@ class _DashboardViewState extends State<_DashboardView> with TickerProviderState
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(

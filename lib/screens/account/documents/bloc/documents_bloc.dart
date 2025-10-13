@@ -178,9 +178,10 @@ class DocumentsBloc extends Bloc<DocumentsEvent, DocumentsState> {
       description: _convertDocumentType(doc.type).description,
       isRequired: _convertDocumentType(doc.type).isRequired,
       status: _convertDocumentStatus(doc.status),
-      frontImagePath: doc.fileUrl,
-      backImagePath: null, // documents_repo model doesn't have back image
+      frontImagePath: doc.frontImageUrl,
+      backImagePath: doc.backImageUrl,
       fileName: doc.fileName,
+      fileSize: doc.fileSize,
       uploadedAt: doc.uploadedAt,
       verifiedAt: doc.verifiedAt,
       rejectionReason: doc.rejectedReason,

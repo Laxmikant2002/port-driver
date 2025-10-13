@@ -1,4 +1,4 @@
-import 'package:booking_repo/booking_repo.dart';
+import 'package:trip_repo/trip_repo.dart';
 import 'package:driver/locator.dart';
 import 'package:driver/screens/booking_flow/Ride_Progress/bloc/booking_bloc.dart';
 import 'package:driver/widgets/colors.dart';
@@ -17,7 +17,7 @@ class RideDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => BookingBloc(
-        bookingRepo: lc(),
+        bookingRepo: sl<TripRepo>(),
       )..add(RideRequestReceived(booking)),
       child: const RideDetailView(),
     );
