@@ -1,4 +1,4 @@
-# Port Driver (Driver App)
+# Driver App
 
 This repository contains the Flutter driver app for the Port project — a mobile application used by drivers to receive and manage bookings. This README is written to hand the project over to a new developer. It documents project structure, important files, how to run and build the app, testing, localization, assets, and a handover checklist.
 
